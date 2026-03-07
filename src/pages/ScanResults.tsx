@@ -55,9 +55,9 @@ const ScanResults = () => {
         <Card className="border-border shadow-elevated">
           <CardContent className="p-5 text-center">
             <div className={`inline-flex items-center gap-2 ${sev.color} text-primary-foreground rounded-full px-5 py-2 font-bold text-sm mb-3`}>
-              {mockResult.severity === "low" && <CheckCircle className="h-4 w-4" />}
-              {mockResult.severity === "medium" && <AlertTriangle className="h-4 w-4" />}
-              {mockResult.severity === "high" && <ShieldAlert className="h-4 w-4" />}
+            {(mockResult.severity as string) === "low" && <CheckCircle className="h-4 w-4" />}
+              {(mockResult.severity as string) === "medium" && <AlertTriangle className="h-4 w-4" />}
+              {(mockResult.severity as string) === "high" && <ShieldAlert className="h-4 w-4" />}
               {sev.label}
             </div>
             <h2 className="font-display text-xl font-bold">{mockResult.condition}</h2>
