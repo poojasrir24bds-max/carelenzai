@@ -1,18 +1,14 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Stethoscope, Check, CreditCard, Crown } from "lucide-react";
+import { ArrowLeft, Stethoscope, Check, Send, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import logo from "@/assets/logo.png";
+import phonepeQr from "@/assets/phonepe-qr.jpeg";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-
-declare global {
-  interface Window {
-    Razorpay: any;
-  }
-}
 
 const DoctorSubscription = () => {
   const navigate = useNavigate();
@@ -20,7 +16,8 @@ const DoctorSubscription = () => {
   const { toast } = useToast();
   const [plan, setPlan] = useState<any>(null);
   const [activeSub, setActiveSub] = useState<any>(null);
-  const [paying, setPaying] = useState(false);
+  const [transactionId, setTransactionId] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     fetchPlan();
@@ -48,71 +45,28 @@ const DoctorSubscription = () => {
     setActiveSub((data as any[])?.[0] || null);
   };
 
-  const handlePayWithRazorpay = async () => {
-    if (!user || !plan || paying) return;
-    setPaying(true);
+  const handleSubmitPayment = async () => {
+    if (!user || !plan || !transactionId.trim() || submitting) return;
+    setSubmitting(true);
 
     try {
-      const { data: orderData, error: orderError } = await supabase.functions.invoke('razorpay-create-order', {
-        body: { plan_id: plan.id },
-      });
+      const { error } = await supabase.from("user_subscriptions").insert({
+        user_id: user.id,
+        plan_id: plan.id,
+        status: "pending",
+        upi_transaction_id: transactionId.trim(),
+        starts_at: new Date().toISOString(),
+      } as any);
 
-      if (orderError || !orderData?.order_id) {
-        throw new Error(orderError?.message || 'Failed to create order');
-      }
+      if (error) throw error;
 
-      const options = {
-        key: orderData.key_id,
-        amount: orderData.amount,
-        currency: orderData.currency,
-        name: 'CARELENZ AI',
-        description: 'Doctor Registration',
-        image: logo,
-        order_id: orderData.order_id,
-        prefill: orderData.prefill,
-        theme: { color: '#2563eb' },
-        handler: async (response: any) => {
-          try {
-            const { data: verifyData, error: verifyError } = await supabase.functions.invoke('razorpay-verify-payment', {
-              body: {
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                plan_id: plan.id,
-              },
-            });
-
-            if (verifyError || !verifyData?.success) {
-              throw new Error(verifyError?.message || 'Payment verification failed');
-            }
-
-            toast({ title: "Payment Successful! ✅", description: "Your doctor registration is now active." });
-            navigate("/doctor");
-          } catch (err: any) {
-            toast({ title: "Verification Failed", description: err.message, variant: "destructive" });
-          }
-        },
-        modal: {
-          ondismiss: () => {
-            setPaying(false);
-          },
-        },
-      };
-
-      const rzp = new window.Razorpay(options);
-      rzp.on('payment.failed', (response: any) => {
-        toast({
-          title: "Payment Failed",
-          description: response.error?.description || "Something went wrong",
-          variant: "destructive",
-        });
-        setPaying(false);
-      });
-      rzp.open();
+      toast({ title: "Payment Submitted! ✅", description: "Your payment is under review. Admin will approve it shortly." });
+      setTransactionId("");
+      fetchActiveSub();
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
-      setPaying(false);
+      setSubmitting(false);
     }
   };
 
@@ -167,7 +121,7 @@ const DoctorSubscription = () => {
         )}
 
         {/* Plan Card */}
-        {plan && !activeSub?.status?.includes("active") && (
+        {plan && !activeSub?.status?.includes("active") && !activeSub?.status?.includes("pending") && (
           <Card className="shadow-card border-2 border-primary/40 bg-primary/5 relative overflow-hidden">
             <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-bl-xl">
               Required
@@ -204,10 +158,34 @@ const DoctorSubscription = () => {
                 </div>
               </div>
 
-              <Button className="w-full rounded-xl" onClick={handlePayWithRazorpay} disabled={paying}>
-                <CreditCard className="h-4 w-4 mr-2" />
-                {paying ? "Processing..." : `Pay ₹${plan.price_inr}`}
-              </Button>
+              {/* PhonePe QR */}
+              <div className="space-y-4">
+                <h3 className="font-display font-bold text-center">Pay via PhonePe</h3>
+                <div className="flex justify-center">
+                  <img
+                    src={phonepeQr}
+                    alt="PhonePe QR Code"
+                    className="w-56 h-56 rounded-xl border-2 border-muted object-contain"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground text-center">
+                  Scan the QR code using PhonePe, Google Pay, or any UPI app. After payment, enter your UPI Transaction ID below.
+                </p>
+                <Input
+                  placeholder="Enter UPI Transaction ID"
+                  value={transactionId}
+                  onChange={(e) => setTransactionId(e.target.value)}
+                  className="rounded-xl"
+                />
+                <Button
+                  className="w-full rounded-xl"
+                  onClick={handleSubmitPayment}
+                  disabled={!transactionId.trim() || submitting}
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  {submitting ? "Submitting..." : `Submit ₹${plan.price_inr} Payment`}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}
