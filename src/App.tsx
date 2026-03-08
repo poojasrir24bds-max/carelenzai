@@ -20,6 +20,7 @@ import DentalHistory from "./pages/dental/DentalHistory";
 import DentalStudy from "./pages/dental/DentalStudy";
 import DentalChat from "./pages/dental/DentalChat";
 import NotFound from "./pages/NotFound";
+import VideoCall from "./pages/VideoCall";
 
 const queryClient = new QueryClient();
 
