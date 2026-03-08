@@ -346,6 +346,7 @@ const PatientDashboard = () => {
                   </CardContent>
                 </Card>
               ))}
+            </div>
           </div>
         )}
       </div>
