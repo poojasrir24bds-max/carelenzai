@@ -70,7 +70,7 @@ const DoctorSubscription = () => {
     const { error } = await supabase.from("user_subscriptions").insert({
       user_id: user.id,
       plan_id: plan.id,
-      status: "pending",
+      status: "active",
       starts_at: now.toISOString(),
       expires_at: null,
     } as any);
@@ -94,7 +94,7 @@ const DoctorSubscription = () => {
     const { error } = await supabase.from("user_subscriptions").insert({
       user_id: user.id,
       plan_id: plan.id,
-      status: "pending",
+      status: "active",
       upi_transaction_id: txnId.trim(),
       starts_at: now.toISOString(),
       expires_at: null,
