@@ -161,24 +161,37 @@ const ScanResults = () => {
     return chunks.length ? chunks : [text.substring(0, maxLen)];
   };
 
-  const playGoogleTTS = async (text: string, langCode: string) => {
+  const playTamilTTS = async (text: string) => {
     handleStopAudio();
     setIsSpeaking(true);
     const chunks = splitTextForTTS(text);
     try {
       for (const chunk of chunks) {
-        const encoded = encodeURIComponent(chunk);
-        const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encoded}&tl=${langCode}&client=tw-ob`;
-        const audio = new Audio(url);
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tts-tamil`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+              Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            },
+            body: JSON.stringify({ text: chunk }),
+          }
+        );
+        if (!response.ok) throw new Error("TTS request failed");
+        const blob = await response.blob();
+        const audioUrl = URL.createObjectURL(blob);
+        const audio = new Audio(audioUrl);
         audioRef.current = audio;
         await new Promise<void>((resolve, reject) => {
-          audio.onended = () => resolve();
-          audio.onerror = () => reject(new Error("Audio playback failed"));
+          audio.onended = () => { URL.revokeObjectURL(audioUrl); resolve(); };
+          audio.onerror = () => { URL.revokeObjectURL(audioUrl); reject(new Error("Audio playback failed")); };
           audio.play().catch(reject);
         });
       }
     } catch (e) {
-      console.error("Google TTS error:", e);
+      console.error("Tamil TTS error:", e);
     }
     setIsSpeaking(false);
     audioRef.current = null;
@@ -197,7 +210,7 @@ const ScanResults = () => {
         handleStopAudio();
         return;
       }
-      playGoogleTTS(text, "ta");
+      playTamilTTS(text);
       return;
     }
 
