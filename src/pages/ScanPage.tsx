@@ -4,28 +4,80 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Upload, Camera, Image, Lightbulb, Ruler, Focus } from "lucide-react";
 import logo from "@/assets/logo.png";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
 
 const scanAreas = ["Skin", "Hair", "Eyes", "Nails", "Lips", "Scalp"];
 
 const ScanPage = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [selectedArea, setSelectedArea] = useState("Skin");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [scanning, setScanning] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setSelectedFile(file);
       setPreviewUrl(URL.createObjectURL(file));
     }
   };
 
-  const handleScan = () => {
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        resolve(result.split(",")[1]); // Remove data:image/...;base64, prefix
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleScan = async () => {
+    if (!selectedFile || !user) return;
     setScanning(true);
-    setTimeout(() => {
-      navigate("/patient/results");
-    }, 2500);
+
+    try {
+      const imageBase64 = await fileToBase64(selectedFile);
+
+      const { data, error } = await supabase.functions.invoke("ai-diagnose", {
+        body: { imageBase64, area: selectedArea.toLowerCase() },
+      });
+
+      if (error) throw error;
+
+      // Save scan to database
+      const { data: scanData, error: scanError } = await supabase.from("scans").insert({
+        user_id: user.id,
+        area: selectedArea.toLowerCase(),
+        condition: data.condition,
+        definition: data.definition,
+        causes: data.causes,
+        severity: data.severity,
+        confidence: data.confidence,
+        guidance: data.guidance,
+      }).select().single();
+
+      if (scanError) throw scanError;
+
+      // Navigate with results
+      navigate("/patient/results", { state: { result: data, scanId: scanData.id } });
+    } catch (err: any) {
+      console.error("Scan error:", err);
+      toast({
+        title: "Scan failed",
+        description: err.message || "Failed to analyze image. Please try again.",
+        variant: "destructive",
+      });
+      setScanning(false);
+    }
   };
 
   return (
@@ -74,12 +126,13 @@ const ScanPage = () => {
                       <div className="bg-card/90 rounded-xl px-5 py-3 text-center">
                         <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2" />
                         <p className="font-semibold text-sm">Analyzing {selectedArea}...</p>
+                        <p className="text-xs text-muted-foreground mt-1">AI is processing your image</p>
                       </div>
                     </div>
                   </div>
                 )}
                 {!scanning && (
-                  <button onClick={() => setPreviewUrl(null)} className="absolute top-2 right-2 bg-card/80 rounded-full p-1.5">
+                  <button onClick={() => { setPreviewUrl(null); setSelectedFile(null); }} className="absolute top-2 right-2 bg-card/80 rounded-full p-1.5">
                     ✕
                   </button>
                 )}
@@ -113,6 +166,13 @@ const ScanPage = () => {
             Analyze {selectedArea}
           </Button>
         )}
+
+        {/* Disclaimer */}
+        <div className="bg-warning/10 border border-warning/30 rounded-xl p-3">
+          <p className="text-xs text-foreground">
+            ⚠️ <strong>AI Screening Only:</strong> This is an AI screening tool. No prescription is generated automatically; only a verified doctor can provide medical advice and prescriptions.
+          </p>
+        </div>
 
         {/* Tips */}
         <Card className="bg-accent/50 border-accent shadow-card">

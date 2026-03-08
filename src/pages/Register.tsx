@@ -8,19 +8,48 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 const Register = () => {
   const { role } = useParams<{ role: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signUp } = useAuth();
   const [form, setForm] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
 
   const update = (key: string, value: string) => setForm((prev) => ({ ...prev, [key]: value }));
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+
+    const { error } = await signUp(
+      form.email || "",
+      form.password || "",
+      {
+        full_name: form.name,
+        age: form.age,
+        sex: form.sex,
+        license: form.license,
+        doctorId: form.doctorId,
+        specialization: form.specialization,
+        hospital: form.hospital,
+      },
+      role || "patient"
+    );
+
+    setLoading(false);
+
+    if (error) {
+      toast({ title: "Registration failed", description: error.message, variant: "destructive" });
+      return;
+    }
+
     if (role === "doctor") {
       toast({ title: "Registration submitted!", description: "Your account is pending admin approval." });
+    } else if (role === "admin") {
+      toast({ title: "Admin account created!", description: "Welcome to HealthScan AI admin panel." });
     } else {
       toast({ title: "Account created!", description: "Welcome to HealthScan AI!" });
     }
@@ -42,8 +71,12 @@ const Register = () => {
       <div className="flex-1 flex items-center justify-center p-4">
         <Card className="w-full max-w-md shadow-elevated border-border">
           <CardHeader className="text-center pb-2">
-            <CardTitle className="font-display text-2xl">{role === "doctor" ? "Doctor" : role === "admin" ? "Admin" : "Patient"} Registration</CardTitle>
-            <CardDescription>{role === "doctor" ? "Submit for admin approval" : "Create your account"}</CardDescription>
+            <CardTitle className="font-display text-2xl">
+              {role === "doctor" ? "Doctor" : role === "admin" ? "Admin" : "Patient"} Registration
+            </CardTitle>
+            <CardDescription>
+              {role === "doctor" ? "Submit for admin approval" : role === "admin" ? "Limited to authorized emails only" : "Create your account"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleRegister} className="space-y-3">
@@ -57,7 +90,7 @@ const Register = () => {
               </div>
               <div className="space-y-1.5">
                 <Label>Password</Label>
-                <Input type="password" placeholder="••••••••" onChange={(e) => update("password", e.target.value)} required />
+                <Input type="password" placeholder="••••••••" onChange={(e) => update("password", e.target.value)} required minLength={6} />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
@@ -106,8 +139,17 @@ const Register = () => {
                 </>
               )}
 
-              <Button type="submit" className="w-full mt-2">
-                {role === "doctor" ? "Submit for Approval" : "Create Account"}
+              {role === "admin" && (
+                <div className="bg-warning/10 border border-warning/30 rounded-xl p-3">
+                  <p className="text-xs text-warning-foreground">
+                    ⚠️ Admin registration is restricted to 5 pre-authorized email addresses only.
+                    Contact the system administrator if you need access.
+                  </p>
+                </div>
+              )}
+
+              <Button type="submit" className="w-full mt-2" disabled={loading}>
+                {loading ? "Processing..." : role === "doctor" ? "Submit for Approval" : "Create Account"}
               </Button>
             </form>
             <p className="text-center text-sm text-muted-foreground mt-4">

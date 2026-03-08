@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { ArrowLeft, Mail, Lock } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 const roleTitles: Record<string, string> = {
   patient: "Patient",
@@ -18,12 +19,22 @@ const Login = () => {
   const { role } = useParams<{ role: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signIn } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock login - redirect to role dashboard
+    setLoading(true);
+    const { error } = await signIn(email, password);
+    setLoading(false);
+
+    if (error) {
+      toast({ title: "Login failed", description: error.message, variant: "destructive" });
+      return;
+    }
+
     toast({ title: "Logged in successfully!", description: `Welcome back, ${roleTitles[role || "patient"]}!` });
     if (role === "patient") navigate("/patient");
     else if (role === "doctor") navigate("/doctor");
@@ -64,7 +75,9 @@ const Login = () => {
                   <Input id="password" type="password" placeholder="••••••••" className="pl-10" value={password} onChange={(e) => setPassword(e.target.value)} required />
                 </div>
               </div>
-              <Button type="submit" className="w-full">Sign In</Button>
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Signing in..." : "Sign In"}
+              </Button>
             </form>
             <p className="text-center text-sm text-muted-foreground mt-4">
               Don't have an account?{" "}

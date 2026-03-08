@@ -1,22 +1,21 @@
 import { useNavigate } from "react-router-dom";
-import { ScanLine, History, Calendar, User, LogOut, Stethoscope, Bell } from "lucide-react";
+import { ScanLine, History, Calendar, User, LogOut, Stethoscope, Bell, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
 import logo from "@/assets/logo.png";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/lib/supabase";
+import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
 
-const scanAreas = [
+const scanAreaItems = [
   { id: "skin", label: "Skin", emoji: "🖐️" },
   { id: "hair", label: "Hair", emoji: "💇" },
   { id: "eyes", label: "Eyes", emoji: "👁️" },
   { id: "nails", label: "Nails", emoji: "💅" },
   { id: "lips", label: "Lips", emoji: "👄" },
   { id: "scalp", label: "Scalp", emoji: "🧠" },
-];
-
-const recentScans = [
-  { area: "Skin", date: "Mar 5, 2026", severity: "low" as const, condition: "Mild dryness detected" },
-  { area: "Hair", date: "Mar 3, 2026", severity: "medium" as const, condition: "Thinning pattern noted" },
-  { area: "Nails", date: "Feb 28, 2026", severity: "high" as const, condition: "Discoloration found" },
 ];
 
 const severityColors = {
@@ -29,6 +28,61 @@ const severityLabels = { low: "Low Risk", medium: "Medium Risk", high: "High Ris
 
 const PatientDashboard = () => {
   const navigate = useNavigate();
+  const { user, profile, signOut } = useAuth();
+  const { toast } = useToast();
+  const [recentScans, setRecentScans] = useState<any[]>([]);
+  const [doubtText, setDoubtText] = useState("");
+  const [submittingDoubt, setSubmittingDoubt] = useState(false);
+  const [myDoubts, setMyDoubts] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (user) {
+      fetchScans();
+      fetchDoubts();
+    }
+  }, [user]);
+
+  const fetchScans = async () => {
+    const { data } = await supabase
+      .from("scans")
+      .select("*")
+      .eq("user_id", user!.id)
+      .order("created_at", { ascending: false })
+      .limit(5);
+    setRecentScans(data || []);
+  };
+
+  const fetchDoubts = async () => {
+    const { data } = await supabase
+      .from("patient_doubts")
+      .select("*")
+      .eq("patient_id", user!.id)
+      .order("created_at", { ascending: false })
+      .limit(5);
+    setMyDoubts(data || []);
+  };
+
+  const handleSubmitDoubt = async () => {
+    if (!doubtText.trim() || !user) return;
+    setSubmittingDoubt(true);
+    const { error } = await supabase.from("patient_doubts").insert({
+      patient_id: user.id,
+      question: doubtText.trim(),
+    });
+    setSubmittingDoubt(false);
+    if (error) {
+      toast({ title: "Failed", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Question submitted!" });
+      setDoubtText("");
+      fetchDoubts();
+    }
+  };
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -40,9 +94,8 @@ const PatientDashboard = () => {
         <div className="flex items-center gap-2">
           <button className="text-primary-foreground relative">
             <Bell className="h-5 w-5" />
-            <span className="absolute -top-1 -right-1 h-2 w-2 bg-destructive rounded-full" />
           </button>
-          <button onClick={() => navigate("/")} className="text-primary-foreground">
+          <button onClick={handleLogout} className="text-primary-foreground">
             <LogOut className="h-5 w-5" />
           </button>
         </div>
@@ -51,7 +104,7 @@ const PatientDashboard = () => {
       <div className="flex-1 container py-6 space-y-6">
         {/* Welcome */}
         <div>
-          <h1 className="font-display text-2xl font-bold">Hello, Patient 👋</h1>
+          <h1 className="font-display text-2xl font-bold">Hello, {profile?.full_name || "Patient"} 👋</h1>
           <p className="text-muted-foreground text-sm">How are you feeling today?</p>
         </div>
 
@@ -72,7 +125,7 @@ const PatientDashboard = () => {
         <div>
           <h2 className="font-display font-semibold text-lg mb-3">Scan Area</h2>
           <div className="grid grid-cols-3 gap-3">
-            {scanAreas.map((area) => (
+            {scanAreaItems.map((area) => (
               <button
                 key={area.id}
                 onClick={() => navigate("/patient/scan")}
@@ -85,6 +138,42 @@ const PatientDashboard = () => {
           </div>
         </div>
 
+        {/* Patient Doubt Box */}
+        <Card className="border-border shadow-card">
+          <CardContent className="p-5">
+            <h3 className="font-display font-semibold mb-2 flex items-center gap-2">
+              <MessageSquare className="h-5 w-5 text-primary" /> Ask a Doctor
+            </h3>
+            <p className="text-xs text-muted-foreground mb-3">Type your health question. A doctor will review and respond.</p>
+            <Textarea
+              placeholder="e.g., Why does my skin feel itchy after sun exposure?"
+              value={doubtText}
+              onChange={(e) => setDoubtText(e.target.value)}
+              rows={3}
+              className="mb-3"
+            />
+            <Button onClick={handleSubmitDoubt} disabled={!doubtText.trim() || submittingDoubt} className="w-full rounded-xl" size="sm">
+              {submittingDoubt ? "Submitting..." : "Submit Question"}
+            </Button>
+
+            {myDoubts.length > 0 && (
+              <div className="mt-4 space-y-2">
+                <p className="text-xs font-medium text-muted-foreground">Your recent questions:</p>
+                {myDoubts.map((d) => (
+                  <div key={d.id} className="bg-accent/30 rounded-lg p-2.5">
+                    <p className="text-xs font-medium">{d.question}</p>
+                    {d.answer ? (
+                      <p className="text-xs text-success mt-1">✓ {d.answer}</p>
+                    ) : (
+                      <p className="text-xs text-muted-foreground mt-1">⏳ Awaiting doctor response</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Recent Scans */}
         <div>
           <div className="flex items-center justify-between mb-3">
@@ -93,22 +182,50 @@ const PatientDashboard = () => {
               <History className="h-4 w-4" /> View All
             </button>
           </div>
-          <div className="space-y-3">
-            {recentScans.map((scan, i) => (
-              <Card key={i} className="shadow-card border-border cursor-pointer hover:shadow-elevated transition-all" onClick={() => navigate("/patient/results")}>
-                <CardContent className="p-4 flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold text-sm">{scan.area} Scan</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{scan.date}</p>
-                    <p className="text-xs text-muted-foreground">{scan.condition}</p>
-                  </div>
-                  <span className={`${severityColors[scan.severity]} text-xs font-semibold px-3 py-1 rounded-full`}>
-                    {severityLabels[scan.severity]}
-                  </span>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          {recentScans.length === 0 ? (
+            <Card className="shadow-card border-border">
+              <CardContent className="p-5 text-center">
+                <p className="text-sm text-muted-foreground">No previous scans found. Start your first scan above!</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {recentScans.map((scan) => (
+                <Card
+                  key={scan.id}
+                  className="shadow-card border-border cursor-pointer hover:shadow-elevated transition-all"
+                  onClick={() => navigate("/patient/results", {
+                    state: {
+                      result: {
+                        condition: scan.condition,
+                        definition: scan.definition,
+                        causes: scan.causes,
+                        severity: scan.severity,
+                        confidence: scan.confidence,
+                        guidance: scan.guidance,
+                      },
+                      scanId: scan.id,
+                    },
+                  })}
+                >
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold text-sm capitalize">{scan.area} Scan</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {new Date(scan.created_at).toLocaleDateString()}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{scan.condition}</p>
+                    </div>
+                    {scan.severity && (
+                      <span className={`${severityColors[scan.severity as keyof typeof severityColors]} text-xs font-semibold px-3 py-1 rounded-full`}>
+                        {severityLabels[scan.severity as keyof typeof severityLabels]}
+                      </span>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Quick Actions */}
