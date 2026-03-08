@@ -30,6 +30,7 @@ const Register = () => {
   const [idPreview, setIdPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const idFileInputRef = useRef<HTMLInputElement>(null);
+  const [medicalConditions, setMedicalConditions] = useState<Record<string, boolean>>({});
 
   // OTP state
   const [otpSent, setOtpSent] = useState(false);
