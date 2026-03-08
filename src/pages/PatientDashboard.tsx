@@ -41,7 +41,10 @@ const PatientDashboard = () => {
   const [submittingDoubt, setSubmittingDoubt] = useState(false);
   const [myDoubts, setMyDoubts] = useState<any[]>([]);
   const [activeConsultations, setActiveConsultations] = useState<any[]>([]);
+  const [completedConsultations, setCompletedConsultations] = useState<any[]>([]);
   const [availableDoctors, setAvailableDoctors] = useState<any[]>([]);
+  const [patientRatings, setPatientRatings] = useState<Record<string, any>>({});
+  const [doctorAvgRatings, setDoctorAvgRatings] = useState<Record<string, { avg: number; count: number }>>({});
 
   const handleScanClick = (area?: string) => {
     if (!hasActiveSubscription) {
