@@ -67,6 +67,45 @@ const PatientDashboard = () => {
     setMyDoubts(data || []);
   };
 
+  const fetchActiveConsultations = async () => {
+    const { data } = await supabase
+      .from("consultations")
+      .select("*")
+      .eq("patient_id", user!.id)
+      .in("status", ["pending", "accepted"])
+      .order("created_at", { ascending: false });
+    setActiveConsultations(data || []);
+  };
+
+  const handleRequestConsultation = async () => {
+    if (!user) return;
+    // Find a verified doctor to assign
+    const { data: doctors } = await supabase
+      .from("doctor_profiles")
+      .select("user_id")
+      .eq("is_verified", true)
+      .eq("is_active", true)
+      .limit(1);
+
+    if (!doctors || doctors.length === 0) {
+      toast({ title: t("patient.noDoctorAvailable"), variant: "destructive" });
+      return;
+    }
+
+    const { error } = await supabase.from("consultations").insert({
+      patient_id: user.id,
+      doctor_id: doctors[0].user_id,
+      status: "pending",
+    });
+
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: t("patient.consultationRequested") });
+      fetchActiveConsultations();
+    }
+  };
+
   const handleSubmitDoubt = async () => {
     if (!doubtText.trim() || !user) return;
     setSubmittingDoubt(true);
