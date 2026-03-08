@@ -338,6 +338,7 @@ const AdminDashboard = () => {
                         <div>
                           <p className="font-semibold text-sm">{doc.profiles?.full_name || "Unknown"}</p>
                           <p className="text-xs text-muted-foreground">📧 {doc.profiles?.email}</p>
+                          {doc.profiles?.phone && <p className="text-xs text-muted-foreground">📱 {doc.profiles.phone}</p>}
                         </div>
                       </div>
                       <div className="flex flex-col items-end gap-1">
@@ -391,7 +392,8 @@ const AdminDashboard = () => {
                           </div>
                           <div>
                             <p className="font-semibold text-sm">{pat.full_name}</p>
-                            <p className="text-xs text-muted-foreground">📧 {pat.email}</p>
+                         <p className="text-xs text-muted-foreground">📧 {pat.email}</p>
+                         {pat.phone && <p className="text-xs text-muted-foreground">📱 {pat.phone} {pat.phone_verified ? '✅' : ''}</p>}
                           </div>
                         </div>
                         <div className="flex flex-col items-end gap-1">
@@ -443,6 +445,7 @@ const AdminDashboard = () => {
                       </span>
                     </div>
                     <p className="text-xs text-muted-foreground">📧 {u.email}</p>
+                    {u.phone && <p className="text-xs text-muted-foreground">📱 {u.phone}</p>}
                     <div className="flex gap-4 mt-1.5">
                       {u.age && <p className="text-xs text-muted-foreground">🎂 Age: {u.age}</p>}
                       {u.sex && <p className="text-xs text-muted-foreground">⚧ {u.sex}</p>}
@@ -484,6 +487,9 @@ const AdminDashboard = () => {
               <div className="bg-accent/30 rounded-xl p-4 space-y-2">
                 <h4 className="font-semibold">{selectedDoctor.profiles?.full_name}</h4>
                 <p className="text-sm text-muted-foreground">📧 {selectedDoctor.profiles?.email}</p>
+                {selectedDoctor.profiles?.phone && (
+                  <p className="text-sm text-muted-foreground">📱 {selectedDoctor.profiles.phone} {selectedDoctor.profiles.phone_verified ? '✅' : '❌'}</p>
+                )}
                 <p className="text-sm text-muted-foreground">🏥 {selectedDoctor.hospital_name}</p>
                 <p className="text-sm text-muted-foreground">🩺 {selectedDoctor.specialization}</p>
                 <p className="text-sm text-muted-foreground">📋 License: <span className="font-mono font-semibold">{selectedDoctor.medical_license}</span></p>
@@ -582,6 +588,9 @@ const AdminDashboard = () => {
               <div className="bg-accent/30 rounded-xl p-4 space-y-2">
                 <h4 className="font-semibold">{selectedPatient.full_name}</h4>
                 <p className="text-sm text-muted-foreground">📧 {selectedPatient.email}</p>
+                {selectedPatient.phone && (
+                  <p className="text-sm text-muted-foreground">📱 {selectedPatient.phone} {selectedPatient.phone_verified ? '✅' : '❌'}</p>
+                )}
                 {selectedPatient.age && <p className="text-sm text-muted-foreground">🎂 Age: {selectedPatient.age}</p>}
                 {selectedPatient.aadhaar_number && (
                   <p className="text-sm text-muted-foreground">🪪 Aadhaar: <span className="font-mono font-semibold">{selectedPatient.aadhaar_number}</span></p>

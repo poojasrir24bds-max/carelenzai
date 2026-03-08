@@ -49,9 +49,9 @@ const DoctorDashboard = () => {
     // Fetch patient names separately
     if (data && data.length > 0) {
       const patientIds = [...new Set(data.map(c => c.patient_id))];
-      const { data: profiles } = await supabase.from("profiles").select("user_id, full_name").in("user_id", patientIds);
-      const profileMap = Object.fromEntries((profiles || []).map(p => [p.user_id, p.full_name]));
-      setConsultations(data.map(c => ({ ...c, patient_name: profileMap[c.patient_id] || "Patient" })));
+      const { data: profiles } = await supabase.from("profiles").select("user_id, full_name, phone, phone_verified").in("user_id", patientIds);
+      const profileMap = Object.fromEntries((profiles || []).map(p => [p.user_id, p]));
+      setConsultations(data.map(c => ({ ...c, patient_name: profileMap[c.patient_id]?.full_name || "Patient", patient_phone: profileMap[c.patient_id]?.phone })));
     } else {
       setConsultations([]);
     }
@@ -218,6 +218,9 @@ const DoctorDashboard = () => {
                             {c.scans?.area && `${c.scans.area} Scan • `}
                             {new Date(c.created_at).toLocaleDateString()}
                           </p>
+                          {c.patient_phone && (
+                            <p className="text-xs text-muted-foreground">📱 {c.patient_phone}</p>
+                          )}
                         </div>
                       </div>
                       {c.scans?.severity && (
@@ -330,6 +333,7 @@ const DoctorDashboard = () => {
               <CardContent className="p-5 space-y-3">
                 {[
                   ["Name", profile?.full_name || "-"],
+                  ["Mobile", profile?.phone ? `${profile.phone} ${profile.phone_verified ? '✅' : '❌ Not verified'}` : "-"],
                   ["Specialization", doctorProfile?.specialization || "-"],
                   ["License", doctorProfile?.medical_license || "-"],
                   ["Hospital", doctorProfile?.hospital_name || "-"],

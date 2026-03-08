@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Eye, EyeOff, Upload, FileCheck } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Upload, FileCheck, Phone, CheckCircle, Loader2 } from "lucide-react";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import logo from "@/assets/logo.png";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -28,6 +29,13 @@ const Register = () => {
   const [idPreview, setIdPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const idFileInputRef = useRef<HTMLInputElement>(null);
+
+  // OTP state
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [otpValue, setOtpValue] = useState("");
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
 
   const update = (key: string, value: string) => setForm((prev) => ({ ...prev, [key]: value }));
 
@@ -52,9 +60,69 @@ const Register = () => {
 
   const isValidAadhaar = (num: string) => /^\d{12}$/.test(num.replace(/\s/g, ''));
 
+  const handleSendOtp = async () => {
+    const phone = form.phone?.replace(/[\s-]/g, "");
+    if (!phone || phone.length < 10) {
+      toast({ title: "Invalid phone", description: "Enter a valid mobile number (e.g., +91XXXXXXXXXX)", variant: "destructive" });
+      return;
+    }
+
+    setSendingOtp(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-otp", {
+        body: { phone },
+      });
+
+      if (error) throw error;
+
+      if (data?.success) {
+        setOtpSent(true);
+        toast({ title: "OTP Sent! 📱", description: data.debug_otp ? `Test OTP: ${data.debug_otp}` : "Check your phone for the OTP" });
+      } else {
+        throw new Error(data?.error || "Failed to send OTP");
+      }
+    } catch (err: any) {
+      toast({ title: "Failed to send OTP", description: err.message, variant: "destructive" });
+    }
+    setSendingOtp(false);
+  };
+
+  const handleVerifyOtp = async () => {
+    if (otpValue.length !== 6) {
+      toast({ title: "Enter 6-digit OTP", variant: "destructive" });
+      return;
+    }
+
+    setVerifyingOtp(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-otp", {
+        body: { phone: form.phone?.replace(/[\s-]/g, ""), otp: otpValue },
+      });
+
+      if (error) throw error;
+
+      if (data?.verified) {
+        setOtpVerified(true);
+        toast({ title: "✅ Phone verified!" });
+      } else {
+        toast({ title: "Invalid OTP", description: data?.error || "Please try again", variant: "destructive" });
+      }
+    } catch (err: any) {
+      toast({ title: "Verification failed", description: err.message, variant: "destructive" });
+    }
+    setVerifyingOtp(false);
+  };
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
+    // Require phone verification
+    if (!otpVerified) {
+      toast({ title: "Phone not verified", description: "Please verify your mobile number with OTP", variant: "destructive" });
+      setLoading(false);
+      return;
+    }
 
     // For doctors, require license document
     if (role === "doctor" && !licenseFile) {
@@ -82,6 +150,7 @@ const Register = () => {
         specialization: form.specialization,
         hospital: form.hospital,
         aadhaar: form.aadhaar,
+        phone: form.phone?.replace(/[\s-]/g, ""),
       },
       role || "patient"
     );
@@ -106,20 +175,13 @@ const Register = () => {
 
         if (uploadError) {
           console.error("License upload error:", uploadError);
-          toast({ title: "License uploaded partially", description: "Registration successful but document upload failed. You can re-upload later.", variant: "destructive" });
+          toast({ title: "License uploaded partially", description: "Registration successful but document upload failed.", variant: "destructive" });
         } else {
-          // Update doctor profile with document URL
-          const { data: urlData } = supabase.storage
-            .from("license-documents")
-            .getPublicUrl(filePath);
-
-          // Try to update doctor profile (may not exist yet due to trigger timing)
           setTimeout(async () => {
             await supabase.from("doctor_profiles").update({
               license_document_url: filePath,
             }).eq("user_id", signUpData.user.id);
 
-            // Trigger license verification
             await supabase.functions.invoke("verify-license", {
               body: {
                 licenseNumber: form.license,
@@ -144,9 +206,7 @@ const Register = () => {
           .from("id-documents")
           .upload(filePath, idFile, { upsert: true });
 
-        if (uploadError) {
-          console.error("ID upload error:", uploadError);
-        } else {
+        if (!uploadError) {
           setTimeout(async () => {
             await supabase.from("profiles").update({
               aadhaar_number: form.aadhaar?.replace(/\s/g, ''),
@@ -158,6 +218,16 @@ const Register = () => {
       } catch (err) {
         console.error("ID upload error:", err);
       }
+    }
+
+    // Update phone in profile
+    if (signUpData?.user && form.phone) {
+      setTimeout(async () => {
+        await supabase.from("profiles").update({
+          phone: form.phone.replace(/[\s-]/g, ""),
+          phone_verified: otpVerified,
+        }).eq("user_id", signUpData.user.id);
+      }, 2000);
     }
 
     setLoading(false);
@@ -207,6 +277,73 @@ const Register = () => {
                   </button>
                 </div>
               </div>
+
+              {/* Mobile Number + OTP */}
+              <div className="space-y-1.5">
+                <Label className="flex items-center gap-2">
+                  <Phone className="h-4 w-4" /> Mobile Number *
+                </Label>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="+91XXXXXXXXXX"
+                    onChange={(e) => {
+                      update("phone", e.target.value);
+                      setOtpSent(false);
+                      setOtpVerified(false);
+                      setOtpValue("");
+                    }}
+                    disabled={otpVerified}
+                    className="flex-1"
+                    required
+                  />
+                  {!otpVerified ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSendOtp}
+                      disabled={sendingOtp || !form.phone}
+                      className="whitespace-nowrap"
+                    >
+                      {sendingOtp ? <Loader2 className="h-4 w-4 animate-spin" /> : otpSent ? "Resend" : "Send OTP"}
+                    </Button>
+                  ) : (
+                    <div className="flex items-center gap-1 text-success px-2">
+                      <CheckCircle className="h-4 w-4" />
+                      <span className="text-xs font-medium">Verified</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* OTP Input */}
+              {otpSent && !otpVerified && (
+                <div className="space-y-2 bg-accent/30 rounded-xl p-3">
+                  <Label className="text-sm">Enter 6-digit OTP</Label>
+                  <div className="flex items-center gap-3">
+                    <InputOTP maxLength={6} value={otpValue} onChange={setOtpValue}>
+                      <InputOTPGroup>
+                        <InputOTPSlot index={0} />
+                        <InputOTPSlot index={1} />
+                        <InputOTPSlot index={2} />
+                        <InputOTPSlot index={3} />
+                        <InputOTPSlot index={4} />
+                        <InputOTPSlot index={5} />
+                      </InputOTPGroup>
+                    </InputOTP>
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={handleVerifyOtp}
+                      disabled={verifyingOtp || otpValue.length !== 6}
+                    >
+                      {verifyingOtp ? <Loader2 className="h-4 w-4 animate-spin" /> : "Verify"}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">OTP expires in 5 minutes</p>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label>{t("register.age")}</Label>
