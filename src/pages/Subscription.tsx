@@ -85,7 +85,7 @@ const Subscription = () => {
     const { error } = await supabase.from("user_subscriptions" as any).insert({
       user_id: user.id,
       plan_id: selectedPlan.id,
-      status: "active",
+      status: "pending",
       upi_transaction_id: txnId.trim(),
       starts_at: now.toISOString(),
       expires_at: expiresAt.toISOString(),
@@ -97,7 +97,7 @@ const Subscription = () => {
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: t("sub.submitted"), description: t("sub.submittedDesc") });
+      toast({ title: "Payment Submitted!", description: "Your subscription will be activated after admin verifies your payment." });
       navigate("/patient");
     }
   };
@@ -112,7 +112,7 @@ const Subscription = () => {
     const { error } = await supabase.from("user_subscriptions" as any).insert({
       user_id: user.id,
       plan_id: selectedPlan.id,
-      status: "active",
+      status: "pending",
       upi_transaction_id: txnId.trim(),
       starts_at: now.toISOString(),
       expires_at: expiresAt.toISOString(),
@@ -121,7 +121,7 @@ const Subscription = () => {
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: t("sub.submitted"), description: t("sub.submittedDesc") });
+      toast({ title: "Payment Submitted!", description: "Your subscription will be activated after admin verifies your payment." });
       setSelectedPlan(null);
       setTxnId("");
       setShowTxnInput(false);
