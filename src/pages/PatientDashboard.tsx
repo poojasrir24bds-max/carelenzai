@@ -192,15 +192,25 @@ const PatientDashboard = () => {
       return;
     }
 
-    const { error } = await supabase.from("consultations").insert({
+    const { data: insertedConsultation, error } = await supabase.from("consultations").insert({
       patient_id: user.id,
       doctor_id: doctors[0].user_id,
       status: "pending",
-    });
+    }).select().single();
 
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
+      // Notify the doctor about the new booking
+      if (insertedConsultation) {
+        await supabase.from("notifications").insert({
+          user_id: doctors[0].user_id,
+          title: "📋 New Consultation Request",
+          message: `${profile?.full_name || "A patient"} has booked a consultation with you.`,
+          type: "consultation_booked",
+          consultation_id: insertedConsultation.id,
+        });
+      }
       toast({ title: t("patient.consultationRequested") });
       fetchActiveConsultations();
     }
