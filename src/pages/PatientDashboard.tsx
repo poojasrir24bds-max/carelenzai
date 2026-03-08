@@ -298,6 +298,41 @@ const PatientDashboard = () => {
           <MedicalHistoryForm userId={user.id} />
         )}
 
+        {/* Available Doctors */}
+        <div>
+          <h2 className="font-display font-semibold text-lg mb-3">{t("patient.availableDoctors")}</h2>
+          {availableDoctors.length === 0 ? (
+            <Card className="shadow-card border-border">
+              <CardContent className="p-5 text-center">
+                <p className="text-sm text-muted-foreground">{t("patient.noDoctorsYet")}</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {availableDoctors.map((doc: any) => (
+                <Card key={doc.id} className="shadow-card border-border">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-primary/10 rounded-full p-2.5">
+                        <Stethoscope className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold text-sm">{doc.profile_name || "Doctor"}</p>
+                        <p className="text-xs text-muted-foreground capitalize">🩺 {doc.specialization}</p>
+                        <p className="text-xs text-muted-foreground">🏥 {doc.hospital_name}</p>
+                        {doc.address && (
+                          <p className="text-xs text-muted-foreground">📍 {doc.address}</p>
+                        )}
+                      </div>
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-success/20 text-success">✅ {t("patient.verified")}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+
         <div className="grid grid-cols-3 gap-3 pb-4">
           <button
             onClick={() => navigate("/patient/scan")}
