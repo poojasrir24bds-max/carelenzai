@@ -469,6 +469,10 @@ const AdminDashboard = () => {
                       <p className="text-xs text-muted-foreground">🏥 {doc.hospital_name}</p>
                       <p className="text-xs text-muted-foreground">🩺 {doc.specialization} • License: {doc.medical_license}</p>
                       <p className="text-xs text-muted-foreground">🆔 Doctor ID: {doc.doctor_id}</p>
+                      {doc.address && <p className="text-xs text-muted-foreground">📍 {doc.address}</p>}
+                      {doc.profiles?.phone && <p className="text-xs text-muted-foreground">📱 {doc.profiles.phone}</p>}
+                      <p className="text-xs text-muted-foreground">📅 Registered: {new Date(doc.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</p>
+                      {doc.verified_at && <p className="text-xs text-success">✅ Verified on: {new Date(doc.verified_at).toLocaleDateString("en-IN")}</p>}
                       {doc.license_document_url && (
                         <p className="text-xs text-success flex items-center gap-1">
                           <FileCheck className="h-3 w-3" /> License document uploaded
