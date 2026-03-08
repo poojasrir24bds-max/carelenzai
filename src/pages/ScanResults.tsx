@@ -181,9 +181,15 @@ const ScanResults = () => {
             size="sm"
             className="flex-1 rounded-xl"
             onClick={() => handlePlayAudio("ta")}
+            disabled={translating}
           >
-            {isSpeaking ? <Pause className="h-4 w-4 mr-2" /> : <Volume2 className="h-4 w-4 mr-2" />}
-            {isSpeaking ? "இடைநிறுத்து" : "தமிழ்"}
+            {translating ? (
+              <><div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin mr-2" /> மொழிபெயர்...</>
+            ) : isSpeaking ? (
+              <><Pause className="h-4 w-4 mr-2" /> இடைநிறுத்து</>
+            ) : (
+              <><Volume2 className="h-4 w-4 mr-2" /> தமிழ்</>
+            )}
           </Button>
           {(isSpeaking || window.speechSynthesis?.speaking) && (
             <Button
