@@ -42,6 +42,18 @@ const DentalResults = () => {
   const [translating, setTranslating] = useState(false);
   const [translatedDental, setTranslatedDental] = useState<TranslatedDentalResult | null>(null);
   const [translatedBody, setTranslatedBody] = useState<TranslatedBodyResult | null>(null);
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+
+  // Preload voices
+  useState(() => {
+    const loadVoices = () => {
+      const v = window.speechSynthesis?.getVoices() || [];
+      if (v.length > 0) setVoices(v);
+    };
+    loadVoices();
+    window.speechSynthesis?.addEventListener("voiceschanged", loadVoices);
+    return () => window.speechSynthesis?.removeEventListener("voiceschanged", loadVoices);
+  });
 
   if (!result) {
     return (
