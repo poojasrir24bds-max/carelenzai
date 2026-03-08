@@ -330,6 +330,7 @@ const DoctorDashboard = () => {
               <CardContent className="p-5 space-y-3">
                 {[
                   ["Name", profile?.full_name || "-"],
+                  ["Mobile", profile?.phone ? `${profile.phone} ${profile.phone_verified ? '✅' : '❌ Not verified'}` : "-"],
                   ["Specialization", doctorProfile?.specialization || "-"],
                   ["License", doctorProfile?.medical_license || "-"],
                   ["Hospital", doctorProfile?.hospital_name || "-"],

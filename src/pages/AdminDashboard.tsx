@@ -445,6 +445,7 @@ const AdminDashboard = () => {
                       </span>
                     </div>
                     <p className="text-xs text-muted-foreground">📧 {u.email}</p>
+                    {u.phone && <p className="text-xs text-muted-foreground">📱 {u.phone}</p>}
                     <div className="flex gap-4 mt-1.5">
                       {u.age && <p className="text-xs text-muted-foreground">🎂 Age: {u.age}</p>}
                       {u.sex && <p className="text-xs text-muted-foreground">⚧ {u.sex}</p>}
