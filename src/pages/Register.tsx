@@ -231,7 +231,12 @@ const Register = () => {
                 <Input placeholder="John Doe" onChange={(e) => update("name", e.target.value)} required />
               </div>
 
-
+              <div className="space-y-1.5">
+                <Label className="flex items-center gap-2">
+                  <Mail className="h-4 w-4" /> {t("login.email")}
+                </Label>
+                <Input type="email" placeholder="you@example.com" onChange={(e) => update("email", e.target.value)} required />
+              </div>
 
 
               <div className="space-y-1.5">
