@@ -213,24 +213,16 @@ const Subscription = () => {
                 />
               </div>
               <p className="text-xs text-muted-foreground text-center">
-                Scan the QR code using PhonePe, Google Pay, or any UPI app. After payment, enter your UPI Transaction ID below.
+                Scan the QR code using PhonePe, Google Pay, or any UPI app and complete the payment.
               </p>
-              <div className="space-y-3">
-                <Input
-                  placeholder="Enter UPI Transaction ID"
-                  value={transactionId}
-                  onChange={(e) => setTransactionId(e.target.value)}
-                  className="rounded-xl"
-                />
-                <Button
-                  className="w-full rounded-xl"
-                  onClick={handleSubmitPayment}
-                  disabled={!transactionId.trim() || submitting}
-                >
-                  <Send className="h-4 w-4 mr-2" />
-                  {submitting ? "Submitting..." : "Submit for Approval"}
-                </Button>
-              </div>
+              <Button
+                className="w-full rounded-xl"
+                onClick={handleSubmitPayment}
+                disabled={submitting}
+              >
+                <Send className="h-4 w-4 mr-2" />
+                {submitting ? "Submitting..." : "I have paid, Submit for Approval"}
+              </Button>
             </CardContent>
           </Card>
         )}
