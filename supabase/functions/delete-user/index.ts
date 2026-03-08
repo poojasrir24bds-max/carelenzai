@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
     }
 
     // Prevent self-deletion
-    if (userId === caller.id) {
+    if (userId === callerId) {
       return new Response(JSON.stringify({ error: "Cannot delete yourself" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
