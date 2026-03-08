@@ -17,6 +17,12 @@ const DoctorSubscription = () => {
   const [activeSub, setActiveSub] = useState<any>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  // Check if consultations are exhausted
+  const docConsultations = activeSub?.subscription_plans?.doctor_consultations || 0;
+  const consultationsUsed = activeSub?.consultations_used || 0;
+  const creditsExhausted = !!(activeSub?.status === 'active' && consultationsUsed >= docConsultations);
+  const canResubscribe = !activeSub || creditsExhausted;
+
   useEffect(() => {
     fetchPlan();
     if (user) fetchActiveSub();
