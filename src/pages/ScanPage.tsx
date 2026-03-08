@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Upload, Camera, Image, Lightbulb, Ruler, Focus } from "lucide-react";
@@ -12,10 +12,12 @@ const scanAreas = ["Skin", "Hair", "Eyes", "Nails", "Lips", "Scalp", "Dental"];
 
 const ScanPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
   const { toast } = useToast();
-  const [selectedArea, setSelectedArea] = useState("Skin");
+  const initialArea = (location.state as any)?.area || "Skin";
+  const [selectedArea, setSelectedArea] = useState(initialArea);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [scanning, setScanning] = useState(false);
