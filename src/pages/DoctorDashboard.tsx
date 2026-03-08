@@ -336,8 +336,14 @@ const DoctorDashboard = () => {
 
                     {c.status === "pending" && (
                       <div className="flex gap-2 mt-3">
-                        <Button size="sm" className="flex-1 rounded-lg text-xs" onClick={() => handleConsultation(c.id, "accepted")}>
-                          <CheckCircle className="h-3.5 w-3.5 mr-1" /> Accept
+                        <Button
+                          size="sm"
+                          className="flex-1 rounded-lg text-xs"
+                          disabled={consultationsRemaining <= 0}
+                          onClick={() => handleConsultation(c.id, "accepted")}
+                        >
+                          <CheckCircle className="h-3.5 w-3.5 mr-1" />
+                          {consultationsRemaining <= 0 ? "No consultations left" : "Accept"}
                         </Button>
                         <Button size="sm" variant="outline" className="flex-1 rounded-lg text-xs" onClick={() => handleConsultation(c.id, "rejected")}>
                           <XCircle className="h-3.5 w-3.5 mr-1" /> Decline
