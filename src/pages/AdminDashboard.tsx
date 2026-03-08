@@ -484,6 +484,9 @@ const AdminDashboard = () => {
               <div className="bg-accent/30 rounded-xl p-4 space-y-2">
                 <h4 className="font-semibold">{selectedDoctor.profiles?.full_name}</h4>
                 <p className="text-sm text-muted-foreground">📧 {selectedDoctor.profiles?.email}</p>
+                {selectedDoctor.profiles?.phone && (
+                  <p className="text-sm text-muted-foreground">📱 {selectedDoctor.profiles.phone} {selectedDoctor.profiles.phone_verified ? '✅' : '❌'}</p>
+                )}
                 <p className="text-sm text-muted-foreground">🏥 {selectedDoctor.hospital_name}</p>
                 <p className="text-sm text-muted-foreground">🩺 {selectedDoctor.specialization}</p>
                 <p className="text-sm text-muted-foreground">📋 License: <span className="font-mono font-semibold">{selectedDoctor.medical_license}</span></p>
