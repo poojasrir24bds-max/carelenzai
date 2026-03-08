@@ -299,6 +299,57 @@ const Register = () => {
                 </>
               )}
 
+              {role === "patient" && (
+                <>
+                  <div className="space-y-1.5">
+                    <Label>Aadhaar Number</Label>
+                    <Input 
+                      placeholder="1234 5678 9012" 
+                      onChange={(e) => update("aadhaar", e.target.value)} 
+                      maxLength={14}
+                    />
+                    <p className="text-xs text-muted-foreground">12-digit Aadhaar number (optional but recommended)</p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="flex items-center gap-2">
+                      <FileCheck className="h-4 w-4" />
+                      Aadhaar / ID Card Upload
+                    </Label>
+                    {idPreview ? (
+                      <div className="relative border border-border rounded-xl overflow-hidden">
+                        <img src={idPreview} alt="ID preview" className="w-full h-32 object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => { setIdFile(null); setIdPreview(null); }}
+                          className="absolute top-2 right-2 bg-card/80 rounded-full p-1 text-xs"
+                        >
+                          ✕
+                        </button>
+                        <div className="absolute bottom-0 left-0 right-0 bg-success/90 text-success-foreground text-xs p-1.5 text-center font-medium">
+                          ✅ {idFile?.name}
+                        </div>
+                      </div>
+                    ) : (
+                      <div
+                        onClick={() => idFileInputRef.current?.click()}
+                        className="border-2 border-dashed border-border rounded-xl p-4 flex flex-col items-center cursor-pointer hover:border-primary hover:bg-accent/50 transition-all"
+                      >
+                        <Upload className="h-8 w-8 text-muted-foreground mb-2" />
+                        <p className="text-sm font-medium">Upload Aadhaar / ID Card</p>
+                        <p className="text-xs text-muted-foreground">JPG, PNG or PDF (max 5MB)</p>
+                      </div>
+                    )}
+                    <input
+                      ref={idFileInputRef}
+                      type="file"
+                      accept="image/*,.pdf"
+                      className="hidden"
+                      onChange={(e) => handleFileChange(e, 'id')}
+                    />
+                  </div>
+                </>
+              )}
+
               {role === "admin" && (
                 <div className="bg-warning/10 border border-warning/30 rounded-xl p-3">
                   <p className="text-xs text-warning-foreground">{t("register.adminWarning")}</p>
