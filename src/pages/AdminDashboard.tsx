@@ -16,6 +16,7 @@ const AdminDashboard = () => {
   const [tab, setTab] = useState("overview");
   const [pendingDoctors, setPendingDoctors] = useState<any[]>([]);
   const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [allDoctorProfiles, setAllDoctorProfiles] = useState<any[]>([]);
   const [stats, setStats] = useState({ users: 0, doctors: 0, scans: 0 });
 
   useEffect(() => {
