@@ -86,7 +86,7 @@ const Subscription = () => {
     const { error } = await supabase.from("user_subscriptions" as any).insert({
       user_id: user.id,
       plan_id: selectedPlan.id,
-      status: "active",
+      status: "pending",
       starts_at: now.toISOString(),
       expires_at: expiresAt.toISOString(),
     } as any);
