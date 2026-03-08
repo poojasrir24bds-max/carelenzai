@@ -49,9 +49,9 @@ const DoctorDashboard = () => {
     // Fetch patient names separately
     if (data && data.length > 0) {
       const patientIds = [...new Set(data.map(c => c.patient_id))];
-      const { data: profiles } = await supabase.from("profiles").select("user_id, full_name").in("user_id", patientIds);
-      const profileMap = Object.fromEntries((profiles || []).map(p => [p.user_id, p.full_name]));
-      setConsultations(data.map(c => ({ ...c, patient_name: profileMap[c.patient_id] || "Patient" })));
+      const { data: profiles } = await supabase.from("profiles").select("user_id, full_name, phone, phone_verified").in("user_id", patientIds);
+      const profileMap = Object.fromEntries((profiles || []).map(p => [p.user_id, p]));
+      setConsultations(data.map(c => ({ ...c, patient_name: profileMap[c.patient_id]?.full_name || "Patient", patient_phone: profileMap[c.patient_id]?.phone })));
     } else {
       setConsultations([]);
     }
