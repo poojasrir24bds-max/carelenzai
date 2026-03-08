@@ -218,6 +218,9 @@ const DoctorDashboard = () => {
                             {c.scans?.area && `${c.scans.area} Scan • `}
                             {new Date(c.created_at).toLocaleDateString()}
                           </p>
+                          {c.patient_phone && (
+                            <p className="text-xs text-muted-foreground">📱 {c.patient_phone}</p>
+                          )}
                         </div>
                       </div>
                       {c.scans?.severity && (
