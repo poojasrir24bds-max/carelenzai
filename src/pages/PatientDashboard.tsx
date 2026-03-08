@@ -84,16 +84,13 @@ const PatientDashboard = () => {
     setDoubtText("");
     fetchDoubts();
 
-    // Get AI answer in background
+    // Get AI answer in background (edge function saves it directly)
     try {
       const { data: aiData, error: aiError } = await supabase.functions.invoke("answer-doubt", {
-        body: { question },
+        body: { question, doubtId: insertedDoubt.id },
       });
 
-      if (!aiError && aiData?.answer && insertedDoubt) {
-        await supabase.from("patient_doubts").update({
-          ai_answer: aiData.answer,
-        }).eq("id", insertedDoubt.id);
+      if (!aiError && aiData?.answer) {
         fetchDoubts();
         toast({ title: "AI has answered your question!" });
       }
