@@ -564,6 +564,7 @@ const PatientDashboard = () => {
               ))}
             </div>
           </div>
+        )}
       </div>
     </div>
   );
