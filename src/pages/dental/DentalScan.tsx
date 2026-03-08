@@ -102,6 +102,9 @@ const DentalScan = () => {
         }).select().single();
         if (scanError) throw scanError;
 
+        // Increment scans_used
+        await supabase.rpc("increment_scans_used" as any, { _user_id: user.id });
+
         navigate("/dental/results", { state: { result: data, scanId: scanData.id, scanMode: "body" } });
       }
     } catch (err: any) {
