@@ -77,14 +77,14 @@ const AdminDashboard = () => {
       .eq("is_verified", false);
     
     const enrichedDoctors = (doctors || []).map((doc) => {
-      const profile = (profiles || []).find((p: any) => p.user_id === doc.user_id);
+      const profile = enrichedProfiles.find((p: any) => p.user_id === doc.user_id);
       return { ...doc, profiles: profile };
     });
     setPendingDoctors(enrichedDoctors);
 
     const { data: allDocs } = await supabase.from("doctor_profiles").select("*");
     const enrichedAllDocs = (allDocs || []).map((doc) => {
-      const profile = (profiles || []).find((p: any) => p.user_id === doc.user_id);
+      const profile = enrichedProfiles.find((p: any) => p.user_id === doc.user_id);
       return { ...doc, profiles: profile };
     });
     setAllDoctorProfiles(enrichedAllDocs);
