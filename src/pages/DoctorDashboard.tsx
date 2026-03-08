@@ -118,11 +118,17 @@ const DoctorDashboard = () => {
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      // If accepted, increment consultations_used on doctor's subscription
       if (status === "accepted" && doctorSub) {
+        const newUsed = (doctorSub.consultations_used || 0) + 1;
+        const maxConsultations = doctorSub.subscription_plans?.doctor_consultations || 5;
+        const updateData: any = { consultations_used: newUsed };
+        // If all consultations used, mark subscription as expired
+        if (newUsed >= maxConsultations) {
+          updateData.status = "expired";
+        }
         await supabase
           .from("user_subscriptions")
-          .update({ consultations_used: (doctorSub.consultations_used || 0) + 1 } as any)
+          .update(updateData)
           .eq("id", doctorSub.id);
         fetchDoctorSubscription();
       }

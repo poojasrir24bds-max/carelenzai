@@ -61,7 +61,6 @@ const DoctorSubscription = () => {
     setSubmitting(true);
 
     const now = new Date();
-    const expiresAt = new Date(now.getTime() + plan.duration_days * 24 * 60 * 60 * 1000);
 
     const { error } = await supabase.from("user_subscriptions").insert({
       user_id: user.id,
@@ -69,7 +68,7 @@ const DoctorSubscription = () => {
       status: "pending",
       upi_transaction_id: txnId.trim(),
       starts_at: now.toISOString(),
-      expires_at: expiresAt.toISOString(),
+      expires_at: null,
     } as any);
 
     if (error) {
@@ -110,7 +109,7 @@ const DoctorSubscription = () => {
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {activeSub.status === "active"
-                      ? `Expires: ${new Date(activeSub.expires_at).toLocaleDateString("en-IN")}`
+                      ? `${(activeSub.subscription_plans?.doctor_consultations || 5) - (activeSub.consultations_used || 0)} consultations remaining`
                       : "Your payment is being verified by admin"}
                   </p>
                 </div>
@@ -159,7 +158,7 @@ const DoctorSubscription = () => {
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Check className="h-4 w-4 text-success" />
-                  <span>{plan.duration_days} Days Validity</span>
+                  <span>No expiry — valid until all consultations used</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Check className="h-4 w-4 text-success" />
