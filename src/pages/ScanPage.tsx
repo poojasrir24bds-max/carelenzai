@@ -79,6 +79,9 @@ const ScanPage = () => {
 
       if (scanError) throw scanError;
 
+      // Increment scans_used
+      await supabase.rpc("increment_scans_used" as any, { _user_id: user.id });
+
       navigate("/patient/results", { state: { result: data, scanId: scanData.id } });
     } catch (err: any) {
       console.error("Scan error:", err);

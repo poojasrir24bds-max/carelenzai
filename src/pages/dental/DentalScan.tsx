@@ -79,6 +79,9 @@ const DentalScan = () => {
         } as any).select().single();
         if (scanError) throw scanError;
 
+        // Increment scans_used
+        await supabase.rpc("increment_scans_used" as any, { _user_id: user.id });
+
         navigate("/dental/results", { state: { result: data, scanId: (scanData as any)?.id, scanMode: "dental" } });
       } else {
         // Body scan (skin, hair, eyes, etc.)
@@ -98,6 +101,9 @@ const DentalScan = () => {
           guidance: data.guidance,
         }).select().single();
         if (scanError) throw scanError;
+
+        // Increment scans_used
+        await supabase.rpc("increment_scans_used" as any, { _user_id: user.id });
 
         navigate("/dental/results", { state: { result: data, scanId: scanData.id, scanMode: "body" } });
       }

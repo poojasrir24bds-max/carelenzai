@@ -708,6 +708,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_scans_used: { Args: { _user_id: string }; Returns: undefined }
       is_admin_email_allowed: { Args: { _email: string }; Returns: boolean }
     }
     Enums: {
