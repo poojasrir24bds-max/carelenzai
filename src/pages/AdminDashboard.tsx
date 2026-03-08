@@ -282,6 +282,32 @@ const AdminDashboard = () => {
               </CardContent>
             </Card>
 
+            {/* Pending Patient ID Verifications */}
+            <Card className="shadow-card border-border">
+              <CardContent className="p-4">
+                <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                  <CreditCard className="h-4 w-4 text-primary" /> Pending Patient ID Verifications ({pendingPatients.length})
+                </h3>
+                {pendingPatients.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No pending patient verifications.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {pendingPatients.slice(0, 5).map((pat: any) => (
+                      <div key={pat.id} className="flex items-center justify-between border-b border-border pb-3 last:border-0 last:pb-0">
+                        <div>
+                          <p className="font-medium text-sm">{pat.full_name}</p>
+                          <p className="text-xs text-muted-foreground">Aadhaar: {pat.aadhaar_number ? `****${pat.aadhaar_number.slice(-4)}` : 'N/A'}</p>
+                        </div>
+                        <Button size="sm" variant="outline" className="rounded-lg h-7 text-xs px-2.5" onClick={() => handleViewPatient(pat)}>
+                          <Eye className="h-3 w-3 mr-1" /> Review
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
             <div className="grid grid-cols-2 gap-3">
               {[
                 { icon: BarChart3, label: "Analytics" },
