@@ -187,7 +187,21 @@ const DentalResults = () => {
     }
 
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = lang === "ta" ? "ta-IN" : "en-US";
+    const isTamil = lang === "ta";
+    utterance.lang = isTamil ? "ta-IN" : "en-US";
+    
+    // Find a matching voice for the language
+    const availableVoices = voices.length > 0 ? voices : (window.speechSynthesis.getVoices() || []);
+    if (isTamil) {
+      const tamilVoice = availableVoices.find(v => v.lang === "ta-IN")
+        || availableVoices.find(v => v.lang.startsWith("ta"))
+        || availableVoices.find(v => v.lang.toLowerCase().includes("tamil"));
+      if (tamilVoice) utterance.voice = tamilVoice;
+    } else {
+      const englishVoice = availableVoices.find(v => v.lang === "en-US") || availableVoices.find(v => v.lang.startsWith("en"));
+      if (englishVoice) utterance.voice = englishVoice;
+    }
+    
     utterance.rate = 0.9;
     utterance.onend = () => setIsSpeaking(false);
     setIsSpeaking(true);
