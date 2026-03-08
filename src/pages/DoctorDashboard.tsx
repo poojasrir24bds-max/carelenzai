@@ -295,8 +295,14 @@ const DoctorDashboard = () => {
               doubts.map((d) => (
                 <Card key={d.id} className="shadow-card border-border">
                   <CardContent className="p-4">
-                    <p className="font-semibold text-sm">{d.patient?.full_name || "Patient"}</p>
+                    <p className="font-semibold text-sm">{d.patient_name || "Patient"}</p>
                     <p className="text-sm mt-1 bg-accent/30 rounded-lg p-2">{d.question}</p>
+                    {d.ai_answer && (
+                      <div className="bg-primary/5 rounded-lg p-2 mt-1">
+                        <p className="text-xs text-muted-foreground font-medium">🤖 AI Answer:</p>
+                        <p className="text-xs mt-0.5">{d.ai_answer}</p>
+                      </div>
+                    )}
                     {d.status === "answered" ? (
                       <p className="text-xs text-success mt-2">✓ Answered: {d.answer}</p>
                     ) : (
