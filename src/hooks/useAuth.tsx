@@ -1,5 +1,5 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 
 interface AuthContextType {
@@ -99,7 +99,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }).eq("user_id", data.user.id);
 
       // Assign role
-      await supabase.from("user_roles").insert({ user_id: data.user.id, role: userRole });
+      await supabase.from("user_roles").insert([{ user_id: data.user.id, role: userRole as "admin" | "doctor" | "moderator" | "patient" }]);
 
       // If doctor, create doctor profile
       if (userRole === "doctor" && metadata.license) {
