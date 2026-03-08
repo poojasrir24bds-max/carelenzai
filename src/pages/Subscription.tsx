@@ -45,6 +45,7 @@ const Subscription = () => {
       .from("subscription_plans" as any)
       .select("*")
       .eq("is_active", true)
+      .neq("name", "Doctor Plan")
       .order("price_inr", { ascending: true });
     setPlans((data as any[]) || []);
   };
