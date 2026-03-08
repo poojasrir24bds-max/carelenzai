@@ -79,10 +79,12 @@ const Login = () => {
                 {loading ? "Signing in..." : "Sign In"}
               </Button>
             </form>
-            <p className="text-center text-sm text-muted-foreground mt-4">
-              Don't have an account?{" "}
-              <Link to={`/register/${role}`} className="text-primary font-medium hover:underline">Register</Link>
-            </p>
+            {role !== "admin" && (
+              <p className="text-center text-sm text-muted-foreground mt-4">
+                Don't have an account?{" "}
+                <Link to={`/register/${role}`} className="text-primary font-medium hover:underline">Register</Link>
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>
