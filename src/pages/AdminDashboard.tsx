@@ -156,6 +156,36 @@ const AdminDashboard = () => {
     fetchData();
   };
 
+  const handleViewPatient = async (patient: any) => {
+    setSelectedPatient(patient);
+    setRejectNotes("");
+    setIdDocUrl(null);
+
+    if (patient.id_document_url) {
+      const { data } = await supabase.storage
+        .from("id-documents")
+        .createSignedUrl(patient.id_document_url, 3600);
+      if (data?.signedUrl) {
+        setIdDocUrl(data.signedUrl);
+      }
+    }
+  };
+
+  const handleVerifyPatient = async (userId: string, approve: boolean) => {
+    const { error } = await supabase.from("profiles").update({
+      id_verification_status: approve ? 'verified' : 'rejected',
+      id_verification_notes: approve ? 'Approved by admin' : (rejectNotes || 'Rejected by admin'),
+    }).eq("user_id", userId);
+
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: approve ? "✅ Patient ID verified!" : "❌ Patient ID rejected." });
+    setSelectedPatient(null);
+    fetchData();
+  };
+
   const handleLogout = async () => {
     await signOut();
     navigate("/");
