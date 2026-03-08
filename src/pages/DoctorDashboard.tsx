@@ -38,8 +38,19 @@ const DoctorDashboard = () => {
       fetchConsultations();
       fetchDoubts();
       fetchDoctorSubscription();
+      fetchRatings();
     }
   }, [user]);
+
+  const fetchRatings = async () => {
+    const { data } = await supabase
+      .from("consultation_ratings" as any)
+      .select("*")
+      .eq("rated_by", user!.id);
+    const map: Record<string, any> = {};
+    (data as any[] || []).forEach((r: any) => { map[r.consultation_id] = r; });
+    setRatings(map);
+  };
 
   const fetchDoctorSubscription = async () => {
     setSubLoading(true);
