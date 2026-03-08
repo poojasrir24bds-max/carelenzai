@@ -20,6 +20,13 @@ const DentalScan = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
   const { toast } = useToast();
+  const { hasActiveSubscription, scansRemaining, loading: subLoading } = useSubscription();
+
+  // Redirect if no subscription
+  if (!subLoading && !hasActiveSubscription) {
+    navigate("/subscription");
+    return null;
+  }
   const [activeCategory, setActiveCategory] = useState("dental");
   const [selectedType, setSelectedType] = useState("Clinical Photo");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);

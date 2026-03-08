@@ -212,12 +212,18 @@ const PatientDashboard = () => {
         <div>
           <h2 className="font-display font-semibold text-lg mb-3">{t("patient.selectScan")}</h2>
           <p className="text-muted-foreground text-sm mb-3">{t("patient.tapToScan")}</p>
+          {!hasActiveSubscription && !subLoading && (
+            <div className="bg-warning/10 border border-warning/30 rounded-xl p-3 mb-3 flex items-center gap-2">
+              <Lock className="h-4 w-4 text-warning shrink-0" />
+              <p className="text-xs text-foreground"><strong>Subscribe to unlock scanning.</strong> Choose a plan to start AI health scans.</p>
+            </div>
+          )}
           <div className="grid grid-cols-4 gap-3">
             {scanAreaItems.map((area) => (
               <button
                 key={area.id}
-                onClick={() => navigate("/patient/scan", { state: { area: t(area.labelKey) } })}
-                className="bg-card rounded-2xl p-4 shadow-card border border-border hover:border-primary hover:shadow-elevated transition-all text-center active:scale-[0.97]"
+                onClick={() => handleScanClick(t(area.labelKey))}
+                className={`bg-card rounded-2xl p-4 shadow-card border border-border hover:border-primary hover:shadow-elevated transition-all text-center active:scale-[0.97] ${!hasActiveSubscription ? "opacity-60" : ""}`}
               >
                 <span className="text-2xl block mb-1">{area.emoji}</span>
                 <span className="text-sm font-medium">{t(area.labelKey)}</span>

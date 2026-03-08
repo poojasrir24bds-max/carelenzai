@@ -125,8 +125,8 @@ const DentalHome = () => {
             {scanAreas.map((area) => (
               <button
                 key={area.id}
-                onClick={() => navigate("/dental/scan")}
-                className="bg-card rounded-2xl p-3 shadow-card border border-border hover:border-primary hover:shadow-elevated transition-all text-center active:scale-[0.97]"
+                onClick={handleScanClick}
+                className={`bg-card rounded-2xl p-3 shadow-card border border-border hover:border-primary hover:shadow-elevated transition-all text-center active:scale-[0.97] ${!hasActiveSubscription ? "opacity-60" : ""}`}
               >
                 <span className="text-xl block mb-1">{area.emoji}</span>
                 <span className="text-xs font-medium">{area.label}</span>
