@@ -34,12 +34,26 @@ const PatientDashboard = () => {
   const { user, profile, signOut } = useAuth();
   const { toast } = useToast();
   const { t } = useLanguage();
+  const { hasActiveSubscription, loading: subLoading, scansRemaining, plan } = useSubscription();
   const [recentScans, setRecentScans] = useState<any[]>([]);
   const [doubtText, setDoubtText] = useState("");
   const [submittingDoubt, setSubmittingDoubt] = useState(false);
   const [myDoubts, setMyDoubts] = useState<any[]>([]);
   const [activeConsultations, setActiveConsultations] = useState<any[]>([]);
   const [availableDoctors, setAvailableDoctors] = useState<any[]>([]);
+
+  const handleScanClick = (area?: string) => {
+    if (!hasActiveSubscription) {
+      toast({ title: t("sub.subscriptionRequired") || "Subscription Required", description: t("sub.pleaseSubscribe") || "Please subscribe to a plan to access scanning.", variant: "destructive" });
+      navigate("/subscription");
+      return;
+    }
+    if (scansRemaining <= 0) {
+      toast({ title: "Scan limit reached", description: "You have used all scans in your current plan.", variant: "destructive" });
+      return;
+    }
+    navigate("/patient/scan", area ? { state: { area } } : undefined);
+  };
 
   useEffect(() => {
     if (user) {
