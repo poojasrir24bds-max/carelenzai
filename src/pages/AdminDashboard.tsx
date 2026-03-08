@@ -23,19 +23,25 @@ const AdminDashboard = () => {
   }, []);
 
   const fetchData = async () => {
-    // Fetch pending doctors
-    const { data: doctors } = await supabase
-      .from("doctor_profiles")
-      .select("*, profiles!doctor_profiles_user_id_fkey(full_name, email)")
-      .eq("is_verified", false);
-    setPendingDoctors(doctors || []);
-
     // Fetch all profiles with roles
     const { data: profiles } = await supabase
       .from("profiles")
       .select("*, user_roles(role)")
       .order("created_at", { ascending: false });
     setAllUsers(profiles || []);
+
+    // Fetch pending doctors
+    const { data: doctors } = await supabase
+      .from("doctor_profiles")
+      .select("*")
+      .eq("is_verified", false);
+    
+    // Match doctor profiles with user profiles
+    const enrichedDoctors = (doctors || []).map((doc) => {
+      const profile = (profiles || []).find((p) => p.user_id === doc.user_id);
+      return { ...doc, profiles: profile };
+    });
+    setPendingDoctors(enrichedDoctors);
 
     // Stats
     const { count: userCount } = await supabase.from("profiles").select("*", { count: "exact", head: true });
