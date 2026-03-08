@@ -172,12 +172,23 @@ const PatientDashboard = () => {
               <div className="mt-4 space-y-2">
                 <p className="text-xs font-medium text-muted-foreground">Your recent questions:</p>
                 {myDoubts.map((d) => (
-                  <div key={d.id} className="bg-accent/30 rounded-lg p-2.5">
+                  <div key={d.id} className="bg-accent/30 rounded-lg p-2.5 space-y-1">
                     <p className="text-xs font-medium">{d.question}</p>
+                    {d.ai_answer && (
+                      <div className="bg-primary/5 rounded p-2 mt-1">
+                        <p className="text-xs text-muted-foreground font-medium">🤖 AI Response:</p>
+                        <p className="text-xs mt-0.5">{d.ai_answer}</p>
+                      </div>
+                    )}
                     {d.answer ? (
-                      <p className="text-xs text-success mt-1">✓ {d.answer}</p>
+                      <div className="bg-success/10 rounded p-2 mt-1">
+                        <p className="text-xs text-success font-medium">👩‍⚕️ Doctor's Response:</p>
+                        <p className="text-xs text-success mt-0.5">{d.answer}</p>
+                      </div>
+                    ) : !d.ai_answer ? (
+                      <p className="text-xs text-muted-foreground mt-1">⏳ Getting AI response...</p>
                     ) : (
-                      <p className="text-xs text-muted-foreground mt-1">⏳ Awaiting doctor response</p>
+                      <p className="text-xs text-muted-foreground mt-1">💡 A doctor may also review this</p>
                     )}
                   </div>
                 ))}
