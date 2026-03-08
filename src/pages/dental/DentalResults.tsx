@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Volume2, VolumeX, AlertTriangle, CheckCircle, Info, Globe, Loader2 } from "lucide-react";
 import DentalBottomNav from "@/components/dental/BottomNav";
 import logo from "@/assets/logo.png";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 const severityConfig: Record<string, { color: string; icon: any; label: string; labelTa: string }> = {
