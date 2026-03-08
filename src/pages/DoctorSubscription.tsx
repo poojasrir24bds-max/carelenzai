@@ -86,7 +86,7 @@ const DoctorSubscription = () => {
       toast({ title: "Payment Submitted!", description: "Your subscription will be activated after admin approval." });
       setShowTxnInput(false);
       setTxnId("");
-      fetchActiveSub();
+      navigate("/doctor");
     }
     setSubmitting(false);
   };
