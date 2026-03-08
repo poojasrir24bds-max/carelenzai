@@ -298,7 +298,7 @@ const PatientDashboard = () => {
     );
   }
 
-
+  return (
     <div className="min-h-screen bg-background flex flex-col">
       <header className="gradient-header px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
