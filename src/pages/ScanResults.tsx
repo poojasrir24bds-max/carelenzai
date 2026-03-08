@@ -77,6 +77,18 @@ const ScanResults = () => {
 
   const handlePlayAudio = (lang: "en" | "ta") => {
     if (!result || !window.speechSynthesis) return;
+
+    // If already speaking, pause/resume
+    if (isSpeaking && window.speechSynthesis.speaking) {
+      if (window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+      } else {
+        window.speechSynthesis.pause();
+        setIsSpeaking(false);
+      }
+      return;
+    }
+
     window.speechSynthesis.cancel();
 
     const text = lang === "en"
@@ -87,7 +99,14 @@ const ScanResults = () => {
     utterance.lang = lang === "en" ? "en-US" : "ta-IN";
     utterance.onstart = () => setIsSpeaking(true);
     utterance.onend = () => setIsSpeaking(false);
+    utterance.onpause = () => setIsSpeaking(false);
+    utterance.onresume = () => setIsSpeaking(true);
     window.speechSynthesis.speak(utterance);
+  };
+
+  const handleStopAudio = () => {
+    window.speechSynthesis.cancel();
+    setIsSpeaking(false);
   };
 
   if (!result) {
