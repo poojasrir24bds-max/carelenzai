@@ -106,6 +106,7 @@ const Register = () => {
               body: {
                 licenseNumber: form.license,
                 doctorId: form.doctorId,
+                specialization: form.specialization,
               },
             });
           }, 2000);
@@ -183,15 +184,6 @@ const Register = () => {
               {role === "doctor" && (
                 <>
                   <div className="space-y-1.5">
-                    <Label>{t("register.license")}</Label>
-                    <Input placeholder="TN-12345 / ML-67890" onChange={(e) => update("license", e.target.value)} required />
-                    <p className="text-xs text-muted-foreground">Format: State code + number (e.g., TN-12345, KA-67890)</p>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>{t("register.doctorId")}</Label>
-                    <Input placeholder="DOC-001" onChange={(e) => update("doctorId", e.target.value)} required />
-                  </div>
-                  <div className="space-y-1.5">
                     <Label>{t("register.specialization")}</Label>
                     <Select onValueChange={(v) => update("specialization", v)}>
                       <SelectTrigger><SelectValue placeholder={t("register.select")} /></SelectTrigger>
@@ -203,6 +195,19 @@ const Register = () => {
                         <SelectItem value="dentist">{t("register.dentist")}</SelectItem>
                       </SelectContent>
                     </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>{t("register.license")}</Label>
+                    <Input placeholder={form.specialization === "dentist" ? "DCI-12345 / TN-D-67890 / SDC-12345" : "TN-12345 / NMC-67890"} onChange={(e) => update("license", e.target.value)} required />
+                    <p className="text-xs text-muted-foreground">
+                      {form.specialization === "dentist" 
+                        ? "Dental formats: DCI-XXXXX, SDC-XXXXX, State-D-Number (e.g., TN-D-12345)" 
+                        : "Medical formats: State-Number (e.g., TN-12345), NMC-XXXXX, MCI-XXXXX"}
+                    </p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>{t("register.doctorId")}</Label>
+                    <Input placeholder="DOC-001" onChange={(e) => update("doctorId", e.target.value)} required />
                   </div>
                   <div className="space-y-1.5">
                     <Label>{t("register.hospital")}</Label>

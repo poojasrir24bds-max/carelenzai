@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 // Indian Medical License format patterns
-const LICENSE_PATTERNS = [
+const MEDICAL_LICENSE_PATTERNS = [
   /^[A-Z]{2,3}-\d{4,8}$/i,           // State prefix format: TN-12345, KA-123456
   /^ML-\d{4,8}$/i,                     // ML- prefix format
   /^IMR-\d{4,10}$/i,                   // Indian Medical Register
@@ -16,6 +16,18 @@ const LICENSE_PATTERNS = [
   /^\d{5,10}$/,                         // Pure numeric registration
   /^[A-Z]{1,4}\d{4,10}$/i,            // Alphanumeric: TN12345
   /^DOC-\d{3,6}$/i,                    // DOC prefix
+];
+
+// Indian Dental License format patterns (Dental Council of India)
+const DENTAL_LICENSE_PATTERNS = [
+  /^DCI-\d{4,10}$/i,                   // Dental Council of India
+  /^SDC-\d{4,10}$/i,                   // State Dental Council
+  /^[A-Z]{2}-D-\d{4,8}$/i,            // State dental format: TN-D-12345
+  /^[A-Z]{2,3}-\d{4,8}$/i,            // State prefix (shared with medical)
+  /^BDS-\d{4,10}$/i,                   // BDS registration
+  /^MDS-\d{4,10}$/i,                   // MDS registration
+  /^\d{5,10}$/,                         // Pure numeric registration
+  /^[A-Z]{1,4}\d{4,10}$/i,            // Alphanumeric
 ];
 
 // State medical council codes
@@ -33,16 +45,18 @@ interface VerificationResult {
   notes: string[];
 }
 
-function verifyLicense(licenseNumber: string, doctorId: string): VerificationResult {
+function verifyLicense(licenseNumber: string, doctorId: string, specialization: string = ''): VerificationResult {
   const trimmed = licenseNumber.trim().toUpperCase();
   const notes: string[] = [];
+  const isDentist = specialization.toLowerCase() === 'dentist';
   
-  // Check format
-  const formatValid = LICENSE_PATTERNS.some(p => p.test(trimmed));
+  // Check format based on specialization
+  const patterns = isDentist ? DENTAL_LICENSE_PATTERNS : MEDICAL_LICENSE_PATTERNS;
+  const formatValid = patterns.some(p => p.test(trimmed));
   if (!formatValid) {
-    notes.push("License number format does not match any known Indian medical license pattern");
+    notes.push(`License number format does not match any known Indian ${isDentist ? 'dental' : 'medical'} license pattern`);
   } else {
-    notes.push("License number format matches a valid pattern");
+    notes.push(`License number format matches a valid ${isDentist ? 'dental' : 'medical'} pattern`);
   }
   
   // Check state code if applicable
@@ -86,7 +100,7 @@ serve(async (req) => {
   }
 
   try {
-    const { licenseNumber, doctorId, doctorProfileId } = await req.json();
+    const { licenseNumber, doctorId, doctorProfileId, specialization } = await req.json();
 
     if (!licenseNumber) {
       return new Response(JSON.stringify({ error: "License number is required" }), {
@@ -95,7 +109,7 @@ serve(async (req) => {
       });
     }
 
-    const result = verifyLicense(licenseNumber, doctorId || '');
+    const result = verifyLicense(licenseNumber, doctorId || '', specialization || '');
 
     // Save verification result to database
     if (doctorProfileId) {
