@@ -84,18 +84,36 @@ const ScanResults = () => {
   const handleSubmitDoubt = async () => {
     if (!doubtText.trim() || !user) return;
     setSubmittingDoubt(true);
-    const { error } = await supabase.from("patient_doubts").insert({
+    const question = doubtText.trim();
+
+    const { data: insertedDoubt, error } = await supabase.from("patient_doubts").insert({
       patient_id: user.id,
       scan_id: scanId || null,
-      question: doubtText.trim(),
-    });
-    setSubmittingDoubt(false);
+      question,
+    }).select().single();
+
     if (error) {
+      setSubmittingDoubt(false);
       toast({ title: "Failed to submit", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Question submitted!", description: "A doctor will review your question." });
-      setDoubtText("");
+      return;
     }
+
+    toast({ title: "Question submitted! Getting AI response..." });
+    setDoubtText("");
+
+    // Get AI answer in background (edge function saves it directly)
+    try {
+      const { data: aiData, error: aiError } = await supabase.functions.invoke("answer-doubt", {
+        body: { question, doubtId: insertedDoubt.id },
+      });
+
+      if (!aiError && aiData?.answer) {
+        toast({ title: "AI has answered your question!" });
+      }
+    } catch (e) {
+      console.error("AI answer error:", e);
+    }
+    setSubmittingDoubt(false);
   };
 
   const handleSwitchLang = async (newLang: "en" | "ta") => {

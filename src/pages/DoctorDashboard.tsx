@@ -43,28 +43,46 @@ const DoctorDashboard = () => {
   const fetchConsultations = async () => {
     const { data } = await supabase
       .from("consultations")
-      .select("*, scans(*), patient:profiles!consultations_patient_id_fkey(full_name)")
+      .select("*, scans(*)")
       .eq("doctor_id", user!.id)
       .order("created_at", { ascending: false });
-    setConsultations(data || []);
+    // Fetch patient names separately
+    if (data && data.length > 0) {
+      const patientIds = [...new Set(data.map(c => c.patient_id))];
+      const { data: profiles } = await supabase.from("profiles").select("user_id, full_name").in("user_id", patientIds);
+      const profileMap = Object.fromEntries((profiles || []).map(p => [p.user_id, p.full_name]));
+      setConsultations(data.map(c => ({ ...c, patient_name: profileMap[c.patient_id] || "Patient" })));
+    } else {
+      setConsultations([]);
+    }
   };
 
   const fetchDoubts = async () => {
     const { data } = await supabase
       .from("patient_doubts")
-      .select("*, patient:profiles!patient_doubts_patient_id_fkey(full_name)")
+      .select("*")
       .eq("doctor_id", user!.id)
       .order("created_at", { ascending: false });
 
     // Also fetch unassigned doubts
     const { data: unassigned } = await supabase
       .from("patient_doubts")
-      .select("*, patient:profiles!patient_doubts_patient_id_fkey(full_name)")
+      .select("*")
       .is("doctor_id", null)
       .eq("status", "pending")
       .order("created_at", { ascending: false });
 
-    setDoubts([...(unassigned || []), ...(data || [])]);
+    const allDoubts = [...(unassigned || []), ...(data || [])];
+    
+    // Fetch patient names
+    if (allDoubts.length > 0) {
+      const patientIds = [...new Set(allDoubts.map(d => d.patient_id))];
+      const { data: profiles } = await supabase.from("profiles").select("user_id, full_name").in("user_id", patientIds);
+      const profileMap = Object.fromEntries((profiles || []).map(p => [p.user_id, p.full_name]));
+      setDoubts(allDoubts.map(d => ({ ...d, patient_name: profileMap[d.patient_id] || "Patient" })));
+    } else {
+      setDoubts([]);
+    }
   };
 
   const fetchPatientHistory = async (patientId: string) => {
@@ -195,7 +213,7 @@ const DoctorDashboard = () => {
                           <Stethoscope className="h-4 w-4 text-primary" />
                         </div>
                         <div>
-                          <p className="font-semibold text-sm">{c.patient?.full_name || "Patient"}</p>
+                          <p className="font-semibold text-sm">{c.patient_name || "Patient"}</p>
                           <p className="text-xs text-muted-foreground">
                             {c.scans?.area && `${c.scans.area} Scan • `}
                             {new Date(c.created_at).toLocaleDateString()}
@@ -277,8 +295,14 @@ const DoctorDashboard = () => {
               doubts.map((d) => (
                 <Card key={d.id} className="shadow-card border-border">
                   <CardContent className="p-4">
-                    <p className="font-semibold text-sm">{d.patient?.full_name || "Patient"}</p>
+                    <p className="font-semibold text-sm">{d.patient_name || "Patient"}</p>
                     <p className="text-sm mt-1 bg-accent/30 rounded-lg p-2">{d.question}</p>
+                    {d.ai_answer && (
+                      <div className="bg-primary/5 rounded-lg p-2 mt-1">
+                        <p className="text-xs text-muted-foreground font-medium">🤖 AI Answer:</p>
+                        <p className="text-xs mt-0.5">{d.ai_answer}</p>
+                      </div>
+                    )}
                     {d.status === "answered" ? (
                       <p className="text-xs text-success mt-2">✓ Answered: {d.answer}</p>
                     ) : (
