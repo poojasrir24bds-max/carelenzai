@@ -134,6 +134,32 @@ const Register = () => {
       }
     }
 
+    // Upload Aadhaar document for patients
+    if (role === "patient" && idFile && signUpData?.user) {
+      try {
+        const fileExt = idFile.name.split('.').pop();
+        const filePath = `${signUpData.user.id}/aadhaar.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("id-documents")
+          .upload(filePath, idFile, { upsert: true });
+
+        if (uploadError) {
+          console.error("ID upload error:", uploadError);
+        } else {
+          setTimeout(async () => {
+            await supabase.from("profiles").update({
+              aadhaar_number: form.aadhaar?.replace(/\s/g, ''),
+              id_document_url: filePath,
+              id_verification_status: 'pending',
+            }).eq("user_id", signUpData.user.id);
+          }, 2000);
+        }
+      } catch (err) {
+        console.error("ID upload error:", err);
+      }
+    }
+
     setLoading(false);
     toast({ title: "Account created!" });
     navigate(`/login/${role}`);
