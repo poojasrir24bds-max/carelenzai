@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import MedicalHistoryForm from "@/components/MedicalHistoryForm";
 import RatingStars from "@/components/RatingStars";
+import NotificationBell from "@/components/NotificationBell";
 
 const sevColors: Record<string, string> = {
   high: "bg-destructive text-destructive-foreground",
@@ -127,6 +128,8 @@ const DoctorDashboard = () => {
   };
 
   const handleConsultation = async (id: string, status: "accepted" | "rejected") => {
+    // Get the consultation details to find patient_id
+    const consultation = consultations.find((c: any) => c.id === id);
     const { error } = await supabase.from("consultations").update({ status }).eq("id", id);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -135,7 +138,6 @@ const DoctorDashboard = () => {
         const newUsed = (doctorSub.consultations_used || 0) + 1;
         const maxConsultations = doctorSub.subscription_plans?.doctor_consultations || 5;
         const updateData: any = { consultations_used: newUsed };
-        // If all consultations used, mark subscription as expired
         if (newUsed >= maxConsultations) {
           updateData.status = "expired";
         }
@@ -145,6 +147,20 @@ const DoctorDashboard = () => {
           .eq("id", doctorSub.id);
         fetchDoctorSubscription();
       }
+
+      // Notify patient when doctor accepts/rejects
+      if (consultation) {
+        await supabase.from("notifications").insert({
+          user_id: consultation.patient_id,
+          title: status === "accepted" ? "✅ Doctor Accepted" : "❌ Consultation Declined",
+          message: status === "accepted"
+            ? `Dr. ${profile?.full_name || "Your doctor"} has accepted your consultation request.`
+            : `Dr. ${profile?.full_name || "Your doctor"} has declined your consultation request.`,
+          type: status === "accepted" ? "consultation_accepted" : "consultation_rejected",
+          consultation_id: id,
+        });
+      }
+
       toast({ title: status === "accepted" ? "Consultation accepted" : "Consultation declined" });
       fetchConsultations();
     }
@@ -229,9 +245,7 @@ const DoctorDashboard = () => {
           <span className="font-display font-bold text-primary-foreground">Doctor Portal</span>
         </div>
         <div className="flex items-center gap-2">
-          <button className="text-primary-foreground relative">
-            <Bell className="h-5 w-5" />
-          </button>
+          <NotificationBell />
           <button onClick={handleLogout} className="text-primary-foreground">
             <LogOut className="h-5 w-5" />
           </button>

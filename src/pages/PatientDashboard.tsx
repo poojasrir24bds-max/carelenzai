@@ -14,6 +14,7 @@ import LanguageToggle from "@/components/LanguageToggle";
 import MedicalHistoryForm from "@/components/MedicalHistoryForm";
 import RatingStars, { AverageRating } from "@/components/RatingStars";
 import AppRatingDialog from "@/components/AppRatingDialog";
+import NotificationBell from "@/components/NotificationBell";
 
 const scanAreaItems = [
   { id: "dental", labelKey: "area.dental", emoji: "🦷" },
@@ -191,15 +192,25 @@ const PatientDashboard = () => {
       return;
     }
 
-    const { error } = await supabase.from("consultations").insert({
+    const { data: insertedConsultation, error } = await supabase.from("consultations").insert({
       patient_id: user.id,
       doctor_id: doctors[0].user_id,
       status: "pending",
-    });
+    }).select().single();
 
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
+      // Notify the doctor about the new booking
+      if (insertedConsultation) {
+        await supabase.from("notifications").insert({
+          user_id: doctors[0].user_id,
+          title: "📋 New Consultation Request",
+          message: `${profile?.full_name || "A patient"} has booked a consultation with you.`,
+          type: "consultation_booked",
+          consultation_id: insertedConsultation.id,
+        });
+      }
       toast({ title: t("patient.consultationRequested") });
       fetchActiveConsultations();
     }
@@ -259,9 +270,7 @@ const PatientDashboard = () => {
         </div>
         <div className="flex items-center gap-2">
           <LanguageToggle variant="header" />
-          <button className="text-primary-foreground relative">
-            <Bell className="h-5 w-5" />
-          </button>
+          <NotificationBell />
           <button onClick={handleLogout} className="text-primary-foreground">
             <LogOut className="h-5 w-5" />
           </button>
