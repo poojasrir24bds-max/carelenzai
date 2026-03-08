@@ -81,6 +81,24 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Dental Section */}
+      <section className="container py-8">
+        <button
+          onClick={() => navigate("/dental")}
+          className="w-full max-w-3xl mx-auto bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(180,60%,45%)] rounded-2xl p-6 text-left text-white shadow-elevated hover:scale-[1.01] transition-transform block"
+        >
+          <div className="flex items-center gap-4">
+            <div className="bg-white/20 rounded-xl p-3">
+              <span className="text-2xl">🦷</span>
+            </div>
+            <div>
+              <h3 className="font-display font-bold text-lg">DentalScan AI</h3>
+              <p className="text-white/80 text-sm">AI-powered dental analysis, study modules & AI assistant for dental students</p>
+            </div>
+          </div>
+        </button>
+      </section>
+
       {/* Role Selection */}
       <section className="container py-10">
         <h2 className="text-center font-display text-2xl font-bold mb-2">Get Started</h2>
