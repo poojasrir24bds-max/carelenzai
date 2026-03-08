@@ -105,7 +105,22 @@ const PatientDashboard = () => {
       const userIds = doctors.map(d => d.user_id);
       const { data: profiles } = await supabase.from("profiles").select("user_id, full_name").in("user_id", userIds);
       const profileMap = Object.fromEntries((profiles || []).map(p => [p.user_id, p.full_name]));
-      setAvailableDoctors(doctors.map(d => ({ ...d, profile_name: profileMap[d.user_id] || "Doctor" })));
+      
+      const enrichedDoctors = doctors.map(d => ({ ...d, profile_name: profileMap[d.user_id] || "Doctor" }));
+      
+      // Sort by proximity: match patient address keywords against doctor address
+      const patientAddress = (profile?.address || "").toLowerCase();
+      const patientWords = patientAddress.split(/[\s,]+/).filter((w: string) => w.length > 2);
+      
+      const scored = enrichedDoctors.map(doc => {
+        const docAddr = (doc.address || "").toLowerCase();
+        const matchCount = patientWords.filter((word: string) => docAddr.includes(word)).length;
+        return { ...doc, locationScore: matchCount, isNearby: matchCount >= 1 && patientWords.length > 0 };
+      });
+      
+      // Sort: nearby first (higher score), then others
+      scored.sort((a, b) => b.locationScore - a.locationScore);
+      setAvailableDoctors(scored);
     } else {
       setAvailableDoctors([]);
     }
