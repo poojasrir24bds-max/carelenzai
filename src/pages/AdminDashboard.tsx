@@ -347,6 +347,26 @@ const AdminDashboard = () => {
     fetchData();
   };
 
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    if (!confirm(`Are you sure you want to permanently remove "${userName}" from the app? This cannot be undone.`)) return;
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const { data, error } = await supabase.functions.invoke("delete-user", {
+        body: { userId },
+      });
+      
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      
+      toast({ title: "✅ User removed", description: `${userName} has been permanently deleted.` });
+      fetchData();
+      fetchSubscriptions();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+  };
+
   const handleLogout = async () => {
     await signOut();
     navigate("/");
