@@ -2,3 +2,9 @@ project_id = "qrizwahrwfinggrspfqg"
 
 [functions.ai-diagnose]
 verify_jwt = true
+
+[functions.dental-analyze]
+verify_jwt = true
+
+[functions.dental-chat]
+verify_jwt = true

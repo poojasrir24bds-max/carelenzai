@@ -76,6 +76,51 @@ export type Database = {
           },
         ]
       }
+      dental_scans: {
+        Row: {
+          clinical_notes: string[] | null
+          conditions_found: string[] | null
+          confidence: number | null
+          created_at: string
+          id: string
+          image_url: string | null
+          overall_assessment: string | null
+          recommendations: string[] | null
+          scan_type: string
+          severity: string | null
+          teeth_identified: Json | null
+          user_id: string
+        }
+        Insert: {
+          clinical_notes?: string[] | null
+          conditions_found?: string[] | null
+          confidence?: number | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          overall_assessment?: string | null
+          recommendations?: string[] | null
+          scan_type?: string
+          severity?: string | null
+          teeth_identified?: Json | null
+          user_id: string
+        }
+        Update: {
+          clinical_notes?: string[] | null
+          conditions_found?: string[] | null
+          confidence?: number | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          overall_assessment?: string | null
+          recommendations?: string[] | null
+          scan_type?: string
+          severity?: string | null
+          teeth_identified?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       doctor_profiles: {
         Row: {
           created_at: string
