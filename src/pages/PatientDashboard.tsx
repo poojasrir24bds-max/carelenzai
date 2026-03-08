@@ -538,6 +538,32 @@ const PatientDashboard = () => {
             </div>
           </div>
         )}
+
+        {/* Completed Consultations - Rate Doctor */}
+        {completedConsultations.length > 0 && (
+          <div className="pb-4">
+            <h2 className="font-display font-semibold text-lg mb-3">Rate Your Doctor</h2>
+            <div className="space-y-3">
+              {completedConsultations.map((c: any) => (
+                <Card key={c.id} className="shadow-card border-border">
+                  <CardContent className="p-4">
+                    <p className="font-semibold text-sm">Consultation</p>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      {new Date(c.created_at).toLocaleDateString()} • ✅ Completed
+                    </p>
+                    <RatingStars
+                      consultationId={c.id}
+                      ratedBy={user!.id}
+                      ratedUser={c.doctor_id}
+                      existingRating={patientRatings[c.id]?.rating}
+                      existingReview={patientRatings[c.id]?.review}
+                      onRated={fetchPatientRatings}
+                    />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
       </div>
     </div>
   );
