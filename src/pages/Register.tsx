@@ -56,63 +56,8 @@ const Register = () => {
 
   const isValidAadhaar = (num: string) => /^\d{12}$/.test(num.replace(/\s/g, ''));
 
-  const handleSendOtp = async () => {
-    const email = form.email?.trim();
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      toast({ title: "Enter email first", description: "Please enter a valid email address above, then send OTP", variant: "destructive" });
-      return;
-    }
 
-    setSendingOtp(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("send-otp", {
-        body: { email },
-      });
 
-      if (error) throw error;
-
-      if (data?.success) {
-        setOtpSent(true);
-        toast({ 
-          title: "OTP Sent! 📧", 
-          description: data.debug_otp 
-            ? `Your verification code: ${data.debug_otp}` 
-            : `Check your email ${email} for the OTP`
-        });
-      } else {
-        throw new Error(data?.error || "Failed to send OTP");
-      }
-    } catch (err: any) {
-      toast({ title: "Failed to send OTP", description: err.message, variant: "destructive" });
-    }
-    setSendingOtp(false);
-  };
-
-  const handleVerifyOtp = async () => {
-    if (otpValue.length !== 6) {
-      toast({ title: "Enter 6-digit OTP", variant: "destructive" });
-      return;
-    }
-
-    setVerifyingOtp(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("verify-otp", {
-        body: { email: form.email?.trim(), otp: otpValue },
-      });
-
-      if (error) throw error;
-
-      if (data?.verified) {
-        setOtpVerified(true);
-        toast({ title: "✅ Email verified!" });
-      } else {
-        toast({ title: "Invalid OTP", description: data?.error || "Please try again", variant: "destructive" });
-      }
-    } catch (err: any) {
-      toast({ title: "Verification failed", description: err.message, variant: "destructive" });
-    }
-    setVerifyingOtp(false);
-  };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
