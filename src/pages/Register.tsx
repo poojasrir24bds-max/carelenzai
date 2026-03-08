@@ -402,7 +402,11 @@ const Register = () => {
                 </div>
               </div>
 
-              {role === "doctor" && (
+              {/* Address */}
+              <div className="space-y-1.5">
+                <Label>{t("register.address")}</Label>
+                <Input placeholder={t("register.addressPlaceholder")} onChange={(e) => update("address", e.target.value)} required />
+              </div>
                 <>
                   <div className="space-y-1.5">
                     <Label>{t("register.specialization")}</Label>

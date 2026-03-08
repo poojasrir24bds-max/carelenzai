@@ -170,6 +170,7 @@ export type Database = {
       }
       doctor_profiles: {
         Row: {
+          address: string | null
           created_at: string
           doctor_id: string
           hospital_name: string
@@ -187,6 +188,7 @@ export type Database = {
           verified_by: string | null
         }
         Insert: {
+          address?: string | null
           created_at?: string
           doctor_id: string
           hospital_name: string
@@ -204,6 +206,7 @@ export type Database = {
           verified_by?: string | null
         }
         Update: {
+          address?: string | null
           created_at?: string
           doctor_id?: string
           hospital_name?: string
@@ -392,6 +395,7 @@ export type Database = {
       profiles: {
         Row: {
           aadhaar_number: string | null
+          address: string | null
           age: number | null
           created_at: string
           email: string
@@ -408,6 +412,7 @@ export type Database = {
         }
         Insert: {
           aadhaar_number?: string | null
+          address?: string | null
           age?: number | null
           created_at?: string
           email: string
@@ -424,6 +429,7 @@ export type Database = {
         }
         Update: {
           aadhaar_number?: string | null
+          address?: string | null
           age?: number | null
           created_at?: string
           email?: string
