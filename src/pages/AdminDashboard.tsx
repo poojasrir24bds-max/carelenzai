@@ -524,8 +524,24 @@ const AdminDashboard = () => {
                         </div>
                       </div>
                       <div className="ml-12 space-y-0.5">
+                        {pat.age && <p className="text-xs text-muted-foreground">🎂 Age: {pat.age} {pat.sex ? `• ⚧ ${pat.sex}` : ''}</p>}
                         {pat.aadhaar_number && <p className="text-xs text-muted-foreground">🪪 Aadhaar: ****{pat.aadhaar_number.slice(-4)}</p>}
-                        {pat.age && <p className="text-xs text-muted-foreground">🎂 Age: {pat.age}</p>}
+                        {pat.address && <p className="text-xs text-muted-foreground">📍 {pat.address}</p>}
+                        <p className="text-xs text-muted-foreground">📅 Joined: {new Date(pat.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</p>
+                        <p className="text-xs text-muted-foreground">🔬 Total Scans: {patientScans[pat.user_id] || 0}</p>
+                        {patientSubs[pat.user_id] ? (
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-success/20 text-success">
+                              ✅ {patientSubs[pat.user_id].subscription_plans?.name} Plan
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              Scans: {patientSubs[pat.user_id].scans_used}/{patientSubs[pat.user_id].subscription_plans?.scan_limit} • 
+                              Consults: {patientSubs[pat.user_id].consultations_used}/{patientSubs[pat.user_id].subscription_plans?.doctor_consultations}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground mt-1 inline-block">No Subscription</span>
+                        )}
                       </div>
                       {pat.id_document_url && (
                         <div className="ml-12 mt-2">
