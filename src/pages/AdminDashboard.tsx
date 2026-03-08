@@ -25,6 +25,8 @@ const AdminDashboard = () => {
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const [allDoctorProfiles, setAllDoctorProfiles] = useState<any[]>([]);
   const [pendingPatients, setPendingPatients] = useState<any[]>([]);
+  const [patientScans, setPatientScans] = useState<Record<string, number>>({});
+  const [patientSubs, setPatientSubs] = useState<Record<string, any>>({});
   const [stats, setStats] = useState({ users: 0, doctors: 0, scans: 0, pendingPatients: 0 });
   const [recordings, setRecordings] = useState<any[]>([]);
   const [subscriptions, setSubscriptions] = useState<any[]>([]);
@@ -76,6 +78,23 @@ const AdminDashboard = () => {
     const { count: doctorCount } = await supabase.from("doctor_profiles").select("*", { count: "exact", head: true });
     const { count: scanCount } = await supabase.from("scans").select("*", { count: "exact", head: true });
     setStats({ users: userCount || 0, doctors: doctorCount || 0, scans: scanCount || 0, pendingPatients: pendingPats.length });
+
+    // Fetch scan counts per patient
+    const { data: allScans } = await supabase.from("scans").select("user_id");
+    const { data: allDentalScans } = await supabase.from("dental_scans").select("user_id");
+    const scanCounts: Record<string, number> = {};
+    (allScans || []).forEach((s: any) => { scanCounts[s.user_id] = (scanCounts[s.user_id] || 0) + 1; });
+    (allDentalScans || []).forEach((s: any) => { scanCounts[s.user_id] = (scanCounts[s.user_id] || 0) + 1; });
+    setPatientScans(scanCounts);
+
+    // Fetch active subscriptions per patient
+    const { data: allSubs } = await supabase
+      .from("user_subscriptions")
+      .select("*, subscription_plans(name, scan_limit, doctor_consultations)")
+      .eq("status", "active");
+    const subMap: Record<string, any> = {};
+    (allSubs || []).forEach((s: any) => { subMap[s.user_id] = s; });
+    setPatientSubs(subMap);
   };
 
   const fetchRecordings = async () => {
@@ -450,6 +469,10 @@ const AdminDashboard = () => {
                       <p className="text-xs text-muted-foreground">🏥 {doc.hospital_name}</p>
                       <p className="text-xs text-muted-foreground">🩺 {doc.specialization} • License: {doc.medical_license}</p>
                       <p className="text-xs text-muted-foreground">🆔 Doctor ID: {doc.doctor_id}</p>
+                      {doc.address && <p className="text-xs text-muted-foreground">📍 {doc.address}</p>}
+                      {doc.profiles?.phone && <p className="text-xs text-muted-foreground">📱 {doc.profiles.phone}</p>}
+                      <p className="text-xs text-muted-foreground">📅 Registered: {new Date(doc.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</p>
+                      {doc.verified_at && <p className="text-xs text-success">✅ Verified on: {new Date(doc.verified_at).toLocaleDateString("en-IN")}</p>}
                       {doc.license_document_url && (
                         <p className="text-xs text-success flex items-center gap-1">
                           <FileCheck className="h-3 w-3" /> License document uploaded
@@ -505,8 +528,24 @@ const AdminDashboard = () => {
                         </div>
                       </div>
                       <div className="ml-12 space-y-0.5">
+                        {pat.age && <p className="text-xs text-muted-foreground">🎂 Age: {pat.age} {pat.sex ? `• ⚧ ${pat.sex}` : ''}</p>}
                         {pat.aadhaar_number && <p className="text-xs text-muted-foreground">🪪 Aadhaar: ****{pat.aadhaar_number.slice(-4)}</p>}
-                        {pat.age && <p className="text-xs text-muted-foreground">🎂 Age: {pat.age}</p>}
+                        {pat.address && <p className="text-xs text-muted-foreground">📍 {pat.address}</p>}
+                        <p className="text-xs text-muted-foreground">📅 Joined: {new Date(pat.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</p>
+                        <p className="text-xs text-muted-foreground">🔬 Total Scans: {patientScans[pat.user_id] || 0}</p>
+                        {patientSubs[pat.user_id] ? (
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-success/20 text-success">
+                              ✅ {patientSubs[pat.user_id].subscription_plans?.name} Plan
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              Scans: {patientSubs[pat.user_id].scans_used}/{patientSubs[pat.user_id].subscription_plans?.scan_limit} • 
+                              Consults: {patientSubs[pat.user_id].consultations_used}/{patientSubs[pat.user_id].subscription_plans?.doctor_consultations}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground mt-1 inline-block">No Subscription</span>
+                        )}
                       </div>
                       {pat.id_document_url && (
                         <div className="ml-12 mt-2">
