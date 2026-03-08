@@ -54,9 +54,9 @@ function verifyLicense(licenseNumber: string, doctorId: string, specialization: 
   const patterns = isDentist ? DENTAL_LICENSE_PATTERNS : MEDICAL_LICENSE_PATTERNS;
   const formatValid = patterns.some(p => p.test(trimmed));
   if (!formatValid) {
-    notes.push("License number format does not match any known Indian medical license pattern");
+    notes.push(`License number format does not match any known Indian ${isDentist ? 'dental' : 'medical'} license pattern`);
   } else {
-    notes.push("License number format matches a valid pattern");
+    notes.push(`License number format matches a valid ${isDentist ? 'dental' : 'medical'} pattern`);
   }
   
   // Check state code if applicable
