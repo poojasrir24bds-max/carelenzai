@@ -230,9 +230,9 @@ const DoctorDashboard = () => {
           <span className="font-display font-bold text-primary-foreground">Doctor Portal</span>
         </div>
         <div className="flex items-center gap-2">
-          <button className="text-primary-foreground relative">
-            <Bell className="h-5 w-5" />
-          </button>
+          <NotificationBell />
+          <button onClick={handleLogout} className="text-primary-foreground">
+            <LogOut className="h-5 w-5" />
           <button onClick={handleLogout} className="text-primary-foreground">
             <LogOut className="h-5 w-5" />
           </button>
