@@ -39,6 +39,18 @@ const ScanResults = () => {
   const [translating, setTranslating] = useState(false);
   const [lang, setLang] = useState<"en" | "ta">("en");
   const [translatedData, setTranslatedData] = useState<TranslatedResult | null>(null);
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+
+  // Preload voices - they load asynchronously
+  useEffect(() => {
+    const loadVoices = () => {
+      const v = window.speechSynthesis?.getVoices() || [];
+      if (v.length > 0) setVoices(v);
+    };
+    loadVoices();
+    window.speechSynthesis?.addEventListener("voiceschanged", loadVoices);
+    return () => window.speechSynthesis?.removeEventListener("voiceschanged", loadVoices);
+  }, []);
 
   useEffect(() => {
     if (result && (result.severity === "medium" || result.severity === "high")) {
@@ -151,18 +163,23 @@ const ScanResults = () => {
     const text = `${displayCondition}. ${displayDefinition}. ${displayGuidance.join(". ")}`;
 
     const utterance = new SpeechSynthesisUtterance(text);
-    const targetLang = lang === "en" ? "en" : "ta";
-    utterance.lang = targetLang === "en" ? "en-US" : "ta-IN";
+    const isTamil = lang === "ta";
+    utterance.lang = isTamil ? "ta-IN" : "en-US";
     
-    // Try to find a matching voice for the language
-    const voices = window.speechSynthesis.getVoices();
-    const matchingVoice = voices.find(v => v.lang.startsWith(targetLang)) 
-      || voices.find(v => v.lang.toLowerCase().includes(targetLang));
-    if (matchingVoice) {
-      utterance.voice = matchingVoice;
-    } else if (targetLang === "ta") {
-      // No Tamil voice available - still speak the Tamil text with default voice
-      console.warn("No Tamil voice found, using default voice for Tamil text");
+    // Find a matching voice for the language
+    const availableVoices = voices.length > 0 ? voices : (window.speechSynthesis.getVoices() || []);
+    if (isTamil) {
+      const tamilVoice = availableVoices.find(v => v.lang === "ta-IN")
+        || availableVoices.find(v => v.lang.startsWith("ta"))
+        || availableVoices.find(v => v.lang.toLowerCase().includes("tamil"));
+      if (tamilVoice) {
+        utterance.voice = tamilVoice;
+      } else {
+        console.warn("No Tamil voice available on this device. Available voices:", availableVoices.map(v => `${v.name} (${v.lang})`));
+      }
+    } else {
+      const englishVoice = availableVoices.find(v => v.lang === "en-US") || availableVoices.find(v => v.lang.startsWith("en"));
+      if (englishVoice) utterance.voice = englishVoice;
     }
     
     utterance.rate = 0.9;
