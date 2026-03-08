@@ -41,6 +41,19 @@ const AdminDashboard = () => {
     fetchData();
     fetchRecordings();
     fetchSubscriptions();
+
+    // Realtime: auto-refresh stats when users/roles/subscriptions change
+    const channel = supabase
+      .channel('admin-stats')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'user_roles' }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'user_subscriptions' }, () => { fetchData(); fetchSubscriptions(); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'doctor_profiles' }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'scans' }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'dental_scans' }, () => fetchData())
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   const fetchData = async () => {
