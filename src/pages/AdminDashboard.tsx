@@ -504,6 +504,64 @@ const AdminDashboard = () => {
             )}
           </TabsContent>
 
+          {/* Recordings Tab */}
+          <TabsContent value="recordings" className="mt-4 space-y-3">
+            <Card className="shadow-card border-border">
+              <CardContent className="p-4">
+                <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                  <Video className="h-4 w-4 text-destructive" /> Call Recordings ({recordings.length})
+                </h3>
+                <p className="text-xs text-muted-foreground mb-3">
+                  All video consultations are automatically recorded and saved here to prevent misuse.
+                </p>
+              </CardContent>
+            </Card>
+            {recordings.length === 0 ? (
+              <Card className="shadow-card border-border">
+                <CardContent className="p-5 text-center text-sm text-muted-foreground">
+                  No call recordings yet. Recordings will appear here after video consultations.
+                </CardContent>
+              </Card>
+            ) : (
+              recordings.map((rec: any) => (
+                <Card key={rec.id} className="shadow-card border-border">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <p className="font-semibold text-sm">
+                          🧑‍⚕️ {rec.doctor_name} ↔ 🧑 {rec.patient_name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          📅 {new Date(rec.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                        </p>
+                        <div className="flex gap-3 mt-1">
+                          {rec.duration_seconds && (
+                            <p className="text-xs text-muted-foreground">
+                              ⏱ {Math.floor(rec.duration_seconds / 60)}m {rec.duration_seconds % 60}s
+                            </p>
+                          )}
+                          {rec.file_size_bytes && (
+                            <p className="text-xs text-muted-foreground">
+                              📦 {(rec.file_size_bytes / (1024 * 1024)).toFixed(1)} MB
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => playRecording(rec.recording_url)}>
+                          <Play className="h-3.5 w-3.5 mr-1" /> Play
+                        </Button>
+                        <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => downloadRecording(rec.recording_url, rec.consultation_id)}>
+                          <Download className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </TabsContent>
+
           <TabsContent value="payments" className="mt-4">
             <Card className="shadow-card border-border">
               <CardContent className="p-5 text-center">
