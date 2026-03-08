@@ -404,7 +404,6 @@ const DoctorDashboard = () => {
                         </div>
                       </div>
                     )}
-                    )}
                   </CardContent>
                 </Card>
               ))
