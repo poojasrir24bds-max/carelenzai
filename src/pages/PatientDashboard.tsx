@@ -37,7 +37,7 @@ const PatientDashboard = () => {
   const { user, profile, signOut } = useAuth();
   const { toast } = useToast();
   const { t } = useLanguage();
-  const { hasActiveSubscription, loading: subLoading, scansRemaining, consultationsRemaining, plan } = useSubscription();
+  const { hasActiveSubscription, hasPendingSubscription, loading: subLoading, scansRemaining, consultationsRemaining, plan } = useSubscription();
   const [recentScans, setRecentScans] = useState<any[]>([]);
   const [doubtText, setDoubtText] = useState("");
   const [submittingDoubt, setSubmittingDoubt] = useState(false);
