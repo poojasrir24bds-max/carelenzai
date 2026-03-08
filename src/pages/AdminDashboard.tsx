@@ -1,26 +1,67 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LogOut, Users, Stethoscope, ScanLine, DollarSign, CheckCircle, XCircle, BarChart3, Shield, Settings } from "lucide-react";
 import logo from "@/assets/logo.png";
-
-const pendingDoctors = [
-  { name: "Dr. Rahul Mehta", specialty: "Trichologist", license: "ML-67890" },
-  { name: "Dr. Kavita Singh", specialty: "Ophthalmologist", license: "ML-54321" },
-];
-
-const allUsers = [
-  { name: "Anita Roy", role: "Patient", status: "Active", joined: "Feb 2026" },
-  { name: "Raj Kumar", role: "Patient", status: "Active", joined: "Jan 2026" },
-  { name: "Dr. Priya Sharma", role: "Doctor", status: "Verified", joined: "Jan 2026" },
-  { name: "Sita Devi", role: "Patient", status: "Expired", joined: "Dec 2025" },
-];
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const { signOut } = useAuth();
+  const { toast } = useToast();
   const [tab, setTab] = useState("overview");
+  const [pendingDoctors, setPendingDoctors] = useState<any[]>([]);
+  const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [stats, setStats] = useState({ users: 0, doctors: 0, scans: 0 });
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    // Fetch pending doctors
+    const { data: doctors } = await supabase
+      .from("doctor_profiles")
+      .select("*, profiles!doctor_profiles_user_id_fkey(full_name, email)")
+      .eq("is_verified", false);
+    setPendingDoctors(doctors || []);
+
+    // Fetch all profiles with roles
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("*, user_roles(role)")
+      .order("created_at", { ascending: false });
+    setAllUsers(profiles || []);
+
+    // Stats
+    const { count: userCount } = await supabase.from("profiles").select("*", { count: "exact", head: true });
+    const { count: doctorCount } = await supabase.from("doctor_profiles").select("*", { count: "exact", head: true });
+    const { count: scanCount } = await supabase.from("scans").select("*", { count: "exact", head: true });
+    setStats({ users: userCount || 0, doctors: doctorCount || 0, scans: scanCount || 0 });
+  };
+
+  const handleVerifyDoctor = async (userId: string, approve: boolean) => {
+    if (approve) {
+      const { error } = await supabase.from("doctor_profiles").update({ is_verified: true }).eq("user_id", userId);
+      if (error) {
+        toast({ title: "Error", description: error.message, variant: "destructive" });
+        return;
+      }
+      toast({ title: "Doctor approved!" });
+    } else {
+      toast({ title: "Doctor registration rejected." });
+    }
+    fetchData();
+  };
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -29,7 +70,7 @@ const AdminDashboard = () => {
           <img src={logo} alt="HealthScan AI" className="h-7 w-7" />
           <span className="font-display font-bold text-primary-foreground">Admin Panel</span>
         </div>
-        <button onClick={() => navigate("/")} className="text-primary-foreground">
+        <button onClick={handleLogout} className="text-primary-foreground">
           <LogOut className="h-5 w-5" />
         </button>
       </header>
@@ -40,10 +81,10 @@ const AdminDashboard = () => {
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
-            { icon: Users, label: "Total Users", value: "1,247", color: "text-primary" },
-            { icon: Stethoscope, label: "Doctors", value: "89", color: "text-secondary" },
-            { icon: ScanLine, label: "Scans Today", value: "342", color: "text-warning" },
-            { icon: DollarSign, label: "Revenue", value: "₹1.2L", color: "text-success" },
+            { icon: Users, label: "Total Users", value: String(stats.users), color: "text-primary" },
+            { icon: Stethoscope, label: "Doctors", value: String(stats.doctors), color: "text-secondary" },
+            { icon: ScanLine, label: "Total Scans", value: String(stats.scans), color: "text-warning" },
+            { icon: DollarSign, label: "Revenue", value: "₹0", color: "text-success" },
           ].map((s) => (
             <Card key={s.label} className="shadow-card border-border">
               <CardContent className="p-4">
@@ -65,34 +106,38 @@ const AdminDashboard = () => {
           </TabsList>
 
           <TabsContent value="overview" className="space-y-4 mt-4">
-            {/* Pending Approvals */}
             <Card className="shadow-card border-border">
               <CardContent className="p-4">
                 <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
-                  <Shield className="h-4 w-4 text-warning" /> Pending Doctor Approvals
+                  <Shield className="h-4 w-4 text-warning" /> Pending Doctor Approvals ({pendingDoctors.length})
                 </h3>
-                <div className="space-y-3">
-                  {pendingDoctors.map((doc, i) => (
-                    <div key={i} className="flex items-center justify-between border-b border-border pb-3 last:border-0 last:pb-0">
-                      <div>
-                        <p className="font-medium text-sm">{doc.name}</p>
-                        <p className="text-xs text-muted-foreground">{doc.specialty} • {doc.license}</p>
+                {pendingDoctors.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No pending approvals.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {pendingDoctors.map((doc) => (
+                      <div key={doc.id} className="flex items-center justify-between border-b border-border pb-3 last:border-0 last:pb-0">
+                        <div>
+                          <p className="font-medium text-sm">{doc.profiles?.full_name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {doc.specialization} • {doc.medical_license}
+                          </p>
+                        </div>
+                        <div className="flex gap-1.5">
+                          <Button size="sm" className="rounded-lg h-7 text-xs px-2.5" onClick={() => handleVerifyDoctor(doc.user_id, true)}>
+                            <CheckCircle className="h-3 w-3 mr-1" /> Approve
+                          </Button>
+                          <Button size="sm" variant="outline" className="rounded-lg h-7 text-xs px-2.5" onClick={() => handleVerifyDoctor(doc.user_id, false)}>
+                            <XCircle className="h-3 w-3 mr-1" /> Reject
+                          </Button>
+                        </div>
                       </div>
-                      <div className="flex gap-1.5">
-                        <Button size="sm" className="rounded-lg h-7 text-xs px-2.5">
-                          <CheckCircle className="h-3 w-3 mr-1" /> Approve
-                        </Button>
-                        <Button size="sm" variant="outline" className="rounded-lg h-7 text-xs px-2.5">
-                          <XCircle className="h-3 w-3 mr-1" /> Reject
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
-            {/* Quick Actions */}
             <div className="grid grid-cols-2 gap-3">
               {[
                 { icon: BarChart3, label: "Analytics" },
@@ -109,38 +154,37 @@ const AdminDashboard = () => {
           </TabsContent>
 
           <TabsContent value="doctors" className="mt-4 space-y-3">
-            {pendingDoctors.map((doc, i) => (
-              <Card key={i} className="shadow-card border-border">
-                <CardContent className="p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-secondary/20 rounded-full p-2.5">
-                      <Stethoscope className="h-5 w-5 text-secondary" />
+            {allUsers
+              .filter((u) => u.user_roles?.some((r: any) => r.role === "doctor"))
+              .map((u) => (
+                <Card key={u.id} className="shadow-card border-border">
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-secondary/20 rounded-full p-2.5">
+                        <Stethoscope className="h-5 w-5 text-secondary" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm">{u.full_name}</p>
+                        <p className="text-xs text-muted-foreground">{u.email}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-semibold text-sm">{doc.name}</p>
-                      <p className="text-xs text-muted-foreground">{doc.specialty}</p>
-                    </div>
-                  </div>
-                  <span className="bg-warning/20 text-warning text-xs font-medium px-2.5 py-0.5 rounded-full">Pending</span>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              ))}
           </TabsContent>
 
           <TabsContent value="users" className="mt-4 space-y-3">
-            {allUsers.map((user, i) => (
-              <Card key={i} className="shadow-card border-border">
+            {allUsers.map((user) => (
+              <Card key={user.id} className="shadow-card border-border">
                 <CardContent className="p-4 flex items-center justify-between">
                   <div>
-                    <p className="font-semibold text-sm">{user.name}</p>
-                    <p className="text-xs text-muted-foreground">{user.role} • Joined {user.joined}</p>
+                    <p className="font-semibold text-sm">{user.full_name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {user.user_roles?.[0]?.role || "unknown"} • {user.email}
+                    </p>
                   </div>
-                  <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${
-                    user.status === "Active" ? "bg-success/20 text-success" :
-                    user.status === "Verified" ? "bg-primary/20 text-primary" :
-                    "bg-destructive/20 text-destructive"
-                  }`}>
-                    {user.status}
+                  <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-success/20 text-success">
+                    Active
                   </span>
                 </CardContent>
               </Card>
@@ -149,22 +193,12 @@ const AdminDashboard = () => {
 
           <TabsContent value="payments" className="mt-4">
             <Card className="shadow-card border-border">
-              <CardContent className="p-5 space-y-4">
-                <h3 className="font-semibold">Revenue Summary</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  {[
-                    { label: "Patient Subs", value: "₹84,150", count: "851 active" },
-                    { label: "Doctor Subs", value: "₹15,711", count: "79 active" },
-                    { label: "Total Revenue", value: "₹99,861", count: "This month" },
-                    { label: "Payouts Due", value: "₹32,400", count: "12 doctors" },
-                  ].map((p) => (
-                    <div key={p.label} className="bg-accent/50 rounded-xl p-3">
-                      <p className="text-xs text-muted-foreground">{p.label}</p>
-                      <p className="font-bold text-lg">{p.value}</p>
-                      <p className="text-xs text-muted-foreground">{p.count}</p>
-                    </div>
-                  ))}
-                </div>
+              <CardContent className="p-5 text-center">
+                <DollarSign className="h-10 w-10 text-primary mx-auto mb-3" />
+                <h3 className="font-semibold mb-1">Payment System</h3>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Stripe integration required for subscription payments. Contact admin to set up.
+                </p>
               </CardContent>
             </Card>
           </TabsContent>
