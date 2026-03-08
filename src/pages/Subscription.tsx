@@ -181,7 +181,7 @@ const Subscription = () => {
                       </div>
                       <div className="flex items-center gap-2 text-sm">
                         <Check className="h-4 w-4 text-success" />
-                        <span>{t("sub.validDays", String(plan.duration_days))}</span>
+                        <span>{plan.duration_days} {t("sub.days")}</span>
                       </div>
                       {isPremium && (
                         <div className="flex items-center gap-2 text-sm">
