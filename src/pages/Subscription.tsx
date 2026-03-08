@@ -36,7 +36,7 @@ const Subscription = () => {
   const allCreditsUsed = !!(scansExhausted && consultationsExhausted);
   const isExpired = !!(activeSub?.status === 'active' && activeSub.expires_at && new Date(activeSub.expires_at) < new Date());
   const canResubscribe = !activeSub || allCreditsUsed || isExpired;
-
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     fetchPlans();
