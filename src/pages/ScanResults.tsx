@@ -143,8 +143,66 @@ const ScanResults = () => {
     setSubmittingDoubt(false);
   };
 
+  const audioRef = React.useRef<HTMLAudioElement | null>(null);
+
+  const splitTextForTTS = (text: string, maxLen = 180): string[] => {
+    const sentences = text.split(/(?<=[.!?।,])\s+/);
+    const chunks: string[] = [];
+    let current = "";
+    for (const s of sentences) {
+      if ((current + " " + s).trim().length > maxLen && current) {
+        chunks.push(current.trim());
+        current = s;
+      } else {
+        current = current ? current + " " + s : s;
+      }
+    }
+    if (current.trim()) chunks.push(current.trim());
+    return chunks.length ? chunks : [text.substring(0, maxLen)];
+  };
+
+  const playGoogleTTS = async (text: string, langCode: string) => {
+    handleStopAudio();
+    setIsSpeaking(true);
+    const chunks = splitTextForTTS(text);
+    try {
+      for (const chunk of chunks) {
+        const encoded = encodeURIComponent(chunk);
+        const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encoded}&tl=${langCode}&client=tw-ob`;
+        const audio = new Audio(url);
+        audioRef.current = audio;
+        await new Promise<void>((resolve, reject) => {
+          audio.onended = () => resolve();
+          audio.onerror = () => reject(new Error("Audio playback failed"));
+          audio.play().catch(reject);
+        });
+      }
+    } catch (e) {
+      console.error("Google TTS error:", e);
+    }
+    setIsSpeaking(false);
+    audioRef.current = null;
+  };
+
   const handlePlayAudio = () => {
-    if (!result || !window.speechSynthesis) return;
+    if (!result) return;
+
+    const dc = lang === "ta" && translatedData ? translatedData.condition : result.condition;
+    const dd = lang === "ta" && translatedData ? translatedData.definition : result.definition;
+    const dg = lang === "ta" && translatedData ? translatedData.guidance : (result.guidance || []);
+    const text = `${dc}. ${dd}. ${dg.join(". ")}`;
+
+    if (lang === "ta") {
+      if (isSpeaking) {
+        handleStopAudio();
+        return;
+      }
+      playGoogleTTS(text, "ta");
+      return;
+    }
+
+    // English: use browser SpeechSynthesis
+    if (!window.speechSynthesis) return;
 
     if (isSpeaking && window.speechSynthesis.speaking) {
       if (window.speechSynthesis.paused) {
@@ -157,25 +215,11 @@ const ScanResults = () => {
     }
 
     window.speechSynthesis.cancel();
-
-    const dc = lang === "ta" && translatedData ? translatedData.condition : result.condition;
-    const dd = lang === "ta" && translatedData ? translatedData.definition : result.definition;
-    const dg = lang === "ta" && translatedData ? translatedData.guidance : (result.guidance || []);
-
-    const text = `${dc}. ${dd}. ${dg.join(". ")}`;
     const utterance = new SpeechSynthesisUtterance(text);
-    const isTamil = lang === "ta";
-    utterance.lang = isTamil ? "ta-IN" : "en-US";
-
+    utterance.lang = "en-US";
     const availableVoices = voices.length > 0 ? voices : (window.speechSynthesis.getVoices() || []);
-    if (isTamil) {
-      const tamilVoice = availableVoices.find(v => v.lang === "ta-IN") || availableVoices.find(v => v.lang.startsWith("ta"));
-      if (tamilVoice) utterance.voice = tamilVoice;
-    } else {
-      const englishVoice = availableVoices.find(v => v.lang === "en-US") || availableVoices.find(v => v.lang.startsWith("en"));
-      if (englishVoice) utterance.voice = englishVoice;
-    }
-
+    const englishVoice = availableVoices.find(v => v.lang === "en-US") || availableVoices.find(v => v.lang.startsWith("en"));
+    if (englishVoice) utterance.voice = englishVoice;
     utterance.rate = 0.9;
     utterance.onstart = () => setIsSpeaking(true);
     utterance.onend = () => setIsSpeaking(false);
@@ -185,7 +229,11 @@ const ScanResults = () => {
   };
 
   const handleStopAudio = () => {
-    window.speechSynthesis.cancel();
+    window.speechSynthesis?.cancel();
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
     setIsSpeaking(false);
   };
 
