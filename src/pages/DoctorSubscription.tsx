@@ -206,14 +206,6 @@ const DoctorSubscription = () => {
           </Card>
         )}
 
-        {/* UPI Info */}
-        <Card className="shadow-card border-border">
-          <CardContent className="p-4 text-center">
-            <p className="text-xs text-muted-foreground mb-1">Pay to UPI ID</p>
-            <p className="font-mono text-sm font-bold text-primary">{UPI_ID}</p>
-            <p className="text-xs text-muted-foreground mt-2">Admin will verify and activate your subscription</p>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
