@@ -100,7 +100,8 @@ serve(async (req) => {
   }
 
   try {
-    const { licenseNumber, doctorId, doctorProfileId } = await req.json();
+    const body = await req.json();
+    const { licenseNumber, doctorProfileId } = body;
 
     if (!licenseNumber) {
       return new Response(JSON.stringify({ error: "License number is required" }), {
