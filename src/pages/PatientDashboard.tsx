@@ -457,6 +457,11 @@ const PatientDashboard = () => {
                         {doc.address && (
                           <p className="text-xs text-muted-foreground">📍 {doc.address}</p>
                         )}
+                        <AverageRating
+                          rating={doctorAvgRatings[doc.user_id]?.avg || 0}
+                          count={doctorAvgRatings[doc.user_id]?.count || 0}
+                        />
+                        )}
                       </div>
                       <div className="flex flex-col items-end gap-1">
                         <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-success/20 text-success">✅ {t("patient.verified")}</span>
