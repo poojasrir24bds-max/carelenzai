@@ -210,7 +210,7 @@ const ScanResults = () => {
         handleStopAudio();
         return;
       }
-      playGoogleTTS(text, "ta");
+      playTamilTTS(text);
       return;
     }
 
