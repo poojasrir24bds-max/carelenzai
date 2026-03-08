@@ -338,6 +338,7 @@ const AdminDashboard = () => {
                         <div>
                           <p className="font-semibold text-sm">{doc.profiles?.full_name || "Unknown"}</p>
                           <p className="text-xs text-muted-foreground">📧 {doc.profiles?.email}</p>
+                          {doc.profiles?.phone && <p className="text-xs text-muted-foreground">📱 {doc.profiles.phone}</p>}
                         </div>
                       </div>
                       <div className="flex flex-col items-end gap-1">
