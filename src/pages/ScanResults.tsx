@@ -2,7 +2,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, AlertTriangle, CheckCircle, ShieldAlert, Stethoscope, Droplets, Salad, Heart, Sparkles, Volume2, MessageSquare } from "lucide-react";
+import { ArrowLeft, AlertTriangle, CheckCircle, ShieldAlert, Stethoscope, Droplets, Salad, Heart, Sparkles, Volume2, Pause, Square, MessageSquare } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -77,6 +77,18 @@ const ScanResults = () => {
 
   const handlePlayAudio = (lang: "en" | "ta") => {
     if (!result || !window.speechSynthesis) return;
+
+    // If already speaking, pause/resume
+    if (isSpeaking && window.speechSynthesis.speaking) {
+      if (window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+      } else {
+        window.speechSynthesis.pause();
+        setIsSpeaking(false);
+      }
+      return;
+    }
+
     window.speechSynthesis.cancel();
 
     const text = lang === "en"
@@ -87,7 +99,14 @@ const ScanResults = () => {
     utterance.lang = lang === "en" ? "en-US" : "ta-IN";
     utterance.onstart = () => setIsSpeaking(true);
     utterance.onend = () => setIsSpeaking(false);
+    utterance.onpause = () => setIsSpeaking(false);
+    utterance.onresume = () => setIsSpeaking(true);
     window.speechSynthesis.speak(utterance);
+  };
+
+  const handleStopAudio = () => {
+    window.speechSynthesis.cancel();
+    setIsSpeaking(false);
   };
 
   if (!result) {
@@ -130,25 +149,35 @@ const ScanResults = () => {
         </Card>
 
         {/* Voiceover Buttons */}
-        <div className="flex gap-3">
+        <div className="flex gap-2">
           <Button
             variant="outline"
             size="sm"
             className="flex-1 rounded-xl"
             onClick={() => handlePlayAudio("en")}
-            disabled={isSpeaking}
           >
-            <Volume2 className="h-4 w-4 mr-2" /> Play in English
+            {isSpeaking ? <Pause className="h-4 w-4 mr-2" /> : <Volume2 className="h-4 w-4 mr-2" />}
+            {isSpeaking ? "Pause" : "English"}
           </Button>
           <Button
             variant="outline"
             size="sm"
             className="flex-1 rounded-xl"
             onClick={() => handlePlayAudio("ta")}
-            disabled={isSpeaking}
           >
-            <Volume2 className="h-4 w-4 mr-2" /> தமிழில் கேளுங்கள்
+            {isSpeaking ? <Pause className="h-4 w-4 mr-2" /> : <Volume2 className="h-4 w-4 mr-2" />}
+            {isSpeaking ? "இடைநிறுத்து" : "தமிழ்"}
           </Button>
+          {(isSpeaking || window.speechSynthesis?.speaking) && (
+            <Button
+              variant="destructive"
+              size="sm"
+              className="rounded-xl"
+              onClick={handleStopAudio}
+            >
+              <Square className="h-4 w-4" />
+            </Button>
+          )}
         </div>
 
         {/* Definition */}
