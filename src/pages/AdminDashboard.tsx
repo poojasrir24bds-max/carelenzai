@@ -566,6 +566,69 @@ const AdminDashboard = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Patient ID Review Dialog */}
+      <Dialog open={!!selectedPatient} onOpenChange={(open) => !open && setSelectedPatient(null)}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5 text-primary" />
+              Patient ID Verification
+            </DialogTitle>
+          </DialogHeader>
+
+          {selectedPatient && (
+            <div className="space-y-4">
+              <div className="bg-accent/30 rounded-xl p-4 space-y-2">
+                <h4 className="font-semibold">{selectedPatient.full_name}</h4>
+                <p className="text-sm text-muted-foreground">📧 {selectedPatient.email}</p>
+                {selectedPatient.age && <p className="text-sm text-muted-foreground">🎂 Age: {selectedPatient.age}</p>}
+                {selectedPatient.aadhaar_number && (
+                  <p className="text-sm text-muted-foreground">🪪 Aadhaar: <span className="font-mono font-semibold">{selectedPatient.aadhaar_number}</span></p>
+                )}
+              </div>
+
+              <div className="border border-border rounded-xl p-4">
+                <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">📄 ID Document</h4>
+                {idDocUrl ? (
+                  <div className="space-y-2">
+                    <img src={idDocUrl} alt="ID Document" className="w-full rounded-lg border border-border" />
+                    <a href={idDocUrl} target="_blank" rel="noreferrer" className="text-xs text-primary underline">
+                      View full document ↗
+                    </a>
+                  </div>
+                ) : selectedPatient.id_document_url ? (
+                  <p className="text-xs text-muted-foreground">Loading document...</p>
+                ) : (
+                  <div className="bg-warning/10 rounded-lg p-3 flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 text-warning" />
+                    <p className="text-xs text-warning">No ID document uploaded</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Rejection Notes (optional)</label>
+                <Textarea
+                  placeholder="Reason for rejection..."
+                  value={rejectNotes}
+                  onChange={(e) => setRejectNotes(e.target.value)}
+                  rows={2}
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <Button className="flex-1" onClick={() => handleVerifyPatient(selectedPatient.user_id, true)}>
+                  <CheckCircle className="h-4 w-4 mr-2" /> Verify Patient
+                </Button>
+                <Button variant="destructive" className="flex-1" onClick={() => handleVerifyPatient(selectedPatient.user_id, false)}>
+                  <XCircle className="h-4 w-4 mr-2" /> Reject
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
