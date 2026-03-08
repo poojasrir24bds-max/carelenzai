@@ -24,11 +24,14 @@ const AdminDashboard = () => {
   const [pendingDoctors, setPendingDoctors] = useState<any[]>([]);
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const [allDoctorProfiles, setAllDoctorProfiles] = useState<any[]>([]);
-  const [stats, setStats] = useState({ users: 0, doctors: 0, scans: 0 });
+  const [pendingPatients, setPendingPatients] = useState<any[]>([]);
+  const [stats, setStats] = useState({ users: 0, doctors: 0, scans: 0, pendingPatients: 0 });
   const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
+  const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [verifying, setVerifying] = useState(false);
   const [rejectNotes, setRejectNotes] = useState("");
   const [licenseDocUrl, setLicenseDocUrl] = useState<string | null>(null);
+  const [idDocUrl, setIdDocUrl] = useState<string | null>(null);
 
   useEffect(() => {
     fetchData();
