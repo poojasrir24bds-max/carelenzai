@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { LogOut, Users, Stethoscope, ScanLine, DollarSign, CheckCircle, XCircle, BarChart3, Shield, Settings, FileCheck, AlertTriangle, Eye, Loader2, CreditCard } from "lucide-react";
+import { LogOut, Users, Stethoscope, ScanLine, DollarSign, CheckCircle, XCircle, BarChart3, Shield, Settings, FileCheck, AlertTriangle, Eye, Loader2, CreditCard, Video, Play, Download } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,6 +26,7 @@ const AdminDashboard = () => {
   const [allDoctorProfiles, setAllDoctorProfiles] = useState<any[]>([]);
   const [pendingPatients, setPendingPatients] = useState<any[]>([]);
   const [stats, setStats] = useState({ users: 0, doctors: 0, scans: 0, pendingPatients: 0 });
+  const [recordings, setRecordings] = useState<any[]>([]);
   const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [verifying, setVerifying] = useState(false);
@@ -35,6 +36,7 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     fetchData();
+    fetchRecordings();
   }, []);
 
   const fetchData = async () => {
@@ -72,6 +74,50 @@ const AdminDashboard = () => {
     const { count: doctorCount } = await supabase.from("doctor_profiles").select("*", { count: "exact", head: true });
     const { count: scanCount } = await supabase.from("scans").select("*", { count: "exact", head: true });
     setStats({ users: userCount || 0, doctors: doctorCount || 0, scans: scanCount || 0, pendingPatients: pendingPats.length });
+  };
+
+  const fetchRecordings = async () => {
+    const { data } = await supabase
+      .from("call_recordings" as any)
+      .select("*")
+      .order("created_at", { ascending: false });
+    
+    if (data && data.length > 0) {
+      // Enrich with patient/doctor names
+      const userIds = [...new Set((data as any[]).flatMap((r: any) => [r.patient_id, r.doctor_id]))];
+      const { data: profiles } = await supabase.from("profiles").select("user_id, full_name").in("user_id", userIds);
+      const profileMap = Object.fromEntries((profiles || []).map(p => [p.user_id, p.full_name]));
+      setRecordings((data as any[]).map((r: any) => ({
+        ...r,
+        patient_name: profileMap[r.patient_id] || "Patient",
+        doctor_name: profileMap[r.doctor_id] || "Doctor",
+      })));
+    } else {
+      setRecordings([]);
+    }
+  };
+
+  const playRecording = async (recordingUrl: string) => {
+    const { data } = await supabase.storage
+      .from("call-recordings")
+      .createSignedUrl(recordingUrl, 3600);
+    if (data?.signedUrl) {
+      window.open(data.signedUrl, "_blank");
+    } else {
+      toast({ title: "Error", description: "Could not load recording", variant: "destructive" });
+    }
+  };
+
+  const downloadRecording = async (recordingUrl: string, consultationId: string) => {
+    const { data } = await supabase.storage
+      .from("call-recordings")
+      .createSignedUrl(recordingUrl, 3600);
+    if (data?.signedUrl) {
+      const a = document.createElement("a");
+      a.href = data.signedUrl;
+      a.download = `recording_${consultationId}.webm`;
+      a.click();
+    }
   };
 
   const handleViewDoctor = async (doc: any) => {
@@ -241,11 +287,12 @@ const AdminDashboard = () => {
 
         {/* Tabs */}
         <Tabs value={tab} onValueChange={setTab}>
-          <TabsList className="w-full grid grid-cols-5">
+          <TabsList className="w-full grid grid-cols-6">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="doctors">Doctors</TabsTrigger>
             <TabsTrigger value="patients">Patients</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
+            <TabsTrigger value="recordings">Recordings</TabsTrigger>
             <TabsTrigger value="payments">Payments</TabsTrigger>
           </TabsList>
 
@@ -451,6 +498,64 @@ const AdminDashboard = () => {
                       {u.sex && <p className="text-xs text-muted-foreground">⚧ {u.sex}</p>}
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">📅 Joined: {new Date(u.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</p>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </TabsContent>
+
+          {/* Recordings Tab */}
+          <TabsContent value="recordings" className="mt-4 space-y-3">
+            <Card className="shadow-card border-border">
+              <CardContent className="p-4">
+                <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                  <Video className="h-4 w-4 text-destructive" /> Call Recordings ({recordings.length})
+                </h3>
+                <p className="text-xs text-muted-foreground mb-3">
+                  All video consultations are automatically recorded and saved here to prevent misuse.
+                </p>
+              </CardContent>
+            </Card>
+            {recordings.length === 0 ? (
+              <Card className="shadow-card border-border">
+                <CardContent className="p-5 text-center text-sm text-muted-foreground">
+                  No call recordings yet. Recordings will appear here after video consultations.
+                </CardContent>
+              </Card>
+            ) : (
+              recordings.map((rec: any) => (
+                <Card key={rec.id} className="shadow-card border-border">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <p className="font-semibold text-sm">
+                          🧑‍⚕️ {rec.doctor_name} ↔ 🧑 {rec.patient_name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          📅 {new Date(rec.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                        </p>
+                        <div className="flex gap-3 mt-1">
+                          {rec.duration_seconds && (
+                            <p className="text-xs text-muted-foreground">
+                              ⏱ {Math.floor(rec.duration_seconds / 60)}m {rec.duration_seconds % 60}s
+                            </p>
+                          )}
+                          {rec.file_size_bytes && (
+                            <p className="text-xs text-muted-foreground">
+                              📦 {(rec.file_size_bytes / (1024 * 1024)).toFixed(1)} MB
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => playRecording(rec.recording_url)}>
+                          <Play className="h-3.5 w-3.5 mr-1" /> Play
+                        </Button>
+                        <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => downloadRecording(rec.recording_url, rec.consultation_id)}>
+                          <Download className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               ))
