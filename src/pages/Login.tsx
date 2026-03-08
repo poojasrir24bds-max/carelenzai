@@ -84,6 +84,9 @@ const Login = () => {
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? t("login.signingIn") : t("login.signInBtn")}
               </Button>
+              <div className="text-right">
+                <Link to="/forgot-password" className="text-sm text-primary hover:underline">{t("login.forgotPassword")}</Link>
+              </div>
             </form>
             {role !== "admin" && (
               <p className="text-center text-sm text-muted-foreground mt-4">

@@ -8,6 +8,8 @@ import { LanguageProvider } from "@/hooks/useLanguage";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import PatientDashboard from "./pages/PatientDashboard";
 import DoctorDashboard from "./pages/DoctorDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -38,6 +40,8 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/login/:role" element={<Login />} />
               <Route path="/register/:role" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/patient" element={<PatientDashboard />} />
               <Route path="/patient/scan" element={<ScanPage />} />
               <Route path="/patient/results" element={<ScanResults />} />

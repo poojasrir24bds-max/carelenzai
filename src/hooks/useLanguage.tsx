@@ -50,6 +50,27 @@ const translations: Record<string, Record<Lang, string>> = {
   "login.signInBtn": { en: "Sign In", ta: "உள்நுழை" },
   "login.noAccount": { en: "Don't have an account?", ta: "கணக்கு இல்லையா?" },
   "login.register": { en: "Register", ta: "பதிவு செய்" },
+  "login.forgotPassword": { en: "Forgot Password?", ta: "கடவுச்சொல் மறந்துவிட்டதா?" },
+
+  // Forgot Password
+  "forgot.title": { en: "Forgot Password", ta: "கடவுச்சொல் மறந்துவிட்டது" },
+  "forgot.desc": { en: "Enter your email to receive a reset link", ta: "மீட்டமைப்பு இணைப்பைப் பெற உங்கள் மின்னஞ்சலை உள்ளிடவும்" },
+  "forgot.sendBtn": { en: "Send Reset Link", ta: "மீட்டமைப்பு இணைப்பை அனுப்பு" },
+  "forgot.sent": { en: "Reset link sent! Check your email.", ta: "மீட்டமைப்பு இணைப்பு அனுப்பப்பட்டது! உங்கள் மின்னஞ்சலைச் சரிபார்க்கவும்." },
+  "forgot.checkEmail": { en: "We've sent a password reset link to your email. Please check your inbox and spam folder.", ta: "உங்கள் மின்னஞ்சலுக்கு கடவுச்சொல் மீட்டமைப்பு இணைப்பை அனுப்பியுள்ளோம். உங்கள் இன்பாக்ஸ் மற்றும் ஸ்பேம் கோப்புறையைச் சரிபார்க்கவும்." },
+  "forgot.failed": { en: "Failed to send reset link", ta: "மீட்டமைப்பு இணைப்பை அனுப்ப முடியவில்லை" },
+
+  // Reset Password
+  "reset.title": { en: "Reset Password", ta: "கடவுச்சொல்லை மீட்டமை" },
+  "reset.desc": { en: "Enter your new password", ta: "உங்கள் புதிய கடவுச்சொல்லை உள்ளிடவும்" },
+  "reset.newPassword": { en: "New Password", ta: "புதிய கடவுச்சொல்" },
+  "reset.confirmPassword": { en: "Confirm Password", ta: "கடவுச்சொல்லை உறுதிப்படுத்து" },
+  "reset.updateBtn": { en: "Update Password", ta: "கடவுச்சொல்லைப் புதுப்பி" },
+  "reset.mismatch": { en: "Passwords do not match", ta: "கடவுச்சொற்கள் பொருந்தவில்லை" },
+  "reset.minLength": { en: "Password must be at least 6 characters", ta: "கடவுச்சொல் குறைந்தது 6 எழுத்துகள் இருக்க வேண்டும்" },
+  "reset.success": { en: "Password updated successfully!", ta: "கடவுச்சொல் வெற்றிகரமாக புதுப்பிக்கப்பட்டது!" },
+  "reset.failed": { en: "Failed to update password", ta: "கடவுச்சொல்லைப் புதுப்பிக்க முடியவில்லை" },
+  "reset.invalidLink": { en: "Invalid or expired reset link. Please request a new one.", ta: "தவறான அல்லது காலாவதியான மீட்டமைப்பு இணைப்பு. புதிய ஒன்றைக் கோருங்கள்." },
 
   // Register
   "register.title": { en: "Registration", ta: "பதிவு" },
