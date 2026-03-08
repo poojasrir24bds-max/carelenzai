@@ -1,17 +1,21 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Stethoscope, Check, ExternalLink, Crown } from "lucide-react";
+import { ArrowLeft, Stethoscope, Check, QrCode, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import logo from "@/assets/logo.png";
+import phonepeQr from "@/assets/phonepe-qr.jpeg";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-
-const UPI_ID = "9789887989@ybl";
-const UPI_NAME = "CARELENZ AI";
 
 const DoctorSubscription = () => {
   const navigate = useNavigate();
@@ -21,6 +25,7 @@ const DoctorSubscription = () => {
   const [activeSub, setActiveSub] = useState<any>(null);
   const [txnId, setTxnId] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showQr, setShowQr] = useState(false);
   const [showTxnInput, setShowTxnInput] = useState(false);
 
   useEffect(() => {
@@ -49,10 +54,14 @@ const DoctorSubscription = () => {
     setActiveSub((data as any[])?.[0] || null);
   };
 
-  const handleUpiPay = () => {
-    if (!plan) return;
-    const upiUrl = `upi://pay?pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent(UPI_NAME)}&am=${plan.price_inr}&cu=INR&tn=${encodeURIComponent("CARELENZ Doctor Registration")}`;
-    window.open(upiUrl, "_blank");
+  const handleShowQr = () => {
+    setShowQr(true);
+    setShowTxnInput(false);
+    setTxnId("");
+  };
+
+  const handlePaidDone = () => {
+    setShowQr(false);
     setShowTxnInput(true);
   };
 
@@ -170,9 +179,9 @@ const DoctorSubscription = () => {
                 </div>
               </div>
 
-              <Button className="w-full rounded-xl" onClick={handleUpiPay}>
-                <ExternalLink className="h-4 w-4 mr-2" />
-                Pay ₹{plan.price_inr} via UPI
+              <Button className="w-full rounded-xl" onClick={handleShowQr}>
+                <QrCode className="h-4 w-4 mr-2" />
+                Pay ₹{plan.price_inr} — Scan QR
               </Button>
             </CardContent>
           </Card>
@@ -184,7 +193,7 @@ const DoctorSubscription = () => {
             <CardContent className="p-5 space-y-3">
               <h3 className="font-display font-semibold">Confirm Payment</h3>
               <p className="text-sm text-muted-foreground">
-                After completing the UPI payment of <strong>₹{plan?.price_inr}</strong>, enter your UPI Transaction ID below.
+                After completing the payment of <strong>₹{plan?.price_inr}</strong>, enter your UPI Transaction ID below.
               </p>
               <div className="space-y-1.5">
                 <Label>UPI Transaction ID</Label>
@@ -205,8 +214,32 @@ const DoctorSubscription = () => {
             </CardContent>
           </Card>
         )}
-
       </div>
+
+      {/* QR Code Dialog */}
+      <Dialog open={showQr} onOpenChange={setShowQr}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-center font-display">
+              Scan & Pay ₹{plan?.price_inr}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center space-y-4 py-2">
+            <p className="text-sm text-muted-foreground text-center">
+              Scan the QR code below using any UPI app to complete your <strong>Doctor Registration</strong>
+            </p>
+            <div className="rounded-xl border-2 border-border overflow-hidden bg-white p-2">
+              <img src={phonepeQr} alt="PhonePe QR Code" className="w-64 h-64 object-contain" />
+            </div>
+            <p className="text-xs text-muted-foreground text-center">
+              Pay exactly <strong>₹{plan?.price_inr}</strong> to complete your registration
+            </p>
+            <Button className="w-full rounded-xl" onClick={handlePaidDone}>
+              I've Paid — Enter Transaction ID
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
