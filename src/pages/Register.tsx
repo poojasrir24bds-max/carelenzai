@@ -53,7 +53,7 @@ const Register = () => {
       return;
     }
 
-    const { error, data } = await signUp(
+    const result = await signUp(
       form.email || "",
       form.password || "",
       {
@@ -68,11 +68,13 @@ const Register = () => {
       role || "patient"
     );
 
-    if (error) {
+    if (result.error) {
       setLoading(false);
-      toast({ title: "Registration failed", description: error.message, variant: "destructive" });
+      toast({ title: "Registration failed", description: result.error.message, variant: "destructive" });
       return;
     }
+
+    const signUpData = (result as any).data;
 
     // Upload license document for doctors
     if (role === "doctor" && licenseFile && signUpData?.user) {
