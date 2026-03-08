@@ -22,16 +22,16 @@ const ScanPage = () => {
   const { t } = useLanguage();
   const { hasActiveSubscription, scansRemaining, loading: subLoading } = useSubscription();
   const initialArea = (location.state as any)?.area || "Skin";
-
-  // Redirect if no subscription
-  if (!subLoading && !hasActiveSubscription) {
-    navigate("/subscription");
-    return null;
-  }
   const [selectedArea, setSelectedArea] = useState(initialArea);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [scanning, setScanning] = useState(false);
+
+  useEffect(() => {
+    if (!subLoading && !hasActiveSubscription) {
+      navigate("/subscription");
+    }
+  }, [subLoading, hasActiveSubscription, navigate]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

@@ -21,17 +21,17 @@ const DentalScan = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { hasActiveSubscription, scansRemaining, loading: subLoading } = useSubscription();
-
-  // Redirect if no subscription
-  if (!subLoading && !hasActiveSubscription) {
-    navigate("/subscription");
-    return null;
-  }
   const [activeCategory, setActiveCategory] = useState("dental");
   const [selectedType, setSelectedType] = useState("Clinical Photo");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [scanning, setScanning] = useState(false);
+
+  useEffect(() => {
+    if (!subLoading && !hasActiveSubscription) {
+      navigate("/subscription");
+    }
+  }, [subLoading, hasActiveSubscription, navigate]);
 
   const currentCategory = categories.find((c) => c.id === activeCategory)!;
   const isDental = activeCategory === "dental";
