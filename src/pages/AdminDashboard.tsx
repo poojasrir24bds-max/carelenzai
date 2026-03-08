@@ -16,6 +16,7 @@ const AdminDashboard = () => {
   const [tab, setTab] = useState("overview");
   const [pendingDoctors, setPendingDoctors] = useState<any[]>([]);
   const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [allDoctorProfiles, setAllDoctorProfiles] = useState<any[]>([]);
   const [stats, setStats] = useState({ users: 0, doctors: 0, scans: 0 });
 
   useEffect(() => {
@@ -42,6 +43,14 @@ const AdminDashboard = () => {
       return { ...doc, profiles: profile };
     });
     setPendingDoctors(enrichedDoctors);
+
+    // Fetch all doctor profiles for Doctors tab
+    const { data: allDocs } = await supabase.from("doctor_profiles").select("*");
+    const enrichedAllDocs = (allDocs || []).map((doc) => {
+      const profile = (profiles || []).find((p) => p.user_id === doc.user_id);
+      return { ...doc, profiles: profile };
+    });
+    setAllDoctorProfiles(enrichedAllDocs);
 
     // Stats
     const { count: userCount } = await supabase.from("profiles").select("*", { count: "exact", head: true });
@@ -160,41 +169,68 @@ const AdminDashboard = () => {
           </TabsContent>
 
           <TabsContent value="doctors" className="mt-4 space-y-3">
-            {allUsers
-              .filter((u) => u.user_roles?.some((r: any) => r.role === "doctor"))
-              .map((u) => (
-                <Card key={u.id} className="shadow-card border-border">
-                  <CardContent className="p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-secondary/20 rounded-full p-2.5">
-                        <Stethoscope className="h-5 w-5 text-secondary" />
+            {allDoctorProfiles.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">No doctors registered yet.</p>
+            ) : (
+              allDoctorProfiles.map((doc) => (
+                <Card key={doc.id} className="shadow-card border-border">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-secondary/20 rounded-full p-2.5">
+                          <Stethoscope className="h-5 w-5 text-secondary" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm">{doc.profiles?.full_name || "Unknown"}</p>
+                          <p className="text-xs text-muted-foreground">📧 {doc.profiles?.email}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-semibold text-sm">{u.full_name}</p>
-                        <p className="text-xs text-muted-foreground">{u.email}</p>
-                      </div>
+                      <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${
+                        doc.is_verified ? "bg-success/20 text-success" : "bg-warning/20 text-warning"
+                      }`}>
+                        {doc.is_verified ? "Verified" : "Pending"}
+                      </span>
+                    </div>
+                    <div className="ml-12 space-y-0.5">
+                      <p className="text-xs text-muted-foreground">🏥 {doc.hospital_name}</p>
+                      <p className="text-xs text-muted-foreground">🩺 {doc.specialization} • License: {doc.medical_license}</p>
+                      <p className="text-xs text-muted-foreground">🆔 Doctor ID: {doc.doctor_id}</p>
                     </div>
                   </CardContent>
                 </Card>
-              ))}
+              ))
+            )}
           </TabsContent>
 
           <TabsContent value="users" className="mt-4 space-y-3">
-            {allUsers.map((user) => (
-              <Card key={user.id} className="shadow-card border-border">
-                <CardContent className="p-4 flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold text-sm">{user.full_name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {user.user_roles?.[0]?.role || "unknown"} • {user.email}
-                    </p>
-                  </div>
-                  <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-success/20 text-success">
-                    Active
-                  </span>
-                </CardContent>
-              </Card>
-            ))}
+            {allUsers.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">No users found.</p>
+            ) : (
+              allUsers.map((user) => (
+                <Card key={user.id} className="shadow-card border-border">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="font-semibold text-sm">{user.full_name}</p>
+                      <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${
+                        user.user_roles?.[0]?.role === "admin"
+                          ? "bg-destructive/20 text-destructive"
+                          : user.user_roles?.[0]?.role === "doctor"
+                          ? "bg-secondary/20 text-secondary"
+                          : "bg-primary/20 text-primary"
+                      }`}>
+                        {user.user_roles?.[0]?.role || "patient"}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">📧 {user.email}</p>
+                    <div className="flex gap-4 mt-1.5">
+                      {user.age && <p className="text-xs text-muted-foreground">🎂 Age: {user.age}</p>}
+                      {user.sex && <p className="text-xs text-muted-foreground">⚧ {user.sex}</p>}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">📅 Joined: {new Date(user.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</p>
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </TabsContent>
 
           <TabsContent value="payments" className="mt-4">
