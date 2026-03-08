@@ -256,19 +256,58 @@ const PatientDashboard = () => {
         )}
 
         <div className="grid grid-cols-3 gap-3 pb-4">
-          <button className="bg-card rounded-2xl p-4 shadow-card border border-border text-center hover:shadow-elevated transition-all">
+          <button
+            onClick={() => navigate("/patient/scan")}
+            className="bg-card rounded-2xl p-4 shadow-card border border-border text-center hover:shadow-elevated transition-all"
+          >
             <Stethoscope className="h-6 w-6 text-primary mx-auto mb-1" />
             <span className="text-xs font-medium">{t("patient.findDoctor")}</span>
           </button>
-          <button className="bg-card rounded-2xl p-4 shadow-card border border-border text-center hover:shadow-elevated transition-all">
-            <Calendar className="h-6 w-6 text-primary mx-auto mb-1" />
-            <span className="text-xs font-medium">{t("patient.appointments")}</span>
+          <button
+            onClick={handleRequestConsultation}
+            className="bg-card rounded-2xl p-4 shadow-card border border-border text-center hover:shadow-elevated transition-all"
+          >
+            <Video className="h-6 w-6 text-primary mx-auto mb-1" />
+            <span className="text-xs font-medium">{t("patient.videoCall")}</span>
           </button>
           <button className="bg-card rounded-2xl p-4 shadow-card border border-border text-center hover:shadow-elevated transition-all">
             <User className="h-6 w-6 text-primary mx-auto mb-1" />
             <span className="text-xs font-medium">{t("patient.profile")}</span>
           </button>
         </div>
+
+        {/* Active Consultations */}
+        {activeConsultations.length > 0 && (
+          <div className="pb-4">
+            <h2 className="font-display font-semibold text-lg mb-3">{t("patient.activeConsultations")}</h2>
+            <div className="space-y-3">
+              {activeConsultations.map((c: any) => (
+                <Card key={c.id} className="shadow-card border-border">
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold text-sm">{t("patient.videoConsultation")}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {c.status === "pending" ? t("patient.waitingDoctor") : t("patient.doctorAccepted")}
+                      </p>
+                    </div>
+                    {c.status === "accepted" && (
+                      <Button
+                        size="sm"
+                        className="rounded-xl"
+                        onClick={() => navigate("/video-call", { state: { roomId: c.room_id, consultationId: c.id, role: "patient" } })}
+                      >
+                        <Video className="h-4 w-4 mr-1" /> {t("patient.joinCall")}
+                      </Button>
+                    )}
+                    {c.status === "pending" && (
+                      <span className="text-xs text-warning font-medium animate-pulse">⏳ {t("patient.pending")}</span>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )
       </div>
     </div>
   );
