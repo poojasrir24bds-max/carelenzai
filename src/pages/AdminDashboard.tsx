@@ -97,11 +97,11 @@ const AdminDashboard = () => {
     // Count patients (users with patient role)
     const patientCount = (roles || []).filter((r: any) => r.role === 'patient').length;
 
-    // Calculate revenue from active/approved subscriptions
+    // Calculate revenue from all paid subscriptions (active, expired, completed)
     const { data: revenueSubs } = await supabase
       .from("user_subscriptions")
       .select("*, subscription_plans(price_inr)")
-      .eq("status", "active");
+      .in("status", ["active", "expired", "completed"]);
     const totalRevenue = (revenueSubs || []).reduce((sum: number, s: any) => sum + ((s.subscription_plans as any)?.price_inr || 0), 0);
 
     setStats({
