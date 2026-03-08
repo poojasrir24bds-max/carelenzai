@@ -248,8 +248,6 @@ const DoctorDashboard = () => {
           <NotificationBell />
           <button onClick={handleLogout} className="text-primary-foreground">
             <LogOut className="h-5 w-5" />
-          <button onClick={handleLogout} className="text-primary-foreground">
-            <LogOut className="h-5 w-5" />
           </button>
         </div>
       </header>
