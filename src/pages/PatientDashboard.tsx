@@ -10,6 +10,7 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 const scanAreaItems = [
+  { id: "dental", label: "Dental", emoji: "🦷" },
   { id: "skin", label: "Skin", emoji: "🖐️" },
   { id: "hair", label: "Hair", emoji: "💇" },
   { id: "eyes", label: "Eyes", emoji: "👁️" },
