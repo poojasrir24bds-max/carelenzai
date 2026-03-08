@@ -8,8 +8,11 @@ import { useState } from "react";
 
 const severityConfig: Record<string, { color: string; icon: any; label: string }> = {
   normal: { color: "bg-success/20 text-success", icon: CheckCircle, label: "Normal" },
+  low: { color: "bg-success/20 text-success", icon: CheckCircle, label: "Low" },
   mild: { color: "bg-primary/20 text-primary", icon: Info, label: "Mild" },
+  medium: { color: "bg-warning/20 text-warning", icon: AlertTriangle, label: "Medium" },
   moderate: { color: "bg-warning/20 text-warning", icon: AlertTriangle, label: "Moderate" },
+  high: { color: "bg-destructive/20 text-destructive", icon: AlertTriangle, label: "High" },
   severe: { color: "bg-destructive/20 text-destructive", icon: AlertTriangle, label: "Severe" },
 };
 
@@ -17,6 +20,7 @@ const DentalResults = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const result = location.state?.result;
+  const scanMode = location.state?.scanMode || "dental";
   const [isSpeaking, setIsSpeaking] = useState(false);
 
   if (!result) {
@@ -33,6 +37,7 @@ const DentalResults = () => {
 
   const severity = severityConfig[result.severity] || severityConfig.normal;
   const SeverityIcon = severity.icon;
+  const isDental = scanMode === "dental";
 
   const speakText = () => {
     if (isSpeaking) {
@@ -41,11 +46,19 @@ const DentalResults = () => {
       return;
     }
 
-    const text = `Dental Analysis Results. Severity: ${result.severity}. Confidence: ${result.confidence} percent. 
-    Overall assessment: ${result.overall_assessment}. 
-    Conditions found: ${result.conditions_found?.join(", ") || "None"}. 
-    Clinical notes: ${result.clinical_notes?.join(". ") || "None"}.
-    Recommendations: ${result.recommendations?.join(". ") || "None"}.`;
+    let text = "";
+    if (isDental) {
+      text = `Dental Analysis Results. Severity: ${result.severity}. Confidence: ${result.confidence} percent. 
+      Overall assessment: ${result.overall_assessment}. 
+      Conditions found: ${result.conditions_found?.join(", ") || "None"}. 
+      Clinical notes: ${result.clinical_notes?.join(". ") || "None"}.
+      Recommendations: ${result.recommendations?.join(". ") || "None"}.`;
+    } else {
+      text = `Health Scan Results. Condition: ${result.condition}. Severity: ${result.severity}. Confidence: ${result.confidence} percent.
+      Definition: ${result.definition}.
+      Causes: ${result.causes?.join(", ") || "Unknown"}.
+      Guidance: ${(Array.isArray(result.guidance) ? result.guidance : []).join(". ") || "None"}.`;
+    }
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "en-US";
@@ -63,8 +76,8 @@ const DentalResults = () => {
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div className="flex items-center gap-2">
-            <img src={logo} alt="DentalScan AI" className="h-7 w-7" />
-            <span className="font-display font-bold text-white">Analysis Results</span>
+            <img src={logo} alt="CareLenz AI" className="h-7 w-7" />
+            <span className="font-display font-bold text-white">{isDental ? "Dental" : "Health"} Results</span>
           </div>
         </div>
         <button onClick={speakText} className="bg-white/20 rounded-full p-2">
@@ -94,89 +107,132 @@ const DentalResults = () => {
           </Card>
         </div>
 
-        {/* Overall Assessment */}
-        <Card className="shadow-card border-border">
-          <CardContent className="p-4">
-            <h3 className="font-semibold text-sm mb-2">📋 Overall Assessment</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">{result.overall_assessment}</p>
-          </CardContent>
-        </Card>
+        {/* === DENTAL RESULTS === */}
+        {isDental && (
+          <>
+            <Card className="shadow-card border-border">
+              <CardContent className="p-4">
+                <h3 className="font-semibold text-sm mb-2">📋 Overall Assessment</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{result.overall_assessment}</p>
+              </CardContent>
+            </Card>
 
-        {/* Teeth Identified */}
-        {result.teeth_identified?.length > 0 && (
-          <Card className="shadow-card border-border">
-            <CardContent className="p-4">
-              <h3 className="font-semibold text-sm mb-3">🦷 Teeth Identified (FDI)</h3>
-              <div className="space-y-2.5">
-                {result.teeth_identified.map((tooth: any, i: number) => (
-                  <div key={i} className="border-b border-border pb-2.5 last:border-0 last:pb-0">
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono font-bold text-sm text-primary">#{tooth.tooth_number}</span>
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-accent text-accent-foreground">{tooth.condition}</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">{tooth.description}</p>
+            {result.teeth_identified?.length > 0 && (
+              <Card className="shadow-card border-border">
+                <CardContent className="p-4">
+                  <h3 className="font-semibold text-sm mb-3">🦷 Teeth Identified (FDI)</h3>
+                  <div className="space-y-2.5">
+                    {result.teeth_identified.map((tooth: any, i: number) => (
+                      <div key={i} className="border-b border-border pb-2.5 last:border-0 last:pb-0">
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono font-bold text-sm text-primary">#{tooth.tooth_number}</span>
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-accent text-accent-foreground">{tooth.condition}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">{tooth.description}</p>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            )}
+
+            {result.conditions_found?.length > 0 && (
+              <Card className="shadow-card border-border">
+                <CardContent className="p-4">
+                  <h3 className="font-semibold text-sm mb-2">⚠️ Conditions Detected</h3>
+                  <div className="flex flex-wrap gap-1.5">
+                    {result.conditions_found.map((c: string, i: number) => (
+                      <span key={i} className="text-xs px-3 py-1 rounded-full bg-warning/10 text-warning border border-warning/20">{c}</span>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {result.clinical_notes?.length > 0 && (
+              <Card className="bg-primary/5 border-primary/20 shadow-card">
+                <CardContent className="p-4">
+                  <h3 className="font-semibold text-sm mb-2">📝 Clinical Notes</h3>
+                  <ul className="space-y-1.5">
+                    {result.clinical_notes.map((note: string, i: number) => (
+                      <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
+                        <span className="text-primary font-bold mt-0.5">•</span> {note}
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            )}
+
+            {result.recommendations?.length > 0 && (
+              <Card className="shadow-card border-border">
+                <CardContent className="p-4">
+                  <h3 className="font-semibold text-sm mb-2">💡 Recommendations</h3>
+                  <ul className="space-y-1.5">
+                    {result.recommendations.map((rec: string, i: number) => (
+                      <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
+                        <span className="text-success font-bold mt-0.5">{i + 1}.</span> {rec}
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            )}
+          </>
         )}
 
-        {/* Conditions Found */}
-        {result.conditions_found?.length > 0 && (
-          <Card className="shadow-card border-border">
-            <CardContent className="p-4">
-              <h3 className="font-semibold text-sm mb-2">⚠️ Conditions Detected</h3>
-              <div className="flex flex-wrap gap-1.5">
-                {result.conditions_found.map((c: string, i: number) => (
-                  <span key={i} className="text-xs px-3 py-1 rounded-full bg-warning/10 text-warning border border-warning/20">{c}</span>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        {/* === BODY SCAN RESULTS === */}
+        {!isDental && (
+          <>
+            <Card className="shadow-card border-border">
+              <CardContent className="p-4">
+                <h3 className="font-semibold text-sm mb-1">🔬 Condition Detected</h3>
+                <p className="font-bold text-lg text-primary">{result.condition}</p>
+                <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{result.definition}</p>
+              </CardContent>
+            </Card>
 
-        {/* Clinical Notes */}
-        {result.clinical_notes?.length > 0 && (
-          <Card className="bg-primary/5 border-primary/20 shadow-card">
-            <CardContent className="p-4">
-              <h3 className="font-semibold text-sm mb-2">📝 Clinical Notes (For Students)</h3>
-              <ul className="space-y-1.5">
-                {result.clinical_notes.map((note: string, i: number) => (
-                  <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
-                    <span className="text-primary font-bold mt-0.5">•</span> {note}
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        )}
+            {result.causes?.length > 0 && (
+              <Card className="shadow-card border-border">
+                <CardContent className="p-4">
+                  <h3 className="font-semibold text-sm mb-2">🧬 Possible Causes</h3>
+                  <ul className="space-y-1.5">
+                    {result.causes.map((cause: string, i: number) => (
+                      <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
+                        <span className="text-warning font-bold mt-0.5">•</span> {cause}
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            )}
 
-        {/* Recommendations */}
-        {result.recommendations?.length > 0 && (
-          <Card className="shadow-card border-border">
-            <CardContent className="p-4">
-              <h3 className="font-semibold text-sm mb-2">💡 Recommendations</h3>
-              <ul className="space-y-1.5">
-                {result.recommendations.map((rec: string, i: number) => (
-                  <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
-                    <span className="text-success font-bold mt-0.5">{i + 1}.</span> {rec}
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
+            {result.guidance && (
+              <Card className="bg-primary/5 border-primary/20 shadow-card">
+                <CardContent className="p-4">
+                  <h3 className="font-semibold text-sm mb-2">💊 Self-Care Guidance</h3>
+                  <ul className="space-y-1.5">
+                    {(Array.isArray(result.guidance) ? result.guidance : []).map((tip: string, i: number) => (
+                      <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
+                        <span className="text-success font-bold mt-0.5">{i + 1}.</span> {tip}
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            )}
+          </>
         )}
 
         {/* Disclaimer */}
         <div className="bg-warning/10 border border-warning/30 rounded-xl p-3">
           <p className="text-xs text-foreground">
-            ⚠️ <strong>Educational Screening Only:</strong> This AI analysis is for learning purposes. It does not replace professional dental diagnosis. Consult a licensed dentist for clinical decisions.
+            ⚠️ <strong>AI Screening Only:</strong> This analysis is for {isDental ? "educational" : "awareness"} purposes. Consult a qualified {isDental ? "dentist" : "healthcare professional"} for proper diagnosis.
           </p>
         </div>
 
         <Button className="w-full rounded-xl h-12" onClick={() => navigate("/dental/scan")}>
-          🦷 Scan Another Image
+          🔬 Scan Another Image
         </Button>
       </div>
 
