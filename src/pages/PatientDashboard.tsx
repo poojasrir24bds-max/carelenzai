@@ -14,6 +14,7 @@ import LanguageToggle from "@/components/LanguageToggle";
 import MedicalHistoryForm from "@/components/MedicalHistoryForm";
 import RatingStars, { AverageRating } from "@/components/RatingStars";
 import AppRatingDialog from "@/components/AppRatingDialog";
+import NotificationBell from "@/components/NotificationBell";
 
 const scanAreaItems = [
   { id: "dental", labelKey: "area.dental", emoji: "🦷" },
