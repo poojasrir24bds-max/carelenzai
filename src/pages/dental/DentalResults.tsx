@@ -45,7 +45,7 @@ const DentalResults = () => {
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
 
   // Preload voices
-  useState(() => {
+  useEffect(() => {
     const loadVoices = () => {
       const v = window.speechSynthesis?.getVoices() || [];
       if (v.length > 0) setVoices(v);
@@ -53,7 +53,7 @@ const DentalResults = () => {
     loadVoices();
     window.speechSynthesis?.addEventListener("voiceschanged", loadVoices);
     return () => window.speechSynthesis?.removeEventListener("voiceschanged", loadVoices);
-  });
+  }, []);
 
   if (!result) {
     return (
