@@ -1,12 +1,14 @@
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ScanLine, BookOpen, MessageCircle, Clock, GraduationCap, Shield, Eye, Hand, Scissors } from "lucide-react";
+import { ScanLine, BookOpen, MessageCircle, Clock, GraduationCap, Shield, Eye, Hand, Scissors, Lock, Crown } from "lucide-react";
 import DentalBottomNav from "@/components/dental/BottomNav";
 import logo from "@/assets/logo.png";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
+import { useSubscription } from "@/hooks/useSubscription";
+import { useToast } from "@/hooks/use-toast";
 
 const scanAreas = [
   { id: "dental", label: "Dental", emoji: "🦷", desc: "Teeth & gums" },
