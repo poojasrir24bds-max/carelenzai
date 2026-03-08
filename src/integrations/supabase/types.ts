@@ -162,6 +162,7 @@ export type Database = {
       }
       patient_doubts: {
         Row: {
+          ai_answer: string | null
           answer: string | null
           created_at: string
           doctor_id: string | null
@@ -173,6 +174,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          ai_answer?: string | null
           answer?: string | null
           created_at?: string
           doctor_id?: string | null
@@ -184,6 +186,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          ai_answer?: string | null
           answer?: string | null
           created_at?: string
           doctor_id?: string | null

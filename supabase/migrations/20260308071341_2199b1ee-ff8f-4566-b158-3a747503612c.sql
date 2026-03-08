@@ -1,0 +1,1 @@
+ALTER TABLE public.patient_doubts ADD COLUMN ai_answer text DEFAULT NULL;

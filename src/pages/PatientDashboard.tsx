@@ -66,18 +66,41 @@ const PatientDashboard = () => {
   const handleSubmitDoubt = async () => {
     if (!doubtText.trim() || !user) return;
     setSubmittingDoubt(true);
-    const { error } = await supabase.from("patient_doubts").insert({
+    const question = doubtText.trim();
+
+    // Insert the doubt
+    const { data: insertedDoubt, error } = await supabase.from("patient_doubts").insert({
       patient_id: user.id,
-      question: doubtText.trim(),
-    });
-    setSubmittingDoubt(false);
+      question,
+    }).select().single();
+
     if (error) {
+      setSubmittingDoubt(false);
       toast({ title: "Failed", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Question submitted!" });
-      setDoubtText("");
-      fetchDoubts();
+      return;
     }
+
+    toast({ title: "Question submitted! Getting AI response..." });
+    setDoubtText("");
+    fetchDoubts();
+
+    // Get AI answer in background
+    try {
+      const { data: aiData, error: aiError } = await supabase.functions.invoke("answer-doubt", {
+        body: { question },
+      });
+
+      if (!aiError && aiData?.answer && insertedDoubt) {
+        await supabase.from("patient_doubts").update({
+          ai_answer: aiData.answer,
+        }).eq("id", insertedDoubt.id);
+        fetchDoubts();
+        toast({ title: "AI has answered your question!" });
+      }
+    } catch (e) {
+      console.error("AI answer error:", e);
+    }
+    setSubmittingDoubt(false);
   };
 
   const handleLogout = async () => {
@@ -131,9 +154,9 @@ const PatientDashboard = () => {
         <Card className="border-border shadow-card">
           <CardContent className="p-5">
             <h3 className="font-display font-semibold mb-2 flex items-center gap-2">
-              <MessageSquare className="h-5 w-5 text-primary" /> Ask a Doctor
+              <MessageSquare className="h-5 w-5 text-primary" /> Ask a Health Question
             </h3>
-            <p className="text-xs text-muted-foreground mb-3">Type your health question. A doctor will review and respond.</p>
+            <p className="text-xs text-muted-foreground mb-3">Type your health question. AI will answer instantly, and a doctor may also review.</p>
             <Textarea
               placeholder="e.g., Why does my skin feel itchy after sun exposure?"
               value={doubtText}
@@ -149,12 +172,23 @@ const PatientDashboard = () => {
               <div className="mt-4 space-y-2">
                 <p className="text-xs font-medium text-muted-foreground">Your recent questions:</p>
                 {myDoubts.map((d) => (
-                  <div key={d.id} className="bg-accent/30 rounded-lg p-2.5">
+                  <div key={d.id} className="bg-accent/30 rounded-lg p-2.5 space-y-1">
                     <p className="text-xs font-medium">{d.question}</p>
+                    {d.ai_answer && (
+                      <div className="bg-primary/5 rounded p-2 mt-1">
+                        <p className="text-xs text-muted-foreground font-medium">🤖 AI Response:</p>
+                        <p className="text-xs mt-0.5">{d.ai_answer}</p>
+                      </div>
+                    )}
                     {d.answer ? (
-                      <p className="text-xs text-success mt-1">✓ {d.answer}</p>
+                      <div className="bg-success/10 rounded p-2 mt-1">
+                        <p className="text-xs text-success font-medium">👩‍⚕️ Doctor's Response:</p>
+                        <p className="text-xs text-success mt-0.5">{d.answer}</p>
+                      </div>
+                    ) : !d.ai_answer ? (
+                      <p className="text-xs text-muted-foreground mt-1">⏳ Getting AI response...</p>
                     ) : (
-                      <p className="text-xs text-muted-foreground mt-1">⏳ Awaiting doctor response</p>
+                      <p className="text-xs text-muted-foreground mt-1">💡 A doctor may also review this</p>
                     )}
                   </div>
                 ))}
