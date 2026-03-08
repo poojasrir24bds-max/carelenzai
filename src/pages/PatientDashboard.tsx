@@ -33,7 +33,7 @@ const PatientDashboard = () => {
   const { user, profile, signOut } = useAuth();
   const { toast } = useToast();
   const { t } = useLanguage();
-  const [recentScans, setRecentScans] = useState<any[]>([]);
+  const [tab, setTab] = useState<"home" | "history">("home");
   const [doubtText, setDoubtText] = useState("");
   const [submittingDoubt, setSubmittingDoubt] = useState(false);
   const [myDoubts, setMyDoubts] = useState<any[]>([]);
