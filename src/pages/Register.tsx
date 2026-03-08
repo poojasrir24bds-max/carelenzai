@@ -63,12 +63,8 @@ const Register = () => {
     e.preventDefault();
     setLoading(true);
 
-    // Require email OTP verification
-    if (!otpVerified) {
-      toast({ title: "Email not verified", description: "Please verify your email with OTP before registering", variant: "destructive" });
-      setLoading(false);
-      return;
-    }
+
+
 
     // For doctors, require license document
     if (role === "doctor" && !licenseFile) {
