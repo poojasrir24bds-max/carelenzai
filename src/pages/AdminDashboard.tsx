@@ -27,7 +27,7 @@ const AdminDashboard = () => {
   const [pendingPatients, setPendingPatients] = useState<any[]>([]);
   const [patientScans, setPatientScans] = useState<Record<string, number>>({});
   const [patientSubs, setPatientSubs] = useState<Record<string, any>>({});
-  const [stats, setStats] = useState({ users: 0, doctors: 0, scans: 0, pendingPatients: 0 });
+  const [stats, setStats] = useState({ users: 0, doctors: 0, patients: 0, scans: 0, revenue: 0, pendingPatients: 0 });
   const [recordings, setRecordings] = useState<any[]>([]);
   const [subscriptions, setSubscriptions] = useState<any[]>([]);
   const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
@@ -92,7 +92,26 @@ const AdminDashboard = () => {
     const { count: userCount } = await supabase.from("profiles").select("*", { count: "exact", head: true });
     const { count: doctorCount } = await supabase.from("doctor_profiles").select("*", { count: "exact", head: true });
     const { count: scanCount } = await supabase.from("scans").select("*", { count: "exact", head: true });
-    setStats({ users: userCount || 0, doctors: doctorCount || 0, scans: scanCount || 0, pendingPatients: pendingPats.length });
+    const { count: dentalScanCount } = await supabase.from("dental_scans").select("*", { count: "exact", head: true });
+
+    // Count patients (users with patient role)
+    const patientCount = (roles || []).filter((r: any) => r.role === 'patient').length;
+
+    // Calculate revenue from active/approved subscriptions
+    const { data: revenueSubs } = await supabase
+      .from("user_subscriptions")
+      .select("*, subscription_plans(price_inr)")
+      .eq("status", "active");
+    const totalRevenue = (revenueSubs || []).reduce((sum: number, s: any) => sum + ((s.subscription_plans as any)?.price_inr || 0), 0);
+
+    setStats({
+      users: userCount || 0,
+      doctors: doctorCount || 0,
+      patients: patientCount,
+      scans: (scanCount || 0) + (dentalScanCount || 0),
+      revenue: totalRevenue,
+      pendingPatients: pendingPats.length,
+    });
 
     // Fetch scan counts per patient
     const { data: allScans } = await supabase.from("scans").select("user_id");
@@ -351,12 +370,13 @@ const AdminDashboard = () => {
         <h1 className="font-display text-2xl font-bold">Admin Dashboard 🛡️</h1>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {[
             { icon: Users, label: "Total Users", value: String(stats.users), color: "text-primary" },
+            { icon: Users, label: "Patients", value: String(stats.patients), color: "text-accent-foreground" },
             { icon: Stethoscope, label: "Doctors", value: String(stats.doctors), color: "text-secondary" },
             { icon: ScanLine, label: "Total Scans", value: String(stats.scans), color: "text-warning" },
-            { icon: DollarSign, label: "Revenue", value: "₹0", color: "text-success" },
+            { icon: DollarSign, label: "Revenue", value: `₹${stats.revenue}`, color: "text-success" },
           ].map((s) => (
             <Card key={s.label} className="shadow-card border-border">
               <CardContent className="p-4">
