@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Stethoscope, Check, Send, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import logo from "@/assets/logo.png";
 import phonepeQr from "@/assets/phonepe-qr.jpeg";
 import { useAuth } from "@/hooks/useAuth";
