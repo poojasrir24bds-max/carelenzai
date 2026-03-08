@@ -226,7 +226,7 @@ const Subscription = () => {
         </div>
 
         {/* PhonePe QR Payment Section */}
-        {selectedPlan && !activeSub && (
+        {selectedPlan && canResubscribe && (
           <Card className="shadow-elevated border-2 border-primary/30">
             <CardContent className="p-5 space-y-4">
               <h3 className="font-display font-bold text-lg text-center">
