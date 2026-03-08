@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-const scanAreas = ["Skin", "Hair", "Eyes", "Nails", "Lips", "Scalp"];
+const scanAreas = ["Skin", "Hair", "Eyes", "Nails", "Lips", "Scalp", "Dental"];
 
 const ScanPage = () => {
   const navigate = useNavigate();
