@@ -44,20 +44,26 @@ const AdminDashboard = () => {
       .order("created_at", { ascending: false });
     setAllUsers(profiles || []);
 
+    // Pending patients with Aadhaar verification
+    const pendingPats = (profiles || []).filter(
+      (p: any) => p.id_document_url && p.id_verification_status === 'pending'
+    );
+    setPendingPatients(pendingPats);
+
     const { data: doctors } = await supabase
       .from("doctor_profiles")
       .select("*")
       .eq("is_verified", false);
     
     const enrichedDoctors = (doctors || []).map((doc) => {
-      const profile = (profiles || []).find((p) => p.user_id === doc.user_id);
+      const profile = (profiles || []).find((p: any) => p.user_id === doc.user_id);
       return { ...doc, profiles: profile };
     });
     setPendingDoctors(enrichedDoctors);
 
     const { data: allDocs } = await supabase.from("doctor_profiles").select("*");
     const enrichedAllDocs = (allDocs || []).map((doc) => {
-      const profile = (profiles || []).find((p) => p.user_id === doc.user_id);
+      const profile = (profiles || []).find((p: any) => p.user_id === doc.user_id);
       return { ...doc, profiles: profile };
     });
     setAllDoctorProfiles(enrichedAllDocs);
@@ -65,7 +71,7 @@ const AdminDashboard = () => {
     const { count: userCount } = await supabase.from("profiles").select("*", { count: "exact", head: true });
     const { count: doctorCount } = await supabase.from("doctor_profiles").select("*", { count: "exact", head: true });
     const { count: scanCount } = await supabase.from("scans").select("*", { count: "exact", head: true });
-    setStats({ users: userCount || 0, doctors: doctorCount || 0, scans: scanCount || 0 });
+    setStats({ users: userCount || 0, doctors: doctorCount || 0, scans: scanCount || 0, pendingPatients: pendingPats.length });
   };
 
   const handleViewDoctor = async (doc: any) => {
