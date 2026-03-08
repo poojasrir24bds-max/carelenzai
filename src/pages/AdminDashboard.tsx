@@ -66,7 +66,7 @@ const AdminDashboard = () => {
     setAllUsers(enrichedProfiles);
 
     // Pending patients with Aadhaar verification
-    const pendingPats = (profiles || []).filter(
+    const pendingPats = enrichedProfiles.filter(
       (p: any) => p.id_document_url && p.id_verification_status === 'pending'
     );
     setPendingPatients(pendingPats);
