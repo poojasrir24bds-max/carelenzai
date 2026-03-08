@@ -78,6 +78,23 @@ const AdminDashboard = () => {
     const { count: doctorCount } = await supabase.from("doctor_profiles").select("*", { count: "exact", head: true });
     const { count: scanCount } = await supabase.from("scans").select("*", { count: "exact", head: true });
     setStats({ users: userCount || 0, doctors: doctorCount || 0, scans: scanCount || 0, pendingPatients: pendingPats.length });
+
+    // Fetch scan counts per patient
+    const { data: allScans } = await supabase.from("scans").select("user_id");
+    const { data: allDentalScans } = await supabase.from("dental_scans").select("user_id");
+    const scanCounts: Record<string, number> = {};
+    (allScans || []).forEach((s: any) => { scanCounts[s.user_id] = (scanCounts[s.user_id] || 0) + 1; });
+    (allDentalScans || []).forEach((s: any) => { scanCounts[s.user_id] = (scanCounts[s.user_id] || 0) + 1; });
+    setPatientScans(scanCounts);
+
+    // Fetch active subscriptions per patient
+    const { data: allSubs } = await supabase
+      .from("user_subscriptions")
+      .select("*, subscription_plans(name, scan_limit, doctor_consultations)")
+      .eq("status", "active");
+    const subMap: Record<string, any> = {};
+    (allSubs || []).forEach((s: any) => { subMap[s.user_id] = s; });
+    setPatientSubs(subMap);
   };
 
   const fetchRecordings = async () => {
