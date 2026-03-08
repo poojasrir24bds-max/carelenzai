@@ -215,7 +215,7 @@ const AdminDashboard = () => {
   const handleApproveSub = async (subId: string) => {
     const { error } = await supabase
       .from("user_subscriptions" as any)
-      .update({ status: "active" } as any)
+      .update({ status: "active", approved_at: new Date().toISOString() } as any)
       .eq("id", subId);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
