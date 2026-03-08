@@ -75,7 +75,7 @@ const Register = () => {
     }
 
     // Upload license document for doctors
-    if (role === "doctor" && licenseFile && data?.user) {
+    if (role === "doctor" && licenseFile && signUpData?.user) {
       try {
         const fileExt = licenseFile.name.split('.').pop();
         const filePath = `${data.user.id}/license.${fileExt}`;
