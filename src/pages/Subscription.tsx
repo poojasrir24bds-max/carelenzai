@@ -29,7 +29,6 @@ const Subscription = () => {
   const [plans, setPlans] = useState<any[]>([]);
   const [activeSub, setActiveSub] = useState<any>(null);
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
-  const [transactionId, setTransactionId] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {

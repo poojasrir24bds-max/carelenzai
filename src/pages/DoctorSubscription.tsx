@@ -16,7 +16,6 @@ const DoctorSubscription = () => {
   const { toast } = useToast();
   const [plan, setPlan] = useState<any>(null);
   const [activeSub, setActiveSub] = useState<any>(null);
-  const [transactionId, setTransactionId] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
