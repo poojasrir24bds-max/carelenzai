@@ -35,8 +35,23 @@ const DoctorDashboard = () => {
       fetchDoctorProfile();
       fetchConsultations();
       fetchDoubts();
+      fetchDoctorSubscription();
     }
   }, [user]);
+
+  const fetchDoctorSubscription = async () => {
+    setSubLoading(true);
+    const { data } = await supabase
+      .from("user_subscriptions")
+      .select("*, subscription_plans(*)")
+      .eq("user_id", user!.id)
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(1);
+    const sub = (data as any[])?.[0] || null;
+    setDoctorSub(sub);
+    setSubLoading(false);
+  };
 
   const fetchDoctorProfile = async () => {
     const { data } = await supabase.from("doctor_profiles").select("*").eq("user_id", user!.id).maybeSingle();
