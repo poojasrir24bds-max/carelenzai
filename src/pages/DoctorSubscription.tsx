@@ -80,7 +80,7 @@ const DoctorSubscription = () => {
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Payment Successful!", description: "Your subscription is now active." });
+      toast({ title: "Payment Submitted!", description: "Your subscription will be activated after admin verification." });
       navigate("/doctor");
     }
   };
