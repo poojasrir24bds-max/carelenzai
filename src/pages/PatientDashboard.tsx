@@ -79,6 +79,23 @@ const PatientDashboard = () => {
     setActiveConsultations(data || []);
   };
 
+  const fetchAvailableDoctors = async () => {
+    const { data: doctors } = await supabase
+      .from("doctor_profiles")
+      .select("*")
+      .eq("is_verified", true)
+      .eq("is_active", true);
+    
+    if (doctors && doctors.length > 0) {
+      const userIds = doctors.map(d => d.user_id);
+      const { data: profiles } = await supabase.from("profiles").select("user_id, full_name").in("user_id", userIds);
+      const profileMap = Object.fromEntries((profiles || []).map(p => [p.user_id, p.full_name]));
+      setAvailableDoctors(doctors.map(d => ({ ...d, profile_name: profileMap[d.user_id] || "Doctor" })));
+    } else {
+      setAvailableDoctors([]);
+    }
+  };
+
   const handleRequestConsultation = async () => {
     if (!user) return;
     // Find a verified doctor to assign
