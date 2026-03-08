@@ -21,6 +21,7 @@ import DentalStudy from "./pages/dental/DentalStudy";
 import DentalChat from "./pages/dental/DentalChat";
 import NotFound from "./pages/NotFound";
 import VideoCall from "./pages/VideoCall";
+import Subscription from "./pages/Subscription";
 
 const queryClient = new QueryClient();
 
