@@ -78,6 +78,8 @@ const translations: Record<string, Record<Lang, string>> = {
   "register.ophthalmologist": { en: "Ophthalmologist", ta: "கண் மருத்துவர்" },
   "register.general": { en: "General Physician", ta: "பொது மருத்துவர்" },
   "register.dentist": { en: "Dentist", ta: "பல் மருத்துவர்" },
+  "register.address": { en: "Address", ta: "முகவரி" },
+  "register.addressPlaceholder": { en: "Enter your full address", ta: "உங்கள் முழு முகவரியை உள்ளிடவும்" },
 
   // Patient Dashboard
   "patient.hello": { en: "Hello,", ta: "வணக்கம்," },
@@ -99,6 +101,9 @@ const translations: Record<string, Record<Lang, string>> = {
   "patient.noScans": { en: "No previous scans found. Start your first scan above!", ta: "முந்தைய ஸ்கேன்கள் இல்லை. மேலே உங்கள் முதல் ஸ்கேனைத் தொடங்குங்கள்!" },
   "patient.scan": { en: "Scan", ta: "ஸ்கேன்" },
   "patient.findDoctor": { en: "Find Doctor", ta: "மருத்துவர் கண்டுபிடி" },
+  "patient.availableDoctors": { en: "Available Doctors", ta: "கிடைக்கும் மருத்துவர்கள்" },
+  "patient.noDoctorsYet": { en: "No verified doctors available yet.", ta: "சரிபார்க்கப்பட்ட மருத்துவர்கள் இன்னும் இல்லை." },
+  "patient.verified": { en: "Verified", ta: "சரிபார்க்கப்பட்டது" },
   "patient.appointments": { en: "Appointments", ta: "நேர நிர்ணயங்கள்" },
   "patient.profile": { en: "Profile", ta: "சுயவிவரம்" },
   "patient.videoCall": { en: "Video Call", ta: "வீடியோ அழைப்பு" },

@@ -99,6 +99,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         aadhaar_number: metadata.aadhaar?.replace(/\s/g, '') || null,
         phone: metadata.phone || null,
         phone_verified: !!metadata.phone,
+        address: metadata.address || null,
       }).eq("user_id", data.user.id);
 
       // Assign role
@@ -112,6 +113,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           doctor_id: metadata.doctorId,
           specialization: metadata.specialization,
           hospital_name: metadata.hospital,
+          address: metadata.address || null,
         });
       }
 

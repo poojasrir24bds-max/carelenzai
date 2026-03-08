@@ -158,6 +158,7 @@ const Register = () => {
         hospital: form.hospital,
         aadhaar: form.aadhaar,
         phone: form.phone?.replace(/[\s-]/g, ""),
+        address: form.address,
       },
       role || "patient"
     );
@@ -400,6 +401,12 @@ const Register = () => {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+
+              {/* Address */}
+              <div className="space-y-1.5">
+                <Label>{t("register.address")}</Label>
+                <Input placeholder={t("register.addressPlaceholder")} onChange={(e) => update("address", e.target.value)} required />
               </div>
 
               {role === "doctor" && (
