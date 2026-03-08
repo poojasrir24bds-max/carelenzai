@@ -75,9 +75,30 @@ const Subscription = () => {
     setTxnId("");
   };
 
-  const handlePaidDone = () => {
+  const handlePaidDone = async () => {
+    if (!selectedPlan || !user) return;
+    setSubmitting(true);
     setShowQr(false);
-    setShowTxnInput(true);
+
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + selectedPlan.duration_days * 24 * 60 * 60 * 1000);
+
+    const { error } = await supabase.from("user_subscriptions" as any).insert({
+      user_id: user.id,
+      plan_id: selectedPlan.id,
+      status: "pending",
+      starts_at: now.toISOString(),
+      expires_at: expiresAt.toISOString(),
+    } as any);
+
+    setSubmitting(false);
+
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: t("sub.submitted"), description: t("sub.submittedDesc") });
+      navigate("/patient");
+    }
   };
 
   const handleSubmitTxn = async () => {

@@ -60,9 +60,29 @@ const DoctorSubscription = () => {
     setTxnId("");
   };
 
-  const handlePaidDone = () => {
+  const handlePaidDone = async () => {
+    if (!plan || !user) return;
+    setSubmitting(true);
     setShowQr(false);
-    setShowTxnInput(true);
+
+    const now = new Date();
+
+    const { error } = await supabase.from("user_subscriptions").insert({
+      user_id: user.id,
+      plan_id: plan.id,
+      status: "pending",
+      starts_at: now.toISOString(),
+      expires_at: null,
+    } as any);
+
+    setSubmitting(false);
+
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Payment Submitted!", description: "Your subscription will be activated after admin approval." });
+      navigate("/doctor");
+    }
   };
 
   const handleSubmitTxn = async () => {
