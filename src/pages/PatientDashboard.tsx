@@ -66,18 +66,41 @@ const PatientDashboard = () => {
   const handleSubmitDoubt = async () => {
     if (!doubtText.trim() || !user) return;
     setSubmittingDoubt(true);
-    const { error } = await supabase.from("patient_doubts").insert({
+    const question = doubtText.trim();
+
+    // Insert the doubt
+    const { data: insertedDoubt, error } = await supabase.from("patient_doubts").insert({
       patient_id: user.id,
-      question: doubtText.trim(),
-    });
-    setSubmittingDoubt(false);
+      question,
+    }).select().single();
+
     if (error) {
+      setSubmittingDoubt(false);
       toast({ title: "Failed", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Question submitted!" });
-      setDoubtText("");
-      fetchDoubts();
+      return;
     }
+
+    toast({ title: "Question submitted! Getting AI response..." });
+    setDoubtText("");
+    fetchDoubts();
+
+    // Get AI answer in background
+    try {
+      const { data: aiData, error: aiError } = await supabase.functions.invoke("answer-doubt", {
+        body: { question },
+      });
+
+      if (!aiError && aiData?.answer && insertedDoubt) {
+        await supabase.from("patient_doubts").update({
+          ai_answer: aiData.answer,
+        }).eq("id", insertedDoubt.id);
+        fetchDoubts();
+        toast({ title: "AI has answered your question!" });
+      }
+    } catch (e) {
+      console.error("AI answer error:", e);
+    }
+    setSubmittingDoubt(false);
   };
 
   const handleLogout = async () => {
