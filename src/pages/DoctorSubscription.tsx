@@ -109,7 +109,7 @@ const DoctorSubscription = () => {
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {activeSub.status === "active"
-                      ? `Expires: ${new Date(activeSub.expires_at).toLocaleDateString("en-IN")}`
+                      ? `${(activeSub.subscription_plans?.doctor_consultations || 5) - (activeSub.consultations_used || 0)} consultations remaining`
                       : "Your payment is being verified by admin"}
                   </p>
                 </div>
