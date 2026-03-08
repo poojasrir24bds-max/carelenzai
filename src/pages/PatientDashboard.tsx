@@ -567,6 +567,13 @@ const PatientDashboard = () => {
           </div>
         )}
       </div>
+
+      {user && (
+        <AppRatingDialog
+          userId={user.id}
+          userCreatedAt={user.created_at}
+        />
+      )}
     </div>
   );
 };
