@@ -63,6 +63,13 @@ const Register = () => {
       return;
     }
 
+    // Validate Aadhaar for patients
+    if (role === "patient" && form.aadhaar && !isValidAadhaar(form.aadhaar)) {
+      toast({ title: "Invalid Aadhaar", description: "Aadhaar number must be 12 digits", variant: "destructive" });
+      setLoading(false);
+      return;
+    }
+
     const result = await signUp(
       form.email || "",
       form.password || "",
@@ -74,6 +81,7 @@ const Register = () => {
         doctorId: form.doctorId,
         specialization: form.specialization,
         hospital: form.hospital,
+        aadhaar: form.aadhaar,
       },
       role || "patient"
     );
