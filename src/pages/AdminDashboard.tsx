@@ -110,14 +110,13 @@ const AdminDashboard = () => {
     // Count patients (users with patient role)
     const patientCount = (roles || []).filter((r: any) => r.role === 'patient').length;
 
-     // Revenue from admin-approved subscriptions after reset date, excluding admin users
-     const REVENUE_RESET_DATE = '2026-03-08T00:00:00.000Z';
+     // Revenue only from admin-approved subscriptions (approved_at is set), excluding admin users
      const adminUserIds = (roles || []).filter((r: any) => r.role === 'admin').map((r: any) => r.user_id);
      const { data: revenueSubs } = await supabase
        .from("user_subscriptions")
        .select("*, subscription_plans(price_inr)")
        .eq("status", "active")
-       .gte("created_at", REVENUE_RESET_DATE);
+       .not("approved_at", "is", null);
      const totalRevenue = (revenueSubs || []).filter((s: any) => !adminUserIds.includes(s.user_id)).reduce((sum: number, s: any) => sum + ((s.subscription_plans as any)?.price_inr || 0), 0);
 
     setStats({
