@@ -151,7 +151,8 @@ const Subscription = () => {
               )}
             </CardContent>
           </Card>
-        )}
+          );
+        })()}
 
         {/* Plans */}
         <div>
