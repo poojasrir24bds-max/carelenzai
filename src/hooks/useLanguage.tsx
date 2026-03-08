@@ -77,6 +77,7 @@ const translations: Record<string, Record<Lang, string>> = {
   "register.trichologist": { en: "Trichologist", ta: "முடி மருத்துவர்" },
   "register.ophthalmologist": { en: "Ophthalmologist", ta: "கண் மருத்துவர்" },
   "register.general": { en: "General Physician", ta: "பொது மருத்துவர்" },
+  "register.dentist": { en: "Dentist", ta: "பல் மருத்துவர்" },
 
   // Patient Dashboard
   "patient.hello": { en: "Hello,", ta: "வணக்கம்," },
