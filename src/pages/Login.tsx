@@ -36,6 +36,7 @@ const Login = () => {
     }
 
     toast({ title: "Logged in successfully!" });
+    // Admins can access any dashboard; redirect based on selected role
     if (role === "patient") navigate("/patient");
     else if (role === "doctor") navigate("/doctor");
     else navigate("/admin");
