@@ -260,8 +260,8 @@ const PatientDashboard = () => {
         </div>
         <div className="flex items-center gap-2">
           <LanguageToggle variant="header" />
-          <button className="text-primary-foreground relative">
-            <Bell className="h-5 w-5" />
+          <NotificationBell />
+          <button onClick={handleLogout} className="text-primary-foreground">
           </button>
           <button onClick={handleLogout} className="text-primary-foreground">
             <LogOut className="h-5 w-5" />
