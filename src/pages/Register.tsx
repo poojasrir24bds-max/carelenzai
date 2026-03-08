@@ -500,6 +500,49 @@ const Register = () => {
                       onChange={(e) => handleFileChange(e, 'id')}
                     />
                   </div>
+
+                  {/* Basic Medical History */}
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <HeartPulse className="h-4 w-4" /> Medical History (optional)
+                    </Label>
+                    <p className="text-xs text-muted-foreground">Select any existing conditions for better care</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { key: "diabetes", label: "🩸 Diabetes" },
+                        { key: "hypertension", label: "💓 High BP" },
+                        { key: "heart_disease", label: "❤️ Heart Disease" },
+                        { key: "asthma", label: "🫁 Asthma" },
+                        { key: "thyroid", label: "🦋 Thyroid" },
+                        { key: "allergies", label: "🤧 Allergies" },
+                        { key: "epilepsy", label: "⚡ Epilepsy" },
+                        { key: "kidney_disease", label: "🫘 Kidney Disease" },
+                      ].map((condition) => (
+                        <label key={condition.key} className="flex items-center gap-2 bg-accent/30 rounded-lg p-2 cursor-pointer hover:bg-accent/50 transition-colors">
+                          <Checkbox
+                            checked={medicalConditions[condition.key] || false}
+                            onCheckedChange={(checked) => setMedicalConditions(prev => ({ ...prev, [condition.key]: !!checked }))}
+                          />
+                          <span className="text-xs font-medium">{condition.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Blood Group</Label>
+                      <Select onValueChange={(v) => update("blood_group", v)}>
+                        <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select blood group" /></SelectTrigger>
+                        <SelectContent>
+                          {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(bg => (
+                            <SelectItem key={bg} value={bg}>{bg}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Current Medications (if any)</Label>
+                      <Input placeholder="e.g., Metformin, Amlodipine..." onChange={(e) => update("medications", e.target.value)} className="h-8 text-xs" />
+                    </div>
+                  </div>
                 </>
               )}
 
