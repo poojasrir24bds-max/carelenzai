@@ -45,12 +45,14 @@ interface VerificationResult {
   notes: string[];
 }
 
-function verifyLicense(licenseNumber: string, doctorId: string): VerificationResult {
+function verifyLicense(licenseNumber: string, doctorId: string, specialization: string = ''): VerificationResult {
   const trimmed = licenseNumber.trim().toUpperCase();
   const notes: string[] = [];
+  const isDentist = specialization.toLowerCase() === 'dentist';
   
-  // Check format
-  const formatValid = LICENSE_PATTERNS.some(p => p.test(trimmed));
+  // Check format based on specialization
+  const patterns = isDentist ? DENTAL_LICENSE_PATTERNS : MEDICAL_LICENSE_PATTERNS;
+  const formatValid = patterns.some(p => p.test(trimmed));
   if (!formatValid) {
     notes.push("License number format does not match any known Indian medical license pattern");
   } else {
