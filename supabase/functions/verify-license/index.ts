@@ -109,7 +109,9 @@ serve(async (req) => {
       });
     }
 
-    const result = verifyLicense(licenseNumber, doctorId || '');
+    const { licenseNumber, doctorId, doctorProfileId, specialization } = await req.json();
+
+    const result = verifyLicense(licenseNumber, doctorId || '', specialization || '');
 
     // Save verification result to database
     if (doctorProfileId) {
