@@ -222,6 +222,36 @@ export type Database = {
           },
         ]
       }
+      phone_otp: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          otp_code: string
+          phone: string
+          user_id: string | null
+          verified: boolean
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          otp_code: string
+          phone: string
+          user_id?: string | null
+          verified?: boolean
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          otp_code?: string
+          phone?: string
+          user_id?: string | null
+          verified?: boolean
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           aadhaar_number: string | null
@@ -233,6 +263,8 @@ export type Database = {
           id_document_url: string | null
           id_verification_notes: string | null
           id_verification_status: string
+          phone: string | null
+          phone_verified: boolean
           sex: string | null
           updated_at: string
           user_id: string
@@ -247,6 +279,8 @@ export type Database = {
           id_document_url?: string | null
           id_verification_notes?: string | null
           id_verification_status?: string
+          phone?: string | null
+          phone_verified?: boolean
           sex?: string | null
           updated_at?: string
           user_id: string
@@ -261,6 +295,8 @@ export type Database = {
           id_document_url?: string | null
           id_verification_notes?: string | null
           id_verification_status?: string
+          phone?: string | null
+          phone_verified?: boolean
           sex?: string | null
           updated_at?: string
           user_id?: string
