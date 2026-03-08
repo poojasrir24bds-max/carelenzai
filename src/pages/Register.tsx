@@ -293,7 +293,7 @@ const Register = () => {
                       type="file"
                       accept="image/*,.pdf"
                       className="hidden"
-                      onChange={handleFileChange}
+                      onChange={(e) => handleFileChange(e, 'license')}
                     />
                   </div>
                 </>
