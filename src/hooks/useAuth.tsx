@@ -90,6 +90,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     if (error) return { error };
 
+    // Detect fake signup (user already exists) - Supabase returns empty identities
+    if (data.user && data.user.identities && data.user.identities.length === 0) {
+      return { error: { message: "An account with this email already exists. Please login instead." } };
+    }
+
     if (data.user) {
       // Update profile with additional info
       await supabase.from("profiles").update({
