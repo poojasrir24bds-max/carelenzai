@@ -158,7 +158,7 @@ const DoctorSubscription = () => {
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Check className="h-4 w-4 text-success" />
-                  <span>{plan.duration_days} Days Validity</span>
+                  <span>No expiry — valid until all consultations used</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Check className="h-4 w-4 text-success" />
