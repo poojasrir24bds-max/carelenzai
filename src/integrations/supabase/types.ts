@@ -224,31 +224,43 @@ export type Database = {
       }
       profiles: {
         Row: {
+          aadhaar_number: string | null
           age: number | null
           created_at: string
           email: string
           full_name: string
           id: string
+          id_document_url: string | null
+          id_verification_notes: string | null
+          id_verification_status: string
           sex: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          aadhaar_number?: string | null
           age?: number | null
           created_at?: string
           email: string
           full_name: string
           id?: string
+          id_document_url?: string | null
+          id_verification_notes?: string | null
+          id_verification_status?: string
           sex?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          aadhaar_number?: string | null
           age?: number | null
           created_at?: string
           email?: string
           full_name?: string
           id?: string
+          id_document_url?: string | null
+          id_verification_notes?: string | null
+          id_verification_status?: string
           sex?: string | null
           updated_at?: string
           user_id?: string
