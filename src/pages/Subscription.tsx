@@ -94,12 +94,27 @@ const Subscription = () => {
 
       <div className="flex-1 container py-6 space-y-6">
         {/* Active / Pending Subscription */}
-        {activeSub && (
-          <Card className={`shadow-elevated ${activeSub.status === 'pending' ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-success/30 bg-success/5'}`}>
+        {activeSub && (() => {
+          const plan = activeSub.subscription_plans;
+          const scansExhausted = activeSub.status === 'active' && (activeSub.scans_used >= (plan?.scan_limit || 0));
+          const consultationsExhausted = activeSub.status === 'active' && (activeSub.consultations_used >= (plan?.doctor_consultations || 0));
+          const allCreditsUsed = scansExhausted && consultationsExhausted;
+          const expired = activeSub.status === 'active' && activeSub.expires_at && new Date(activeSub.expires_at) < new Date();
+
+          return (
+          <Card className={`shadow-elevated ${
+            allCreditsUsed || expired ? 'border-destructive/30 bg-destructive/5' :
+            activeSub.status === 'pending' ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-success/30 bg-success/5'
+          }`}>
             <CardContent className="p-5">
               <div className="flex items-center gap-3 mb-2">
-                <div className={`rounded-full p-2 ${activeSub.status === 'pending' ? 'bg-yellow-500/20' : 'bg-success/20'}`}>
-                  {activeSub.status === 'pending' ? (
+                <div className={`rounded-full p-2 ${
+                  allCreditsUsed || expired ? 'bg-destructive/20' :
+                  activeSub.status === 'pending' ? 'bg-yellow-500/20' : 'bg-success/20'
+                }`}>
+                  {allCreditsUsed || expired ? (
+                    <Crown className="h-5 w-5 text-destructive" />
+                  ) : activeSub.status === 'pending' ? (
                     <Crown className="h-5 w-5 text-yellow-600" />
                   ) : (
                     <Check className="h-5 w-5 text-success" />
@@ -107,25 +122,29 @@ const Subscription = () => {
                 </div>
                 <div>
                   <p className="font-display font-bold text-sm">
-                    {activeSub.status === 'pending' ? '⏳ Payment Under Review' : t("sub.activePlan")}
+                    {allCreditsUsed || expired
+                      ? '❌ Credits Exhausted / Expired'
+                      : activeSub.status === 'pending' ? '⏳ Payment Under Review' : t("sub.activePlan")}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {activeSub.subscription_plans?.name} • {activeSub.status === 'pending'
-                      ? 'Waiting for admin approval'
-                      : `${t("sub.expires")} ${new Date(activeSub.expires_at).toLocaleDateString("en-IN")}`}
+                    {allCreditsUsed || expired
+                      ? 'Please subscribe again to continue using the app'
+                      : activeSub.status === 'pending'
+                        ? `${plan?.name} • Waiting for admin approval`
+                        : `${plan?.name} • ${t("sub.expires")} ${new Date(activeSub.expires_at).toLocaleDateString("en-IN")}`}
                   </p>
                 </div>
               </div>
-              {activeSub.status === 'active' && (
+              {activeSub.status === 'active' && !allCreditsUsed && !expired && (
                 <div className="grid grid-cols-2 gap-3 mt-3">
                   <div className="bg-background rounded-xl p-3 text-center">
                     <ScanLine className="h-5 w-5 text-primary mx-auto mb-1" />
-                    <p className="text-lg font-bold">{activeSub.scans_used}/{activeSub.subscription_plans?.scan_limit}</p>
+                    <p className="text-lg font-bold">{activeSub.scans_used}/{plan?.scan_limit}</p>
                     <p className="text-xs text-muted-foreground">{t("sub.scansUsed")}</p>
                   </div>
                   <div className="bg-background rounded-xl p-3 text-center">
                     <Stethoscope className="h-5 w-5 text-primary mx-auto mb-1" />
-                    <p className="text-lg font-bold">{activeSub.consultations_used}/{activeSub.subscription_plans?.doctor_consultations}</p>
+                    <p className="text-lg font-bold">{activeSub.consultations_used}/{plan?.doctor_consultations}</p>
                     <p className="text-xs text-muted-foreground">{t("sub.consultationsUsed")}</p>
                   </div>
                 </div>
