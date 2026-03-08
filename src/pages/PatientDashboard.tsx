@@ -114,7 +114,7 @@ const PatientDashboard = () => {
     <div className="min-h-screen bg-background flex flex-col">
       <header className="gradient-header px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <img src={logo} alt="HealthScan AI" className="h-7 w-7" />
+          <img src={logo} alt="CARELENZ AI" className="h-7 w-7" />
           <span className="font-display font-bold text-primary-foreground">{t("app.name")}</span>
         </div>
         <div className="flex items-center gap-2">

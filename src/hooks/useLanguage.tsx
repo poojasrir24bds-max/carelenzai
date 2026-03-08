@@ -10,7 +10,7 @@ interface LanguageContextType {
 
 const translations: Record<string, Record<Lang, string>> = {
   // Common
-  "app.name": { en: "HealthScan AI", ta: "ஹெல்த்ஸ்கேன் AI" },
+  "app.name": { en: "CARELENZ AI", ta: "CARELENZ AI" },
   "common.back": { en: "Back", ta: "பின்" },
   "common.submit": { en: "Submit", ta: "சமர்ப்பி" },
   "common.loading": { en: "Loading...", ta: "ஏற்றுகிறது..." },
