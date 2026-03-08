@@ -374,7 +374,55 @@ const AdminDashboard = () => {
             )}
           </TabsContent>
 
-          <TabsContent value="users" className="mt-4 space-y-3">
+          {/* Patients Tab */}
+          <TabsContent value="patients" className="mt-4 space-y-3">
+            {allUsers.filter((u: any) => u.user_roles?.[0]?.role === 'patient' || !u.user_roles?.[0]?.role).length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">No patients found.</p>
+            ) : (
+              allUsers
+                .filter((u: any) => u.user_roles?.[0]?.role === 'patient' || !u.user_roles?.[0]?.role)
+                .map((pat: any) => (
+                  <Card key={pat.id} className="shadow-card border-border">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-3">
+                          <div className="bg-primary/20 rounded-full p-2.5">
+                            <Users className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-sm">{pat.full_name}</p>
+                            <p className="text-xs text-muted-foreground">📧 {pat.email}</p>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-1">
+                          {pat.id_verification_status === 'verified' ? (
+                            <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-success/20 text-success">✅ ID Verified</span>
+                          ) : pat.id_verification_status === 'rejected' ? (
+                            <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-destructive/20 text-destructive">❌ Rejected</span>
+                          ) : pat.id_document_url ? (
+                            <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-warning/20 text-warning">⏳ Pending</span>
+                          ) : (
+                            <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-muted text-muted-foreground">No ID</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="ml-12 space-y-0.5">
+                        {pat.aadhaar_number && <p className="text-xs text-muted-foreground">🪪 Aadhaar: ****{pat.aadhaar_number.slice(-4)}</p>}
+                        {pat.age && <p className="text-xs text-muted-foreground">🎂 Age: {pat.age}</p>}
+                      </div>
+                      {pat.id_document_url && (
+                        <div className="ml-12 mt-2">
+                          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => handleViewPatient(pat)}>
+                            <Eye className="h-3 w-3 mr-1" /> Review ID
+                          </Button>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))
+            )}
+          </TabsContent>
+
             {allUsers.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-6">No users found.</p>
             ) : (
