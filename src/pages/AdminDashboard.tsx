@@ -422,7 +422,7 @@ const AdminDashboard = () => {
 
               {/* Rejection Notes */}
               <div className="space-y-2">
-                <Label className="text-sm font-medium">Rejection Notes (optional)</Label>
+                <label className="text-sm font-medium">Rejection Notes (optional)</label>
                 <Textarea
                   placeholder="Reason for rejection..."
                   value={rejectNotes}
