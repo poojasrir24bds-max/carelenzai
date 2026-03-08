@@ -99,12 +99,22 @@ const DentalHome = () => {
         <Card className="bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(180,60%,45%)] border-0 shadow-elevated overflow-hidden">
           <CardContent className="p-5 flex items-center justify-between">
             <div>
-              <h2 className="font-display font-bold text-lg text-white">Start AI Scan</h2>
-              <p className="text-white/80 text-sm mt-1">Dental, skin, eyes, hair & more</p>
+              <h2 className="font-display font-bold text-lg text-white">
+                {hasActiveSubscription ? "Start AI Scan" : "Subscribe to Scan"}
+              </h2>
+              <p className="text-white/80 text-sm mt-1">
+                {hasActiveSubscription ? `${scansRemaining} scans remaining` : "Get a plan to unlock AI scanning"}
+              </p>
             </div>
-            <Button variant="secondary" size="lg" onClick={() => navigate("/dental/scan")} className="rounded-xl font-semibold">
-              <ScanLine className="h-5 w-5 mr-2" /> Scan Now
-            </Button>
+            {hasActiveSubscription ? (
+              <Button variant="secondary" size="lg" onClick={handleScanClick} className="rounded-xl font-semibold">
+                <ScanLine className="h-5 w-5 mr-2" /> Scan Now
+              </Button>
+            ) : (
+              <Button variant="secondary" size="lg" onClick={() => navigate("/subscription")} className="rounded-xl font-semibold">
+                <Crown className="h-5 w-5 mr-2" /> Subscribe
+              </Button>
+            )}
           </CardContent>
         </Card>
 
