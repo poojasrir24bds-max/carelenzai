@@ -423,6 +423,7 @@ const AdminDashboard = () => {
             )}
           </TabsContent>
 
+          <TabsContent value="users" className="mt-4 space-y-3">
             {allUsers.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-6">No users found.</p>
             ) : (
