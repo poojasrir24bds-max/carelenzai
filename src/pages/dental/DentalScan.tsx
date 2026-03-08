@@ -54,6 +54,10 @@ const DentalScan = () => {
 
   const handleScan = async () => {
     if (!selectedFile || !user) return;
+    if (scansRemaining <= 0) {
+      toast({ title: "No scans remaining", description: "Please upgrade your plan to continue scanning.", variant: "destructive" });
+      return;
+    }
     setScanning(true);
 
     try {
