@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/hooks/useLanguage";
 
-const UPI_ID = "9789887989@ibl";
+const UPI_ID = "9789887989@ybl";
 const UPI_NAME = "CARELENZ AI";
 
 const planIcons: Record<string, any> = {

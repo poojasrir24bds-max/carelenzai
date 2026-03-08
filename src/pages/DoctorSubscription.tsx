@@ -10,7 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-const UPI_ID = "9789887989@ibl";
+const UPI_ID = "9789887989@ybl";
 const UPI_NAME = "CARELENZ AI";
 
 const DoctorSubscription = () => {
