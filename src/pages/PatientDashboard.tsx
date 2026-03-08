@@ -262,7 +262,6 @@ const PatientDashboard = () => {
           <LanguageToggle variant="header" />
           <NotificationBell />
           <button onClick={handleLogout} className="text-primary-foreground">
-          <button onClick={handleLogout} className="text-primary-foreground">
             <LogOut className="h-5 w-5" />
           </button>
         </div>
