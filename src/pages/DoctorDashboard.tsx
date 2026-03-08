@@ -213,7 +213,7 @@ const DoctorDashboard = () => {
                           <Stethoscope className="h-4 w-4 text-primary" />
                         </div>
                         <div>
-                          <p className="font-semibold text-sm">{c.patient?.full_name || "Patient"}</p>
+                          <p className="font-semibold text-sm">{c.patient_name || "Patient"}</p>
                           <p className="text-xs text-muted-foreground">
                             {c.scans?.area && `${c.scans.area} Scan • `}
                             {new Date(c.created_at).toLocaleDateString()}
