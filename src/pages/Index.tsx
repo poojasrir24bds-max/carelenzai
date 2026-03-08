@@ -89,11 +89,11 @@ const Index = () => {
         >
           <div className="flex items-center gap-4">
             <div className="bg-white/20 rounded-xl p-3">
-              <span className="text-2xl">🦷</span>
+              <span className="text-2xl">🔬</span>
             </div>
             <div>
-              <h3 className="font-display font-bold text-lg">DentalScan AI</h3>
-              <p className="text-white/80 text-sm">AI-powered dental analysis, study modules & AI assistant for dental students</p>
+              <h3 className="font-display font-bold text-lg">CareLenz AI</h3>
+              <p className="text-white/80 text-sm">AI-powered dental & body scan analysis, study modules & AI assistant</p>
             </div>
           </div>
         </button>
