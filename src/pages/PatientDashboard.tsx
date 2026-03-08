@@ -45,6 +45,7 @@ const PatientDashboard = () => {
       fetchScans();
       fetchDoubts();
       fetchActiveConsultations();
+      fetchAvailableDoctors();
     }
   }, [user]);
 
