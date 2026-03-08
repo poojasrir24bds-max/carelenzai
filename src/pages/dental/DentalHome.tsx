@@ -38,7 +38,22 @@ const severityColors: Record<string, string> = {
 const DentalHome = () => {
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
+  const { hasActiveSubscription, loading: subLoading, scansRemaining } = useSubscription();
+  const { toast } = useToast();
   const [recentScans, setRecentScans] = useState<any[]>([]);
+
+  const handleScanClick = () => {
+    if (!hasActiveSubscription) {
+      toast({ title: "Subscription Required", description: "Please subscribe to a plan to access scanning.", variant: "destructive" });
+      navigate("/subscription");
+      return;
+    }
+    if (scansRemaining <= 0) {
+      toast({ title: "Scan limit reached", description: "You have used all scans in your current plan.", variant: "destructive" });
+      return;
+    }
+    navigate("/dental/scan");
+  };
 
   useEffect(() => {
     if (user) fetchRecentScans();
