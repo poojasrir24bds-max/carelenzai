@@ -31,12 +31,7 @@ const Register = () => {
   const idFileInputRef = useRef<HTMLInputElement>(null);
   const [medicalConditions, setMedicalConditions] = useState<Record<string, boolean>>({});
 
-  // OTP state
-  const [otpSent, setOtpSent] = useState(false);
-  const [otpVerified, setOtpVerified] = useState(false);
-  const [otpValue, setOtpValue] = useState("");
-  const [sendingOtp, setSendingOtp] = useState(false);
-  const [verifyingOtp, setVerifyingOtp] = useState(false);
+
 
   const update = (key: string, value: string) => setForm((prev) => ({ ...prev, [key]: value }));
 
