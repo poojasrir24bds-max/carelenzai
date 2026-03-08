@@ -237,6 +237,28 @@ const Register = () => {
       }, 2000);
     }
 
+    // Save medical history for patients
+    if (role === "patient" && signUpData?.user) {
+      const hasAnyCondition = Object.values(medicalConditions).some(v => v);
+      if (hasAnyCondition || form.blood_group || form.medications) {
+        setTimeout(async () => {
+          await supabase.from("medical_history").insert({
+            user_id: signUpData.user.id,
+            has_diabetes: medicalConditions.diabetes || false,
+            has_hypertension: medicalConditions.hypertension || false,
+            has_heart_disease: medicalConditions.heart_disease || false,
+            has_asthma: medicalConditions.asthma || false,
+            has_thyroid: medicalConditions.thyroid || false,
+            has_allergies: medicalConditions.allergies || false,
+            has_epilepsy: medicalConditions.epilepsy || false,
+            has_kidney_disease: medicalConditions.kidney_disease || false,
+            blood_group: form.blood_group || null,
+            current_medications: form.medications || null,
+          });
+        }, 2500);
+      }
+    }
+
     setLoading(false);
     toast({ title: "Account created!" });
     navigate(`/login/${role}`);
