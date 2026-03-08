@@ -26,6 +26,7 @@ const AdminDashboard = () => {
   const [allDoctorProfiles, setAllDoctorProfiles] = useState<any[]>([]);
   const [pendingPatients, setPendingPatients] = useState<any[]>([]);
   const [stats, setStats] = useState({ users: 0, doctors: 0, scans: 0, pendingPatients: 0 });
+  const [recordings, setRecordings] = useState<any[]>([]);
   const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [verifying, setVerifying] = useState(false);
