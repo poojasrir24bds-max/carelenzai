@@ -129,10 +129,15 @@ export type Database = {
           id: string
           is_active: boolean
           is_verified: boolean
+          license_document_url: string | null
+          license_verification_notes: string | null
+          license_verification_status: string
           medical_license: string
           specialization: string
           updated_at: string
           user_id: string
+          verified_at: string | null
+          verified_by: string | null
         }
         Insert: {
           created_at?: string
@@ -141,10 +146,15 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_verified?: boolean
+          license_document_url?: string | null
+          license_verification_notes?: string | null
+          license_verification_status?: string
           medical_license: string
           specialization: string
           updated_at?: string
           user_id: string
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Update: {
           created_at?: string
@@ -153,10 +163,15 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_verified?: boolean
+          license_document_url?: string | null
+          license_verification_notes?: string | null
+          license_verification_status?: string
           medical_license?: string
           specialization?: string
           updated_at?: string
           user_id?: string
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Relationships: []
       }
