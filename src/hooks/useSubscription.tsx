@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 interface SubscriptionStatus {
   hasActiveSubscription: boolean;
+  hasPendingSubscription: boolean;
   subscription: any | null;
   plan: any | null;
   loading: boolean;
@@ -15,6 +16,7 @@ export const useSubscription = (): SubscriptionStatus => {
   const { user } = useAuth();
   const [state, setState] = useState<SubscriptionStatus>({
     hasActiveSubscription: false,
+    hasPendingSubscription: false,
     subscription: null,
     plan: null,
     loading: true,
@@ -29,6 +31,7 @@ export const useSubscription = (): SubscriptionStatus => {
     }
 
     const fetch = async () => {
+      // Check for active subscription
       const { data } = await supabase
         .from("user_subscriptions")
         .select("*, subscription_plans(*)")
@@ -42,6 +45,7 @@ export const useSubscription = (): SubscriptionStatus => {
         const plan = data.subscription_plans as any;
         setState({
           hasActiveSubscription: true,
+          hasPendingSubscription: false,
           subscription: data,
           plan,
           loading: false,
@@ -49,7 +53,24 @@ export const useSubscription = (): SubscriptionStatus => {
           consultationsRemaining: Math.max(0, (plan.doctor_consultations || 0) - (data.consultations_used || 0)),
         });
       } else {
-        setState({ hasActiveSubscription: false, subscription: null, plan: null, loading: false, scansRemaining: 0, consultationsRemaining: 0 });
+        // Check for pending subscription
+        const { data: pending } = await supabase
+          .from("user_subscriptions")
+          .select("*")
+          .eq("user_id", user.id)
+          .eq("status", "pending")
+          .limit(1)
+          .maybeSingle();
+
+        setState({
+          hasActiveSubscription: false,
+          hasPendingSubscription: !!pending,
+          subscription: null,
+          plan: null,
+          loading: false,
+          scansRemaining: 0,
+          consultationsRemaining: 0,
+        });
       }
     };
 
