@@ -43,6 +43,7 @@ const PatientDashboard = () => {
     if (user) {
       fetchScans();
       fetchDoubts();
+      fetchActiveConsultations();
     }
   }, [user]);
 
