@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { LogOut, Bell, Calendar, Clock, Users, CheckCircle, XCircle, FileText, Stethoscope, MessageSquare, HeartPulse } from "lucide-react";
+import { LogOut, Bell, Calendar, Clock, Users, CheckCircle, XCircle, FileText, Stethoscope, MessageSquare, HeartPulse, Video } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -279,6 +279,17 @@ const DoctorDashboard = () => {
                         </Button>
                         <Button size="sm" variant="outline" className="flex-1 rounded-lg text-xs" onClick={() => handleConsultation(c.id, "rejected")}>
                           <XCircle className="h-3.5 w-3.5 mr-1" /> Decline
+                        </Button>
+                      </div>
+                    )}
+                    {c.status === "accepted" && (
+                      <div className="flex gap-2 mt-3">
+                        <Button
+                          size="sm"
+                          className="flex-1 rounded-lg text-xs"
+                          onClick={() => navigate("/video-call", { state: { roomId: c.room_id, consultationId: c.id, role: "doctor" } })}
+                        >
+                          <Video className="h-3.5 w-3.5 mr-1" /> Join Video Call
                         </Button>
                       </div>
                     )}

@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ScanLine, History, Calendar, User, LogOut, Stethoscope, Bell, MessageSquare, HeartPulse } from "lucide-react";
+import { ScanLine, History, Calendar, User, LogOut, Stethoscope, Bell, MessageSquare, HeartPulse, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -37,11 +37,13 @@ const PatientDashboard = () => {
   const [doubtText, setDoubtText] = useState("");
   const [submittingDoubt, setSubmittingDoubt] = useState(false);
   const [myDoubts, setMyDoubts] = useState<any[]>([]);
+  const [activeConsultations, setActiveConsultations] = useState<any[]>([]);
 
   useEffect(() => {
     if (user) {
       fetchScans();
       fetchDoubts();
+      fetchActiveConsultations();
     }
   }, [user]);
 
@@ -63,6 +65,45 @@ const PatientDashboard = () => {
       .order("created_at", { ascending: false })
       .limit(5);
     setMyDoubts(data || []);
+  };
+
+  const fetchActiveConsultations = async () => {
+    const { data } = await supabase
+      .from("consultations")
+      .select("*")
+      .eq("patient_id", user!.id)
+      .in("status", ["pending", "accepted"])
+      .order("created_at", { ascending: false });
+    setActiveConsultations(data || []);
+  };
+
+  const handleRequestConsultation = async () => {
+    if (!user) return;
+    // Find a verified doctor to assign
+    const { data: doctors } = await supabase
+      .from("doctor_profiles")
+      .select("user_id")
+      .eq("is_verified", true)
+      .eq("is_active", true)
+      .limit(1);
+
+    if (!doctors || doctors.length === 0) {
+      toast({ title: t("patient.noDoctorAvailable"), variant: "destructive" });
+      return;
+    }
+
+    const { error } = await supabase.from("consultations").insert({
+      patient_id: user.id,
+      doctor_id: doctors[0].user_id,
+      status: "pending",
+    });
+
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: t("patient.consultationRequested") });
+      fetchActiveConsultations();
+    }
   };
 
   const handleSubmitDoubt = async () => {
@@ -256,19 +297,58 @@ const PatientDashboard = () => {
         )}
 
         <div className="grid grid-cols-3 gap-3 pb-4">
-          <button className="bg-card rounded-2xl p-4 shadow-card border border-border text-center hover:shadow-elevated transition-all">
+          <button
+            onClick={() => navigate("/patient/scan")}
+            className="bg-card rounded-2xl p-4 shadow-card border border-border text-center hover:shadow-elevated transition-all"
+          >
             <Stethoscope className="h-6 w-6 text-primary mx-auto mb-1" />
             <span className="text-xs font-medium">{t("patient.findDoctor")}</span>
           </button>
-          <button className="bg-card rounded-2xl p-4 shadow-card border border-border text-center hover:shadow-elevated transition-all">
-            <Calendar className="h-6 w-6 text-primary mx-auto mb-1" />
-            <span className="text-xs font-medium">{t("patient.appointments")}</span>
+          <button
+            onClick={handleRequestConsultation}
+            className="bg-card rounded-2xl p-4 shadow-card border border-border text-center hover:shadow-elevated transition-all"
+          >
+            <Video className="h-6 w-6 text-primary mx-auto mb-1" />
+            <span className="text-xs font-medium">{t("patient.videoCall")}</span>
           </button>
           <button className="bg-card rounded-2xl p-4 shadow-card border border-border text-center hover:shadow-elevated transition-all">
             <User className="h-6 w-6 text-primary mx-auto mb-1" />
             <span className="text-xs font-medium">{t("patient.profile")}</span>
           </button>
         </div>
+
+        {/* Active Consultations */}
+        {activeConsultations.length > 0 && (
+          <div className="pb-4">
+            <h2 className="font-display font-semibold text-lg mb-3">{t("patient.activeConsultations")}</h2>
+            <div className="space-y-3">
+              {activeConsultations.map((c: any) => (
+                <Card key={c.id} className="shadow-card border-border">
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold text-sm">{t("patient.videoConsultation")}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {c.status === "pending" ? t("patient.waitingDoctor") : t("patient.doctorAccepted")}
+                      </p>
+                    </div>
+                    {c.status === "accepted" && (
+                      <Button
+                        size="sm"
+                        className="rounded-xl"
+                        onClick={() => navigate("/video-call", { state: { roomId: c.room_id, consultationId: c.id, role: "patient" } })}
+                      >
+                        <Video className="h-4 w-4 mr-1" /> {t("patient.joinCall")}
+                      </Button>
+                    )}
+                    {c.status === "pending" && (
+                      <span className="text-xs text-warning font-medium animate-pulse">⏳ {t("patient.pending")}</span>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

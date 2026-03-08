@@ -39,6 +39,7 @@ export type Database = {
           id: string
           notes: string | null
           patient_id: string
+          room_id: string | null
           scan_id: string | null
           scheduled_at: string | null
           status: string
@@ -50,6 +51,7 @@ export type Database = {
           id?: string
           notes?: string | null
           patient_id: string
+          room_id?: string | null
           scan_id?: string | null
           scheduled_at?: string | null
           status?: string
@@ -61,6 +63,7 @@ export type Database = {
           id?: string
           notes?: string | null
           patient_id?: string
+          room_id?: string | null
           scan_id?: string | null
           scheduled_at?: string | null
           status?: string
