@@ -395,7 +395,7 @@ const PatientDashboard = () => {
           ) : (
             <div className="space-y-3">
               {availableDoctors.map((doc: any) => (
-                <Card key={doc.id} className="shadow-card border-border">
+                <Card key={doc.id} className={`shadow-card border-border ${doc.isNearby ? "border-success/30 bg-success/5" : ""}`}>
                   <CardContent className="p-4">
                     <div className="flex items-center gap-3">
                       <div className="bg-primary/10 rounded-full p-2.5">
@@ -409,7 +409,14 @@ const PatientDashboard = () => {
                           <p className="text-xs text-muted-foreground">📍 {doc.address}</p>
                         )}
                       </div>
-                      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-success/20 text-success">✅ {t("patient.verified")}</span>
+                      <div className="flex flex-col items-end gap-1">
+                        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-success/20 text-success">✅ {t("patient.verified")}</span>
+                        {doc.isNearby && (
+                          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-primary/20 text-primary flex items-center gap-1">
+                            <MapPin className="h-3 w-3" /> Near You
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
