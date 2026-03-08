@@ -76,6 +76,50 @@ const AdminDashboard = () => {
     setStats({ users: userCount || 0, doctors: doctorCount || 0, scans: scanCount || 0, pendingPatients: pendingPats.length });
   };
 
+  const fetchRecordings = async () => {
+    const { data } = await supabase
+      .from("call_recordings" as any)
+      .select("*")
+      .order("created_at", { ascending: false });
+    
+    if (data && data.length > 0) {
+      // Enrich with patient/doctor names
+      const userIds = [...new Set((data as any[]).flatMap((r: any) => [r.patient_id, r.doctor_id]))];
+      const { data: profiles } = await supabase.from("profiles").select("user_id, full_name").in("user_id", userIds);
+      const profileMap = Object.fromEntries((profiles || []).map(p => [p.user_id, p.full_name]));
+      setRecordings((data as any[]).map((r: any) => ({
+        ...r,
+        patient_name: profileMap[r.patient_id] || "Patient",
+        doctor_name: profileMap[r.doctor_id] || "Doctor",
+      })));
+    } else {
+      setRecordings([]);
+    }
+  };
+
+  const playRecording = async (recordingUrl: string) => {
+    const { data } = await supabase.storage
+      .from("call-recordings")
+      .createSignedUrl(recordingUrl, 3600);
+    if (data?.signedUrl) {
+      window.open(data.signedUrl, "_blank");
+    } else {
+      toast({ title: "Error", description: "Could not load recording", variant: "destructive" });
+    }
+  };
+
+  const downloadRecording = async (recordingUrl: string, consultationId: string) => {
+    const { data } = await supabase.storage
+      .from("call-recordings")
+      .createSignedUrl(recordingUrl, 3600);
+    if (data?.signedUrl) {
+      const a = document.createElement("a");
+      a.href = data.signedUrl;
+      a.download = `recording_${consultationId}.webm`;
+      a.click();
+    }
+  };
+
   const handleViewDoctor = async (doc: any) => {
     setSelectedDoctor(doc);
     setRejectNotes("");
