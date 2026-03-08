@@ -455,7 +455,4 @@ const AdminDashboard = () => {
   );
 };
 
-// Need Label import for the dialog
-import { Label } from "@/components/ui/label";
-
 export default AdminDashboard;
