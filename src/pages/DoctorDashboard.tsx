@@ -60,19 +60,29 @@ const DoctorDashboard = () => {
   const fetchDoubts = async () => {
     const { data } = await supabase
       .from("patient_doubts")
-      .select("*, patient:profiles!patient_doubts_patient_id_fkey(full_name)")
+      .select("*")
       .eq("doctor_id", user!.id)
       .order("created_at", { ascending: false });
 
     // Also fetch unassigned doubts
     const { data: unassigned } = await supabase
       .from("patient_doubts")
-      .select("*, patient:profiles!patient_doubts_patient_id_fkey(full_name)")
+      .select("*")
       .is("doctor_id", null)
       .eq("status", "pending")
       .order("created_at", { ascending: false });
 
-    setDoubts([...(unassigned || []), ...(data || [])]);
+    const allDoubts = [...(unassigned || []), ...(data || [])];
+    
+    // Fetch patient names
+    if (allDoubts.length > 0) {
+      const patientIds = [...new Set(allDoubts.map(d => d.patient_id))];
+      const { data: profiles } = await supabase.from("profiles").select("user_id, full_name").in("user_id", patientIds);
+      const profileMap = Object.fromEntries((profiles || []).map(p => [p.user_id, p.full_name]));
+      setDoubts(allDoubts.map(d => ({ ...d, patient_name: profileMap[d.patient_id] || "Patient" })));
+    } else {
+      setDoubts([]);
+    }
   };
 
   const fetchPatientHistory = async (patientId: string) => {
