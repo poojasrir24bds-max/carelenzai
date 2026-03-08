@@ -8,6 +8,7 @@ import logo from "@/assets/logo.png";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useSubscription } from "@/hooks/useSubscription";
 
 const categories = [
   { id: "dental", label: "🦷 Dental", types: ["Clinical Photo", "X-Ray", "Intraoral", "Panoramic"] },
