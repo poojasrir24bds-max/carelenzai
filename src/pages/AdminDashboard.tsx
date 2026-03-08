@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { LogOut, Users, Stethoscope, ScanLine, DollarSign, CheckCircle, XCircle, BarChart3, Shield, Settings, FileCheck, AlertTriangle, Eye, Loader2, CreditCard, Video, Play, Download } from "lucide-react";
+import { LogOut, Users, Stethoscope, ScanLine, DollarSign, CheckCircle, XCircle, BarChart3, Shield, Settings, FileCheck, AlertTriangle, Eye, Loader2, CreditCard, Video, Play, Download, Trash2 } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -347,6 +347,26 @@ const AdminDashboard = () => {
     fetchData();
   };
 
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    if (!confirm(`Are you sure you want to permanently remove "${userName}" from the app? This cannot be undone.`)) return;
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const { data, error } = await supabase.functions.invoke("delete-user", {
+        body: { userId },
+      });
+      
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      
+      toast({ title: "✅ User removed", description: `${userName} has been permanently deleted.` });
+      fetchData();
+      fetchSubscriptions();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+  };
+
   const handleLogout = async () => {
     await signOut();
     navigate("/");
@@ -634,6 +654,16 @@ const AdminDashboard = () => {
                       {u.sex && <p className="text-xs text-muted-foreground">⚧ {u.sex}</p>}
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">📅 Joined: {new Date(u.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</p>
+                    {u.user_roles?.[0]?.role !== "admin" && (
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="mt-2 h-7 text-xs rounded-lg"
+                        onClick={() => handleDeleteUser(u.user_id, u.full_name)}
+                      >
+                        <Trash2 className="h-3 w-3 mr-1" /> Remove User
+                      </Button>
+                    )}
                   </CardContent>
                 </Card>
               ))
