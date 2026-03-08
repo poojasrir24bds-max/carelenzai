@@ -24,23 +24,33 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [licenseFile, setLicenseFile] = useState<File | null>(null);
   const [licensePreview, setLicensePreview] = useState<string | null>(null);
+  const [idFile, setIdFile] = useState<File | null>(null);
+  const [idPreview, setIdPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const idFileInputRef = useRef<HTMLInputElement>(null);
 
   const update = (key: string, value: string) => setForm((prev) => ({ ...prev, [key]: value }));
 
   const roleTitle = t(`role.${role || "patient"}`);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'license' | 'id') => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
         toast({ title: "File too large", description: "Maximum file size is 5MB", variant: "destructive" });
         return;
       }
-      setLicenseFile(file);
-      setLicensePreview(URL.createObjectURL(file));
+      if (type === 'license') {
+        setLicenseFile(file);
+        setLicensePreview(URL.createObjectURL(file));
+      } else {
+        setIdFile(file);
+        setIdPreview(URL.createObjectURL(file));
+      }
     }
   };
+
+  const isValidAadhaar = (num: string) => /^\d{12}$/.test(num.replace(/\s/g, ''));
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,6 +59,13 @@ const Register = () => {
     // For doctors, require license document
     if (role === "doctor" && !licenseFile) {
       toast({ title: "License document required", description: "Please upload your medical license certificate", variant: "destructive" });
+      setLoading(false);
+      return;
+    }
+
+    // Validate Aadhaar for patients
+    if (role === "patient" && form.aadhaar && !isValidAadhaar(form.aadhaar)) {
+      toast({ title: "Invalid Aadhaar", description: "Aadhaar number must be 12 digits", variant: "destructive" });
       setLoading(false);
       return;
     }
@@ -64,6 +81,7 @@ const Register = () => {
         doctorId: form.doctorId,
         specialization: form.specialization,
         hospital: form.hospital,
+        aadhaar: form.aadhaar,
       },
       role || "patient"
     );
@@ -113,6 +131,32 @@ const Register = () => {
         }
       } catch (err) {
         console.error("Upload error:", err);
+      }
+    }
+
+    // Upload Aadhaar document for patients
+    if (role === "patient" && idFile && signUpData?.user) {
+      try {
+        const fileExt = idFile.name.split('.').pop();
+        const filePath = `${signUpData.user.id}/aadhaar.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("id-documents")
+          .upload(filePath, idFile, { upsert: true });
+
+        if (uploadError) {
+          console.error("ID upload error:", uploadError);
+        } else {
+          setTimeout(async () => {
+            await supabase.from("profiles").update({
+              aadhaar_number: form.aadhaar?.replace(/\s/g, ''),
+              id_document_url: filePath,
+              id_verification_status: 'pending',
+            }).eq("user_id", signUpData.user.id);
+          }, 2000);
+        }
+      } catch (err) {
+        console.error("ID upload error:", err);
       }
     }
 
@@ -249,7 +293,58 @@ const Register = () => {
                       type="file"
                       accept="image/*,.pdf"
                       className="hidden"
-                      onChange={handleFileChange}
+                      onChange={(e) => handleFileChange(e, 'license')}
+                    />
+                  </div>
+                </>
+              )}
+
+              {role === "patient" && (
+                <>
+                  <div className="space-y-1.5">
+                    <Label>Aadhaar Number</Label>
+                    <Input 
+                      placeholder="1234 5678 9012" 
+                      onChange={(e) => update("aadhaar", e.target.value)} 
+                      maxLength={14}
+                    />
+                    <p className="text-xs text-muted-foreground">12-digit Aadhaar number (optional but recommended)</p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="flex items-center gap-2">
+                      <FileCheck className="h-4 w-4" />
+                      Aadhaar / ID Card Upload
+                    </Label>
+                    {idPreview ? (
+                      <div className="relative border border-border rounded-xl overflow-hidden">
+                        <img src={idPreview} alt="ID preview" className="w-full h-32 object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => { setIdFile(null); setIdPreview(null); }}
+                          className="absolute top-2 right-2 bg-card/80 rounded-full p-1 text-xs"
+                        >
+                          ✕
+                        </button>
+                        <div className="absolute bottom-0 left-0 right-0 bg-success/90 text-success-foreground text-xs p-1.5 text-center font-medium">
+                          ✅ {idFile?.name}
+                        </div>
+                      </div>
+                    ) : (
+                      <div
+                        onClick={() => idFileInputRef.current?.click()}
+                        className="border-2 border-dashed border-border rounded-xl p-4 flex flex-col items-center cursor-pointer hover:border-primary hover:bg-accent/50 transition-all"
+                      >
+                        <Upload className="h-8 w-8 text-muted-foreground mb-2" />
+                        <p className="text-sm font-medium">Upload Aadhaar / ID Card</p>
+                        <p className="text-xs text-muted-foreground">JPG, PNG or PDF (max 5MB)</p>
+                      </div>
+                    )}
+                    <input
+                      ref={idFileInputRef}
+                      type="file"
+                      accept="image/*,.pdf"
+                      className="hidden"
+                      onChange={(e) => handleFileChange(e, 'id')}
                     />
                   </div>
                 </>

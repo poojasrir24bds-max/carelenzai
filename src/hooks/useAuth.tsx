@@ -96,6 +96,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         full_name: metadata.full_name,
         age: metadata.age ? parseInt(metadata.age) : null,
         sex: metadata.sex || null,
+        aadhaar_number: metadata.aadhaar?.replace(/\s/g, '') || null,
       }).eq("user_id", data.user.id);
 
       // Assign role

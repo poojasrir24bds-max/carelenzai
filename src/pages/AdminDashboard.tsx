@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { LogOut, Users, Stethoscope, ScanLine, DollarSign, CheckCircle, XCircle, BarChart3, Shield, Settings, FileCheck, AlertTriangle, Eye, Loader2 } from "lucide-react";
+import { LogOut, Users, Stethoscope, ScanLine, DollarSign, CheckCircle, XCircle, BarChart3, Shield, Settings, FileCheck, AlertTriangle, Eye, Loader2, CreditCard } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,11 +24,14 @@ const AdminDashboard = () => {
   const [pendingDoctors, setPendingDoctors] = useState<any[]>([]);
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const [allDoctorProfiles, setAllDoctorProfiles] = useState<any[]>([]);
-  const [stats, setStats] = useState({ users: 0, doctors: 0, scans: 0 });
+  const [pendingPatients, setPendingPatients] = useState<any[]>([]);
+  const [stats, setStats] = useState({ users: 0, doctors: 0, scans: 0, pendingPatients: 0 });
   const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
+  const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [verifying, setVerifying] = useState(false);
   const [rejectNotes, setRejectNotes] = useState("");
   const [licenseDocUrl, setLicenseDocUrl] = useState<string | null>(null);
+  const [idDocUrl, setIdDocUrl] = useState<string | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -41,20 +44,26 @@ const AdminDashboard = () => {
       .order("created_at", { ascending: false });
     setAllUsers(profiles || []);
 
+    // Pending patients with Aadhaar verification
+    const pendingPats = (profiles || []).filter(
+      (p: any) => p.id_document_url && p.id_verification_status === 'pending'
+    );
+    setPendingPatients(pendingPats);
+
     const { data: doctors } = await supabase
       .from("doctor_profiles")
       .select("*")
       .eq("is_verified", false);
     
     const enrichedDoctors = (doctors || []).map((doc) => {
-      const profile = (profiles || []).find((p) => p.user_id === doc.user_id);
+      const profile = (profiles || []).find((p: any) => p.user_id === doc.user_id);
       return { ...doc, profiles: profile };
     });
     setPendingDoctors(enrichedDoctors);
 
     const { data: allDocs } = await supabase.from("doctor_profiles").select("*");
     const enrichedAllDocs = (allDocs || []).map((doc) => {
-      const profile = (profiles || []).find((p) => p.user_id === doc.user_id);
+      const profile = (profiles || []).find((p: any) => p.user_id === doc.user_id);
       return { ...doc, profiles: profile };
     });
     setAllDoctorProfiles(enrichedAllDocs);
@@ -62,7 +71,7 @@ const AdminDashboard = () => {
     const { count: userCount } = await supabase.from("profiles").select("*", { count: "exact", head: true });
     const { count: doctorCount } = await supabase.from("doctor_profiles").select("*", { count: "exact", head: true });
     const { count: scanCount } = await supabase.from("scans").select("*", { count: "exact", head: true });
-    setStats({ users: userCount || 0, doctors: doctorCount || 0, scans: scanCount || 0 });
+    setStats({ users: userCount || 0, doctors: doctorCount || 0, scans: scanCount || 0, pendingPatients: pendingPats.length });
   };
 
   const handleViewDoctor = async (doc: any) => {
@@ -147,6 +156,36 @@ const AdminDashboard = () => {
     fetchData();
   };
 
+  const handleViewPatient = async (patient: any) => {
+    setSelectedPatient(patient);
+    setRejectNotes("");
+    setIdDocUrl(null);
+
+    if (patient.id_document_url) {
+      const { data } = await supabase.storage
+        .from("id-documents")
+        .createSignedUrl(patient.id_document_url, 3600);
+      if (data?.signedUrl) {
+        setIdDocUrl(data.signedUrl);
+      }
+    }
+  };
+
+  const handleVerifyPatient = async (userId: string, approve: boolean) => {
+    const { error } = await supabase.from("profiles").update({
+      id_verification_status: approve ? 'verified' : 'rejected',
+      id_verification_notes: approve ? 'Approved by admin' : (rejectNotes || 'Rejected by admin'),
+    }).eq("user_id", userId);
+
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: approve ? "✅ Patient ID verified!" : "❌ Patient ID rejected." });
+    setSelectedPatient(null);
+    fetchData();
+  };
+
   const handleLogout = async () => {
     await signOut();
     navigate("/");
@@ -202,9 +241,10 @@ const AdminDashboard = () => {
 
         {/* Tabs */}
         <Tabs value={tab} onValueChange={setTab}>
-          <TabsList className="w-full grid grid-cols-4">
+          <TabsList className="w-full grid grid-cols-5">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="doctors">Doctors</TabsTrigger>
+            <TabsTrigger value="patients">Patients</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="payments">Payments</TabsTrigger>
           </TabsList>
@@ -235,6 +275,32 @@ const AdminDashboard = () => {
                             <Eye className="h-3 w-3 mr-1" /> Review
                           </Button>
                         </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Pending Patient ID Verifications */}
+            <Card className="shadow-card border-border">
+              <CardContent className="p-4">
+                <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                  <CreditCard className="h-4 w-4 text-primary" /> Pending Patient ID Verifications ({pendingPatients.length})
+                </h3>
+                {pendingPatients.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No pending patient verifications.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {pendingPatients.slice(0, 5).map((pat: any) => (
+                      <div key={pat.id} className="flex items-center justify-between border-b border-border pb-3 last:border-0 last:pb-0">
+                        <div>
+                          <p className="font-medium text-sm">{pat.full_name}</p>
+                          <p className="text-xs text-muted-foreground">Aadhaar: {pat.aadhaar_number ? `****${pat.aadhaar_number.slice(-4)}` : 'N/A'}</p>
+                        </div>
+                        <Button size="sm" variant="outline" className="rounded-lg h-7 text-xs px-2.5" onClick={() => handleViewPatient(pat)}>
+                          <Eye className="h-3 w-3 mr-1" /> Review
+                        </Button>
                       </div>
                     ))}
                   </div>
@@ -305,6 +371,55 @@ const AdminDashboard = () => {
                   </CardContent>
                 </Card>
               ))
+            )}
+          </TabsContent>
+
+          {/* Patients Tab */}
+          <TabsContent value="patients" className="mt-4 space-y-3">
+            {allUsers.filter((u: any) => u.user_roles?.[0]?.role === 'patient' || !u.user_roles?.[0]?.role).length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">No patients found.</p>
+            ) : (
+              allUsers
+                .filter((u: any) => u.user_roles?.[0]?.role === 'patient' || !u.user_roles?.[0]?.role)
+                .map((pat: any) => (
+                  <Card key={pat.id} className="shadow-card border-border">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-3">
+                          <div className="bg-primary/20 rounded-full p-2.5">
+                            <Users className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-sm">{pat.full_name}</p>
+                            <p className="text-xs text-muted-foreground">📧 {pat.email}</p>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-1">
+                          {pat.id_verification_status === 'verified' ? (
+                            <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-success/20 text-success">✅ ID Verified</span>
+                          ) : pat.id_verification_status === 'rejected' ? (
+                            <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-destructive/20 text-destructive">❌ Rejected</span>
+                          ) : pat.id_document_url ? (
+                            <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-warning/20 text-warning">⏳ Pending</span>
+                          ) : (
+                            <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-muted text-muted-foreground">No ID</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="ml-12 space-y-0.5">
+                        {pat.aadhaar_number && <p className="text-xs text-muted-foreground">🪪 Aadhaar: ****{pat.aadhaar_number.slice(-4)}</p>}
+                        {pat.age && <p className="text-xs text-muted-foreground">🎂 Age: {pat.age}</p>}
+                      </div>
+                      {pat.id_document_url && (
+                        <div className="ml-12 mt-2">
+                          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => handleViewPatient(pat)}>
+                            <Eye className="h-3 w-3 mr-1" /> Review ID
+                          </Button>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))
             )}
           </TabsContent>
 
@@ -444,6 +559,69 @@ const AdminDashboard = () => {
                   className="flex-1"
                   onClick={() => handleVerifyDoctor(selectedDoctor.user_id, false)}
                 >
+                  <XCircle className="h-4 w-4 mr-2" /> Reject
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Patient ID Review Dialog */}
+      <Dialog open={!!selectedPatient} onOpenChange={(open) => !open && setSelectedPatient(null)}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5 text-primary" />
+              Patient ID Verification
+            </DialogTitle>
+          </DialogHeader>
+
+          {selectedPatient && (
+            <div className="space-y-4">
+              <div className="bg-accent/30 rounded-xl p-4 space-y-2">
+                <h4 className="font-semibold">{selectedPatient.full_name}</h4>
+                <p className="text-sm text-muted-foreground">📧 {selectedPatient.email}</p>
+                {selectedPatient.age && <p className="text-sm text-muted-foreground">🎂 Age: {selectedPatient.age}</p>}
+                {selectedPatient.aadhaar_number && (
+                  <p className="text-sm text-muted-foreground">🪪 Aadhaar: <span className="font-mono font-semibold">{selectedPatient.aadhaar_number}</span></p>
+                )}
+              </div>
+
+              <div className="border border-border rounded-xl p-4">
+                <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">📄 ID Document</h4>
+                {idDocUrl ? (
+                  <div className="space-y-2">
+                    <img src={idDocUrl} alt="ID Document" className="w-full rounded-lg border border-border" />
+                    <a href={idDocUrl} target="_blank" rel="noreferrer" className="text-xs text-primary underline">
+                      View full document ↗
+                    </a>
+                  </div>
+                ) : selectedPatient.id_document_url ? (
+                  <p className="text-xs text-muted-foreground">Loading document...</p>
+                ) : (
+                  <div className="bg-warning/10 rounded-lg p-3 flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 text-warning" />
+                    <p className="text-xs text-warning">No ID document uploaded</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Rejection Notes (optional)</label>
+                <Textarea
+                  placeholder="Reason for rejection..."
+                  value={rejectNotes}
+                  onChange={(e) => setRejectNotes(e.target.value)}
+                  rows={2}
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <Button className="flex-1" onClick={() => handleVerifyPatient(selectedPatient.user_id, true)}>
+                  <CheckCircle className="h-4 w-4 mr-2" /> Verify Patient
+                </Button>
+                <Button variant="destructive" className="flex-1" onClick={() => handleVerifyPatient(selectedPatient.user_id, false)}>
                   <XCircle className="h-4 w-4 mr-2" /> Reject
                 </Button>
               </div>
