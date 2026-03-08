@@ -169,6 +169,7 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleViewDoctor = async (doc: any) => {
     setSelectedDoctor(doc);
     setRejectNotes("");
     setLicenseDocUrl(null);
