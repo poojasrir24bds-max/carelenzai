@@ -76,7 +76,7 @@ const ScanResults = () => {
     }
   };
 
-  const handlePlayAudio = (lang: "en" | "ta") => {
+  const handlePlayAudio = async (lang: "en" | "ta") => {
     if (!result || !window.speechSynthesis) return;
 
     // If already speaking, pause/resume
@@ -92,9 +92,25 @@ const ScanResults = () => {
 
     window.speechSynthesis.cancel();
 
-    const text = lang === "en"
-      ? `Condition: ${result.condition}. ${result.definition}. Severity: ${result.severity} risk. ${result.guidance?.join(". ")}`
-      : `நிலை: ${result.condition}. ${result.definition}. தீவிரம்: ${result.severity} அபாயம்.`;
+    const englishText = `Condition: ${result.condition}. ${result.definition}. Severity: ${result.severity} risk. ${(result.guidance || []).join(". ")}`;
+
+    let text = englishText;
+
+    if (lang === "ta") {
+      try {
+        setTranslating(true);
+        const { data, error } = await supabase.functions.invoke("translate", {
+          body: { text: englishText, targetLang: "Tamil (தமிழ்)" },
+        });
+        if (!error && data?.translated) {
+          text = data.translated;
+        }
+      } catch (err) {
+        console.error("Translation failed, using English:", err);
+      } finally {
+        setTranslating(false);
+      }
+    }
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = lang === "en" ? "en-US" : "ta-IN";
