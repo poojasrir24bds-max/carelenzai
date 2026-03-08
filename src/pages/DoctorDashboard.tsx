@@ -145,6 +145,11 @@ const DoctorDashboard = () => {
     navigate("/");
   };
 
+  const hasActiveSub = !!doctorSub;
+  const consultationsRemaining = hasActiveSub
+    ? Math.max(0, (doctorSub.subscription_plans?.doctor_consultations || 5) - (doctorSub.consultations_used || 0))
+    : 0;
+
   if (doctorProfile && !doctorProfile.is_verified) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
@@ -158,6 +163,31 @@ const DoctorDashboard = () => {
               Your doctor account is awaiting admin verification. You'll be notified once approved.
             </p>
             <Button variant="outline" onClick={handleLogout}>Sign Out</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // If doctor is verified but has no active subscription, show subscription required
+  if (!subLoading && doctorProfile?.is_verified && !hasActiveSub) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+        <Card className="max-w-md shadow-elevated border-primary/30">
+          <CardContent className="p-6 text-center">
+            <div className="bg-primary/10 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+              <CreditCard className="h-8 w-8 text-primary" />
+            </div>
+            <h2 className="font-display text-xl font-bold mb-2">Subscription Required</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              To start accepting consultations, please subscribe to the Doctor Plan (₹99 for 5 consultations).
+            </p>
+            <div className="flex gap-2">
+              <Button className="flex-1 rounded-xl" onClick={() => navigate("/doctor/subscription")}>
+                <CreditCard className="h-4 w-4 mr-2" /> Subscribe Now
+              </Button>
+              <Button variant="outline" onClick={handleLogout}>Sign Out</Button>
+            </div>
           </CardContent>
         </Card>
       </div>
