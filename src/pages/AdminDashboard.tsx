@@ -44,6 +44,14 @@ const AdminDashboard = () => {
     });
     setPendingDoctors(enrichedDoctors);
 
+    // Fetch all doctor profiles for Doctors tab
+    const { data: allDocs } = await supabase.from("doctor_profiles").select("*");
+    const enrichedAllDocs = (allDocs || []).map((doc) => {
+      const profile = (profiles || []).find((p) => p.user_id === doc.user_id);
+      return { ...doc, profiles: profile };
+    });
+    setAllDoctorProfiles(enrichedAllDocs);
+
     // Stats
     const { count: userCount } = await supabase.from("profiles").select("*", { count: "exact", head: true });
     const { count: doctorCount } = await supabase.from("doctor_profiles").select("*", { count: "exact", head: true });
