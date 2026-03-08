@@ -209,6 +209,30 @@ const PatientDashboard = () => {
           <p className="text-muted-foreground text-sm">{t("patient.howFeeling")}</p>
         </div>
 
+        {/* Subscription Status Card */}
+        {hasActiveSubscription && !subLoading && (
+          <Card className="shadow-elevated border-primary/30 bg-primary/5">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Crown className="h-5 w-5 text-yellow-500" />
+                <p className="font-display font-bold text-sm">{plan?.name || "Active"} Plan</p>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-card rounded-xl p-3 text-center border border-border">
+                  <ScanLine className="h-5 w-5 text-primary mx-auto mb-1" />
+                  <p className="text-xl font-bold">{scansRemaining}</p>
+                  <p className="text-xs text-muted-foreground">AI Scans Left</p>
+                </div>
+                <div className="bg-card rounded-xl p-3 text-center border border-border">
+                  <Video className="h-5 w-5 text-primary mx-auto mb-1" />
+                  <p className="text-xl font-bold">{consultationsRemaining}</p>
+                  <p className="text-xs text-muted-foreground">Video Consults Left</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <div>
           <h2 className="font-display font-semibold text-lg mb-3">{t("patient.selectScan")}</h2>
           <p className="text-muted-foreground text-sm mb-3">{t("patient.tapToScan")}</p>
