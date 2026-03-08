@@ -180,21 +180,34 @@ const AdminDashboard = () => {
           </TabsContent>
 
           <TabsContent value="users" className="mt-4 space-y-3">
-            {allUsers.map((user) => (
-              <Card key={user.id} className="shadow-card border-border">
-                <CardContent className="p-4 flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold text-sm">{user.full_name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {user.user_roles?.[0]?.role || "unknown"} • {user.email}
-                    </p>
-                  </div>
-                  <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-success/20 text-success">
-                    Active
-                  </span>
-                </CardContent>
-              </Card>
-            ))}
+            {allUsers.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">No users found.</p>
+            ) : (
+              allUsers.map((user) => (
+                <Card key={user.id} className="shadow-card border-border">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="font-semibold text-sm">{user.full_name}</p>
+                      <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${
+                        user.user_roles?.[0]?.role === "admin"
+                          ? "bg-destructive/20 text-destructive"
+                          : user.user_roles?.[0]?.role === "doctor"
+                          ? "bg-secondary/20 text-secondary"
+                          : "bg-primary/20 text-primary"
+                      }`}>
+                        {user.user_roles?.[0]?.role || "patient"}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">📧 {user.email}</p>
+                    <div className="flex gap-4 mt-1.5">
+                      {user.age && <p className="text-xs text-muted-foreground">🎂 Age: {user.age}</p>}
+                      {user.sex && <p className="text-xs text-muted-foreground">⚧ {user.sex}</p>}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">📅 Joined: {new Date(user.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</p>
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </TabsContent>
 
           <TabsContent value="payments" className="mt-4">
