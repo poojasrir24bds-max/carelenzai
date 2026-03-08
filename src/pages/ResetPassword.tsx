@@ -60,8 +60,10 @@ const ResetPassword = () => {
       return;
     }
 
-    toast({ title: t("reset.success") });
-    navigate("/");
+    toast({ title: t("reset.success"), description: "Please log in with your new password." });
+    // Sign out so user can log in fresh with new password
+    await supabase.auth.signOut();
+    navigate("/login/patient");
   };
 
   if (!isRecovery) {
