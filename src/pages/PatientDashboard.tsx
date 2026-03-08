@@ -64,9 +64,32 @@ const PatientDashboard = () => {
       fetchScans();
       fetchDoubts();
       fetchActiveConsultations();
+      fetchCompletedConsultations();
       fetchAvailableDoctors();
+      fetchPatientRatings();
     }
   }, [user]);
+
+  const fetchPatientRatings = async () => {
+    const { data } = await supabase
+      .from("consultation_ratings" as any)
+      .select("*")
+      .eq("rated_by", user!.id);
+    const map: Record<string, any> = {};
+    (data as any[] || []).forEach((r: any) => { map[r.consultation_id] = r; });
+    setPatientRatings(map);
+  };
+
+  const fetchCompletedConsultations = async () => {
+    const { data } = await supabase
+      .from("consultations")
+      .select("*")
+      .eq("patient_id", user!.id)
+      .eq("status", "completed")
+      .order("created_at", { ascending: false })
+      .limit(10);
+    setCompletedConsultations(data || []);
+  };
 
   const fetchScans = async () => {
     const { data } = await supabase
