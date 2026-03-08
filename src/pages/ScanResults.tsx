@@ -100,7 +100,8 @@ const ScanResults = () => {
       return;
     }
 
-    toast({ title: "Question submitted! Getting AI response..." });
+    setSubmittedQuestion(question);
+    setAiAnswer(null);
     setDoubtText("");
 
     // Get AI answer in background (edge function saves it directly)
@@ -110,7 +111,9 @@ const ScanResults = () => {
       });
 
       if (!aiError && aiData?.answer) {
-        toast({ title: "AI has answered your question!" });
+        setAiAnswer(aiData.answer);
+      } else {
+        toast({ title: "Could not get AI response", variant: "destructive" });
       }
     } catch (e) {
       console.error("AI answer error:", e);
