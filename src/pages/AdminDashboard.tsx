@@ -169,23 +169,37 @@ const AdminDashboard = () => {
           </TabsContent>
 
           <TabsContent value="doctors" className="mt-4 space-y-3">
-            {allUsers
-              .filter((u) => u.user_roles?.some((r: any) => r.role === "doctor"))
-              .map((u) => (
-                <Card key={u.id} className="shadow-card border-border">
-                  <CardContent className="p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-secondary/20 rounded-full p-2.5">
-                        <Stethoscope className="h-5 w-5 text-secondary" />
+            {allDoctorProfiles.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">No doctors registered yet.</p>
+            ) : (
+              allDoctorProfiles.map((doc) => (
+                <Card key={doc.id} className="shadow-card border-border">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-secondary/20 rounded-full p-2.5">
+                          <Stethoscope className="h-5 w-5 text-secondary" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm">{doc.profiles?.full_name || "Unknown"}</p>
+                          <p className="text-xs text-muted-foreground">📧 {doc.profiles?.email}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-semibold text-sm">{u.full_name}</p>
-                        <p className="text-xs text-muted-foreground">{u.email}</p>
-                      </div>
+                      <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${
+                        doc.is_verified ? "bg-success/20 text-success" : "bg-warning/20 text-warning"
+                      }`}>
+                        {doc.is_verified ? "Verified" : "Pending"}
+                      </span>
+                    </div>
+                    <div className="ml-12 space-y-0.5">
+                      <p className="text-xs text-muted-foreground">🏥 {doc.hospital_name}</p>
+                      <p className="text-xs text-muted-foreground">🩺 {doc.specialization} • License: {doc.medical_license}</p>
+                      <p className="text-xs text-muted-foreground">🆔 Doctor ID: {doc.doctor_id}</p>
                     </div>
                   </CardContent>
                 </Card>
-              ))}
+              ))
+            )}
           </TabsContent>
 
           <TabsContent value="users" className="mt-4 space-y-3">
