@@ -255,8 +255,17 @@ const DoctorSubscription = () => {
             <p className="text-xs text-muted-foreground text-center">
               Pay exactly <strong>₹{plan?.price_inr}</strong> to complete your registration
             </p>
-            <Button className="w-full rounded-xl" onClick={handlePaidDone}>
-              I've Paid — Enter Transaction ID
+            <div className="w-full space-y-2">
+              <Label>UPI Transaction ID</Label>
+              <Input
+                placeholder="e.g. UPI1234567890"
+                value={txnId}
+                onChange={(e) => setTxnId(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">Find this in your UPI app payment history</p>
+            </div>
+            <Button className="w-full rounded-xl" onClick={handleSubmitFromQr} disabled={!txnId.trim() || submitting}>
+              {submitting ? "Submitting..." : "Submit Payment"}
             </Button>
           </div>
         </DialogContent>

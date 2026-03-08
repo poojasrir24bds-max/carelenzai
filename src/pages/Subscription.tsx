@@ -288,8 +288,17 @@ const Subscription = () => {
             <p className="text-xs text-muted-foreground text-center">
               Pay exactly <strong>₹{selectedPlan?.price_inr}</strong> to complete your subscription
             </p>
-            <Button className="w-full rounded-xl" onClick={handlePaidDone}>
-              I've Paid — Enter Transaction ID
+            <div className="w-full space-y-2">
+              <Label>{t("sub.transactionId")}</Label>
+              <Input
+                placeholder="e.g. UPI1234567890"
+                value={txnId}
+                onChange={(e) => setTxnId(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">{t("sub.transactionIdHint")}</p>
+            </div>
+            <Button className="w-full rounded-xl" onClick={handleSubmitFromQr} disabled={!txnId.trim() || submitting}>
+              {submitting ? t("common.loading") : t("sub.submitPayment")}
             </Button>
           </div>
         </DialogContent>
