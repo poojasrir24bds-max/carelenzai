@@ -100,8 +100,7 @@ serve(async (req) => {
   }
 
   try {
-    const body = await req.json();
-    const { licenseNumber, doctorProfileId } = body;
+    const { licenseNumber, doctorId, doctorProfileId, specialization } = await req.json();
 
     if (!licenseNumber) {
       return new Response(JSON.stringify({ error: "License number is required" }), {
@@ -109,8 +108,6 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-
-    const { licenseNumber, doctorId, doctorProfileId, specialization } = await req.json();
 
     const result = verifyLicense(licenseNumber, doctorId || '', specialization || '');
 

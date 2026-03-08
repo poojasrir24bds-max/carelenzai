@@ -106,6 +106,7 @@ const Register = () => {
               body: {
                 licenseNumber: form.license,
                 doctorId: form.doctorId,
+                specialization: form.specialization,
               },
             });
           }, 2000);
