@@ -17,6 +17,7 @@ const Register = () => {
   const { signUp } = useAuth();
   const [form, setForm] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const update = (key: string, value: string) => setForm((prev) => ({ ...prev, [key]: value }));
 
