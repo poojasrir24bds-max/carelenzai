@@ -61,7 +61,6 @@ const DoctorSubscription = () => {
     setSubmitting(true);
 
     const now = new Date();
-    const expiresAt = new Date(now.getTime() + plan.duration_days * 24 * 60 * 60 * 1000);
 
     const { error } = await supabase.from("user_subscriptions").insert({
       user_id: user.id,
@@ -69,7 +68,7 @@ const DoctorSubscription = () => {
       status: "pending",
       upi_transaction_id: txnId.trim(),
       starts_at: now.toISOString(),
-      expires_at: expiresAt.toISOString(),
+      expires_at: null,
     } as any);
 
     if (error) {
