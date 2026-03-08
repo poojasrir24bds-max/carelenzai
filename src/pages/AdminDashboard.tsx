@@ -92,7 +92,26 @@ const AdminDashboard = () => {
     const { count: userCount } = await supabase.from("profiles").select("*", { count: "exact", head: true });
     const { count: doctorCount } = await supabase.from("doctor_profiles").select("*", { count: "exact", head: true });
     const { count: scanCount } = await supabase.from("scans").select("*", { count: "exact", head: true });
-    setStats({ users: userCount || 0, doctors: doctorCount || 0, scans: scanCount || 0, pendingPatients: pendingPats.length });
+    const { count: dentalScanCount } = await supabase.from("dental_scans").select("*", { count: "exact", head: true });
+
+    // Count patients (users with patient role)
+    const patientCount = (roles || []).filter((r: any) => r.role === 'patient').length;
+
+    // Calculate revenue from active/approved subscriptions
+    const { data: revenueSubs } = await supabase
+      .from("user_subscriptions")
+      .select("*, subscription_plans(price_inr)")
+      .eq("status", "active");
+    const totalRevenue = (revenueSubs || []).reduce((sum: number, s: any) => sum + ((s.subscription_plans as any)?.price_inr || 0), 0);
+
+    setStats({
+      users: userCount || 0,
+      doctors: doctorCount || 0,
+      patients: patientCount,
+      scans: (scanCount || 0) + (dentalScanCount || 0),
+      revenue: totalRevenue,
+      pendingPatients: pendingPats.length,
+    });
 
     // Fetch scan counts per patient
     const { data: allScans } = await supabase.from("scans").select("user_id");
