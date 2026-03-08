@@ -370,12 +370,13 @@ const AdminDashboard = () => {
         <h1 className="font-display text-2xl font-bold">Admin Dashboard 🛡️</h1>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {[
             { icon: Users, label: "Total Users", value: String(stats.users), color: "text-primary" },
+            { icon: Users, label: "Patients", value: String(stats.patients), color: "text-accent-foreground" },
             { icon: Stethoscope, label: "Doctors", value: String(stats.doctors), color: "text-secondary" },
             { icon: ScanLine, label: "Total Scans", value: String(stats.scans), color: "text-warning" },
-            { icon: DollarSign, label: "Revenue", value: "₹0", color: "text-success" },
+            { icon: DollarSign, label: "Revenue", value: `₹${stats.revenue}`, color: "text-success" },
           ].map((s) => (
             <Card key={s.label} className="shadow-card border-border">
               <CardContent className="p-4">
