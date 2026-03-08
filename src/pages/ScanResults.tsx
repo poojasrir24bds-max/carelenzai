@@ -2,7 +2,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, AlertTriangle, CheckCircle, ShieldAlert, Stethoscope, Droplets, Salad, Heart, Sparkles, Volume2, Pause, Square, MessageSquare } from "lucide-react";
+import { ArrowLeft, AlertTriangle, CheckCircle, ShieldAlert, Stethoscope, Droplets, Salad, Heart, Sparkles, Volume2, Pause, Square, MessageSquare, Globe } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,12 +10,20 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 
 const severityConfig = {
-  low: { color: "bg-success", textColor: "text-success", label: "🟢 Low Risk", desc: "Normal or mild issue — no immediate concern" },
-  medium: { color: "bg-warning", textColor: "text-warning", label: "🟡 Medium Risk", desc: "Monitor condition and consider a doctor consultation" },
-  high: { color: "bg-destructive", textColor: "text-destructive", label: "🔴 High Risk", desc: "Doctor consultation recommended immediately" },
+  low: { color: "bg-success", textColor: "text-success", label: "🟢 Low Risk", labelTa: "🟢 குறைந்த ஆபத்து", desc: "Normal or mild issue — no immediate concern" },
+  medium: { color: "bg-warning", textColor: "text-warning", label: "🟡 Medium Risk", labelTa: "🟡 நடுத்தர ஆபத்து", desc: "Monitor condition and consider a doctor consultation" },
+  high: { color: "bg-destructive", textColor: "text-destructive", label: "🔴 High Risk", labelTa: "🔴 அதிக ஆபத்து", desc: "Doctor consultation recommended immediately" },
 };
 
 const guidanceIcons = [Droplets, Salad, Heart, Sparkles];
+
+type TranslatedResult = {
+  condition: string;
+  definition: string;
+  severityDesc: string;
+  causes: string[];
+  guidance: string[];
+};
 
 const ScanResults = () => {
   const navigate = useNavigate();
@@ -29,6 +37,8 @@ const ScanResults = () => {
   const [submittingDoubt, setSubmittingDoubt] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [translating, setTranslating] = useState(false);
+  const [lang, setLang] = useState<"en" | "ta">("en");
+  const [translatedData, setTranslatedData] = useState<TranslatedResult | null>(null);
 
   useEffect(() => {
     if (result && (result.severity === "medium" || result.severity === "high")) {
@@ -76,10 +86,52 @@ const ScanResults = () => {
     }
   };
 
-  const handlePlayAudio = async (lang: "en" | "ta") => {
+  const handleSwitchLang = async (newLang: "en" | "ta") => {
+    if (newLang === lang) return;
+    
+    if (newLang === "en") {
+      setLang("en");
+      return;
+    }
+
+    // Translate to Tamil
+    if (translatedData) {
+      setLang("ta");
+      return;
+    }
+
+    setTranslating(true);
+    try {
+      const sev = severityConfig[result.severity as keyof typeof severityConfig] || severityConfig.low;
+      const { data, error } = await supabase.functions.invoke("translate", {
+        body: {
+          targetLang: "Tamil (தமிழ்)",
+          structuredResult: {
+            condition: result.condition,
+            definition: result.definition,
+            severityDesc: sev.desc,
+            causes: result.causes || [],
+            guidance: result.guidance || [],
+          },
+        },
+      });
+      if (!error && data?.translatedResult) {
+        setTranslatedData(data.translatedResult);
+        setLang("ta");
+      } else {
+        toast({ title: "Translation failed", variant: "destructive" });
+      }
+    } catch (err) {
+      console.error("Translation error:", err);
+      toast({ title: "Translation failed", variant: "destructive" });
+    } finally {
+      setTranslating(false);
+    }
+  };
+
+  const handlePlayAudio = () => {
     if (!result || !window.speechSynthesis) return;
 
-    // If already speaking, pause/resume
     if (isSpeaking && window.speechSynthesis.speaking) {
       if (window.speechSynthesis.paused) {
         window.speechSynthesis.resume();
@@ -92,25 +144,11 @@ const ScanResults = () => {
 
     window.speechSynthesis.cancel();
 
-    const englishText = `Condition: ${result.condition}. ${result.definition}. Severity: ${result.severity} risk. ${(result.guidance || []).join(". ")}`;
+    const displayCondition = lang === "ta" && translatedData ? translatedData.condition : result.condition;
+    const displayDefinition = lang === "ta" && translatedData ? translatedData.definition : result.definition;
+    const displayGuidance = lang === "ta" && translatedData ? translatedData.guidance : (result.guidance || []);
 
-    let text = englishText;
-
-    if (lang === "ta") {
-      try {
-        setTranslating(true);
-        const { data, error } = await supabase.functions.invoke("translate", {
-          body: { text: englishText, targetLang: "Tamil (தமிழ்)" },
-        });
-        if (!error && data?.translated) {
-          text = data.translated;
-        }
-      } catch (err) {
-        console.error("Translation failed, using English:", err);
-      } finally {
-        setTranslating(false);
-      }
-    }
+    const text = `${displayCondition}. ${displayDefinition}. ${displayGuidance.join(". ")}`;
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = lang === "en" ? "en-US" : "ta-IN";
@@ -137,19 +175,60 @@ const ScanResults = () => {
 
   const sev = severityConfig[result.severity as keyof typeof severityConfig] || severityConfig.low;
 
+  // Display values based on current language
+  const displayCondition = lang === "ta" && translatedData ? translatedData.condition : result.condition;
+  const displayDefinition = lang === "ta" && translatedData ? translatedData.definition : result.definition;
+  const displayCauses = lang === "ta" && translatedData ? translatedData.causes : (result.causes || []);
+  const displayGuidance = lang === "ta" && translatedData ? translatedData.guidance : (result.guidance || []);
+  const displaySevDesc = lang === "ta" && translatedData ? translatedData.severityDesc : sev.desc;
+  const displaySevLabel = lang === "ta" ? sev.labelTa : sev.label;
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="gradient-header px-4 py-3 flex items-center gap-3">
-        <button onClick={() => navigate("/patient")} className="text-primary-foreground">
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <div className="flex items-center gap-2">
-          <img src={logo} alt="HealthScan AI" className="h-7 w-7" />
-          <span className="font-display font-bold text-primary-foreground">Scan Results</span>
+      <header className="gradient-header px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <button onClick={() => navigate("/patient")} className="text-primary-foreground">
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <div className="flex items-center gap-2">
+            <img src={logo} alt="HealthScan AI" className="h-7 w-7" />
+            <span className="font-display font-bold text-primary-foreground">
+              {lang === "ta" ? "ஸ்கேன் முடிவுகள்" : "Scan Results"}
+            </span>
+          </div>
         </div>
       </header>
 
       <div className="flex-1 container py-6 space-y-5">
+        {/* Language Toggle */}
+        <div className="flex items-center justify-center gap-2">
+          <Globe className="h-4 w-4 text-muted-foreground" />
+          <div className="flex bg-muted rounded-full p-0.5">
+            <button
+              onClick={() => handleSwitchLang("en")}
+              className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                lang === "en" ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+              }`}
+            >
+              English
+            </button>
+            <button
+              onClick={() => handleSwitchLang("ta")}
+              disabled={translating}
+              className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                lang === "ta" ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+              }`}
+            >
+              {translating ? (
+                <span className="flex items-center gap-1">
+                  <div className="h-3 w-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  மொழிபெயர்...
+                </span>
+              ) : "தமிழ்"}
+            </button>
+          </div>
+        </div>
+
         {/* Severity Badge */}
         <Card className="border-border shadow-elevated">
           <CardContent className="p-5 text-center">
@@ -157,11 +236,11 @@ const ScanResults = () => {
               {result.severity === "low" && <CheckCircle className="h-4 w-4" />}
               {result.severity === "medium" && <AlertTriangle className="h-4 w-4" />}
               {result.severity === "high" && <ShieldAlert className="h-4 w-4" />}
-              {sev.label}
+              {displaySevLabel}
             </div>
-            <h2 className="font-display text-xl font-bold">{result.condition}</h2>
-            <p className="text-muted-foreground text-sm mt-1">{result.confidence}% confidence</p>
-            <p className="text-sm mt-2">{sev.desc}</p>
+            <h2 className="font-display text-xl font-bold">{displayCondition}</h2>
+            <p className="text-muted-foreground text-sm mt-1">{result.confidence}% {lang === "ta" ? "நம்பகத்தன்மை" : "confidence"}</p>
+            <p className="text-sm mt-2">{displaySevDesc}</p>
           </CardContent>
         </Card>
 
@@ -171,25 +250,12 @@ const ScanResults = () => {
             variant="outline"
             size="sm"
             className="flex-1 rounded-xl"
-            onClick={() => handlePlayAudio("en")}
+            onClick={handlePlayAudio}
           >
             {isSpeaking ? <Pause className="h-4 w-4 mr-2" /> : <Volume2 className="h-4 w-4 mr-2" />}
-            {isSpeaking ? "Pause" : "English"}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1 rounded-xl"
-            onClick={() => handlePlayAudio("ta")}
-            disabled={translating}
-          >
-            {translating ? (
-              <><div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin mr-2" /> மொழிபெயர்...</>
-            ) : isSpeaking ? (
-              <><Pause className="h-4 w-4 mr-2" /> இடைநிறுத்து</>
-            ) : (
-              <><Volume2 className="h-4 w-4 mr-2" /> தமிழ்</>
-            )}
+            {isSpeaking
+              ? (lang === "ta" ? "இடைநிறுத்து" : "Pause")
+              : (lang === "ta" ? "🔊 கேளுங்கள்" : "🔊 Listen")}
           </Button>
           {(isSpeaking || window.speechSynthesis?.speaking) && (
             <Button
@@ -204,11 +270,13 @@ const ScanResults = () => {
         </div>
 
         {/* Definition */}
-        {result.definition && (
+        {displayDefinition && (
           <Card className="border-border shadow-card">
             <CardContent className="p-5">
-              <h3 className="font-display font-semibold mb-2">What is {result.condition}?</h3>
-              <p className="text-sm text-muted-foreground">{result.definition}</p>
+              <h3 className="font-display font-semibold mb-2">
+                {lang === "ta" ? `${displayCondition} என்றால் என்ன?` : `What is ${displayCondition}?`}
+              </h3>
+              <p className="text-sm text-muted-foreground">{displayDefinition}</p>
             </CardContent>
           </Card>
         )}
@@ -216,9 +284,11 @@ const ScanResults = () => {
         {/* Possible Causes */}
         <Card className="border-border shadow-card">
           <CardContent className="p-5">
-            <h3 className="font-display font-semibold mb-3">Possible Causes</h3>
+            <h3 className="font-display font-semibold mb-3">
+              {lang === "ta" ? "சாத்தியமான காரணங்கள்" : "Possible Causes"}
+            </h3>
             <div className="space-y-2">
-              {(result.causes || []).map((cause: string, i: number) => (
+              {displayCauses.map((cause: string, i: number) => (
                 <div key={i} className="flex items-start gap-2">
                   <span className="text-warning mt-0.5">•</span>
                   <p className="text-sm text-muted-foreground">{cause}</p>
@@ -231,9 +301,11 @@ const ScanResults = () => {
         {/* Health Guidance */}
         <Card className="border-border shadow-card">
           <CardContent className="p-5">
-            <h3 className="font-display font-semibold mb-3">Health Guidance</h3>
+            <h3 className="font-display font-semibold mb-3">
+              {lang === "ta" ? "சுகாதார வழிகாட்டுதல்" : "Health Guidance"}
+            </h3>
             <div className="space-y-3">
-              {(result.guidance || []).map((text: string, i: number) => {
+              {displayGuidance.map((text: string, i: number) => {
                 const Icon = guidanceIcons[i % guidanceIcons.length];
                 return (
                   <div key={i} className="flex items-center gap-3 bg-accent/50 rounded-xl p-3">
@@ -252,13 +324,16 @@ const ScanResults = () => {
         <Card className="border-border shadow-card">
           <CardContent className="p-5">
             <h3 className="font-display font-semibold mb-3 flex items-center gap-2">
-              <MessageSquare className="h-5 w-5 text-primary" /> Ask a Question
+              <MessageSquare className="h-5 w-5 text-primary" />
+              {lang === "ta" ? "கேள்வி கேளுங்கள்" : "Ask a Question"}
             </h3>
             <p className="text-xs text-muted-foreground mb-3">
-              Have doubts about your diagnosis? Ask here and a doctor will review your question.
+              {lang === "ta"
+                ? "உங்கள் கண்டறிதல் பற்றி சந்தேகங்கள் உள்ளதா? இங்கே கேளுங்கள், மருத்துவர் பதிலளிப்பார்."
+                : "Have doubts about your diagnosis? Ask here and a doctor will review your question."}
             </p>
             <Textarea
-              placeholder="Type your question about the diagnosis..."
+              placeholder={lang === "ta" ? "கண்டறிதல் பற்றிய உங்கள் கேள்வியை தட்டச்சு செய்யவும்..." : "Type your question about the diagnosis..."}
               value={doubtText}
               onChange={(e) => setDoubtText(e.target.value)}
               className="mb-3"
@@ -270,7 +345,9 @@ const ScanResults = () => {
               className="w-full rounded-xl"
               size="sm"
             >
-              {submittingDoubt ? "Submitting..." : "Submit Question"}
+              {submittingDoubt
+                ? (lang === "ta" ? "சமர்ப்பிக்கிறது..." : "Submitting...")
+                : (lang === "ta" ? "கேள்வியை சமர்ப்பிக்கவும்" : "Submit Question")}
             </Button>
           </CardContent>
         </Card>
@@ -279,9 +356,13 @@ const ScanResults = () => {
         {(result.severity === "medium" || result.severity === "high") && (
           <Card className="border-border shadow-card">
             <CardContent className="p-5">
-              <h3 className="font-display font-semibold mb-3">Recommended Doctors</h3>
+              <h3 className="font-display font-semibold mb-3">
+                {lang === "ta" ? "பரிந்துரைக்கப்பட்ட மருத்துவர்கள்" : "Recommended Doctors"}
+              </h3>
               {doctors.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No verified doctors available at the moment.</p>
+                <p className="text-sm text-muted-foreground">
+                  {lang === "ta" ? "தற்போது சரிபார்க்கப்பட்ட மருத்துவர்கள் இல்லை." : "No verified doctors available at the moment."}
+                </p>
               ) : (
                 <div className="space-y-3">
                   {doctors.map((doc) => (
@@ -296,7 +377,7 @@ const ScanResults = () => {
                         </div>
                       </div>
                       <Button size="sm" className="rounded-lg text-xs" onClick={() => handleBookDoctor(doc.user_id)}>
-                        Book
+                        {lang === "ta" ? "முன்பதிவு" : "Book"}
                       </Button>
                     </div>
                   ))}
@@ -308,7 +389,9 @@ const ScanResults = () => {
 
         {/* Disclaimer */}
         <p className="text-xs text-muted-foreground text-center pb-4">
-          ⚠️ This is AI-powered health screening only, not a medical diagnosis. No prescription is generated automatically. Always consult a healthcare professional.
+          {lang === "ta"
+            ? "⚠️ இது AI உடல்நல திரையிடல் மட்டுமே, மருத்துவ கண்டறிதல் அல்ல. எப்போதும் சுகாதார நிபுணரை அணுகவும்."
+            : "⚠️ This is AI-powered health screening only, not a medical diagnosis. No prescription is generated automatically. Always consult a healthcare professional."}
         </p>
       </div>
     </div>
