@@ -187,6 +187,7 @@ const translations: Record<string, Record<Lang, string>> = {
   "sub.aiScans": { en: "AI Health Scans", ta: "AI ஆரோக்கிய ஸ்கேன்கள்" },
   "sub.doctorConsultations": { en: "Doctor Video Consultations", ta: "மருத்துவர் வீடியோ ஆலோசனைகள்" },
   "sub.days": { en: "days validity", ta: "நாட்கள் செல்லுபடியாகும்" },
+  "sub.prioritySupport": { en: "Priority Support", ta: "முன்னுரிமை ஆதரவு" },
   "sub.payWithUpi": { en: "Pay with UPI", ta: "UPI மூலம் செலுத்து" },
   "sub.confirmPayment": { en: "Confirm Payment", ta: "பணம் செலுத்துதலை உறுதிப்படுத்தவும்" },
   "sub.confirmPaymentDesc": { en: "After paying via UPI, enter the transaction ID to activate your", ta: "UPI மூலம் பணம் செலுத்திய பிறகு, உங்கள் திட்டத்தை செயல்படுத்த பரிவர்த்தனை ID-ஐ உள்ளிடவும்" },
