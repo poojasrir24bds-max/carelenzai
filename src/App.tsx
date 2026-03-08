@@ -40,6 +40,8 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/login/:role" element={<Login />} />
               <Route path="/register/:role" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/patient" element={<PatientDashboard />} />
               <Route path="/patient/scan" element={<ScanPage />} />
               <Route path="/patient/results" element={<ScanResults />} />
