@@ -232,8 +232,15 @@ const PatientDashboard = () => {
           </div>
         </div>
 
-        <Card className="border-border shadow-card">
+        <Card className={`border-border shadow-card ${!hasActiveSubscription ? "opacity-60 relative" : ""}`}>
           <CardContent className="p-5">
+            {!hasActiveSubscription && (
+              <div className="absolute inset-0 bg-background/50 rounded-lg flex flex-col items-center justify-center z-10 cursor-pointer" onClick={() => navigate("/subscription")}>
+                <Lock className="h-6 w-6 text-warning mb-2" />
+                <p className="text-sm font-semibold">Subscribe to unlock</p>
+                <p className="text-xs text-muted-foreground">Choose a plan to ask health questions</p>
+              </div>
+            )}
             <h3 className="font-display font-semibold mb-2 flex items-center gap-2">
               <MessageSquare className="h-5 w-5 text-primary" /> {t("patient.askQuestion")}
             </h3>
@@ -244,8 +251,9 @@ const PatientDashboard = () => {
               onChange={(e) => setDoubtText(e.target.value)}
               rows={3}
               className="mb-3"
+              disabled={!hasActiveSubscription}
             />
-            <Button onClick={handleSubmitDoubt} disabled={!doubtText.trim() || submittingDoubt} className="w-full rounded-xl" size="sm">
+            <Button onClick={handleSubmitDoubt} disabled={!doubtText.trim() || submittingDoubt || !hasActiveSubscription} className="w-full rounded-xl" size="sm">
               {submittingDoubt ? t("patient.submitting") : t("patient.submitQuestion")}
             </Button>
 
