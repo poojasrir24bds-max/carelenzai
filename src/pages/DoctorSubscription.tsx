@@ -87,43 +87,59 @@ const DoctorSubscription = () => {
       <div className="flex-1 container py-6 space-y-6 max-w-md mx-auto">
         {/* Active / Pending Subscription */}
         {activeSub && (
-          <Card className={`shadow-elevated ${activeSub.status === "active" ? "border-success/30 bg-success/5" : "border-warning/30 bg-warning/5"}`}>
+          <Card className={`shadow-elevated ${
+            creditsExhausted ? "border-destructive/30 bg-destructive/5" :
+            activeSub.status === "active" ? "border-success/30 bg-success/5" : "border-warning/30 bg-warning/5"
+          }`}>
             <CardContent className="p-5">
               <div className="flex items-center gap-3 mb-3">
-                <div className={`rounded-full p-2 ${activeSub.status === "active" ? "bg-success/20" : "bg-warning/20"}`}>
-                  {activeSub.status === "active" ? <Check className="h-5 w-5 text-success" /> : <Crown className="h-5 w-5 text-warning" />}
+                <div className={`rounded-full p-2 ${
+                  creditsExhausted ? "bg-destructive/20" :
+                  activeSub.status === "active" ? "bg-success/20" : "bg-warning/20"
+                }`}>
+                  {creditsExhausted ? (
+                    <Crown className="h-5 w-5 text-destructive" />
+                  ) : activeSub.status === "active" ? (
+                    <Check className="h-5 w-5 text-success" />
+                  ) : (
+                    <Crown className="h-5 w-5 text-warning" />
+                  )}
                 </div>
                 <div>
                   <p className="font-display font-bold text-sm">
-                    {activeSub.status === "active" ? "Active Subscription" : "⏳ Pending Approval"}
+                    {creditsExhausted
+                      ? "❌ Consultations Exhausted"
+                      : activeSub.status === "active" ? "Active Subscription" : "⏳ Pending Approval"}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {activeSub.status === "active"
-                      ? `${(activeSub.subscription_plans?.doctor_consultations || 5) - (activeSub.consultations_used || 0)} consultations remaining`
-                      : "Your payment is being verified by admin"}
+                    {creditsExhausted
+                      ? "Please subscribe again to continue consultations"
+                      : activeSub.status === "active"
+                        ? `${docConsultations - consultationsUsed} consultations remaining`
+                        : "Your payment is being verified by admin"}
                   </p>
                 </div>
               </div>
-              {activeSub.status === "active" && (
-                <div className="bg-background rounded-xl p-3 text-center">
-                  <Stethoscope className="h-5 w-5 text-primary mx-auto mb-1" />
-                  <p className="text-lg font-bold">
-                    {activeSub.consultations_used}/{activeSub.subscription_plans?.doctor_consultations || 5}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Consultations Used</p>
-                </div>
-              )}
-              {activeSub.status === "active" && (
-                <Button className="w-full mt-4 rounded-xl" onClick={() => navigate("/doctor")}>
-                  Go to Dashboard
-                </Button>
+              {activeSub.status === "active" && !creditsExhausted && (
+                <>
+                  <div className="bg-background rounded-xl p-3 text-center">
+                    <Stethoscope className="h-5 w-5 text-primary mx-auto mb-1" />
+                    <p className="text-lg font-bold">
+                      {consultationsUsed}/{docConsultations}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Consultations Used</p>
+                  </div>
+                  <Button className="w-full mt-4 rounded-xl" onClick={() => navigate("/doctor")}>
+                    Go to Dashboard
+                  </Button>
+                </>
               )}
             </CardContent>
           </Card>
         )}
 
         {/* Plan Card */}
-        {plan && !activeSub?.status?.includes("active") && !activeSub?.status?.includes("pending") && (
+        {plan && canResubscribe && (
           <Card className="shadow-card border-2 border-primary/40 bg-primary/5 relative overflow-hidden">
             <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-bl-xl">
               Required
