@@ -37,6 +37,7 @@ const PatientDashboard = () => {
   const [doubtText, setDoubtText] = useState("");
   const [submittingDoubt, setSubmittingDoubt] = useState(false);
   const [myDoubts, setMyDoubts] = useState<any[]>([]);
+  const [activeConsultations, setActiveConsultations] = useState<any[]>([]);
 
   useEffect(() => {
     if (user) {
