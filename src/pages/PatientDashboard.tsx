@@ -350,7 +350,14 @@ const PatientDashboard = () => {
           )}
         </div>
 
-        <div className="grid grid-cols-3 gap-3 pb-4">
+        <div className="grid grid-cols-4 gap-3 pb-4">
+          <button
+            onClick={() => navigate("/subscription")}
+            className="bg-card rounded-2xl p-4 shadow-card border border-border text-center hover:shadow-elevated transition-all"
+          >
+            <Crown className="h-6 w-6 text-yellow-500 mx-auto mb-1" />
+            <span className="text-xs font-medium">{t("sub.subscribe")}</span>
+          </button>
           <button
             onClick={() => navigate("/patient/scan")}
             className="bg-card rounded-2xl p-4 shadow-card border border-border text-center hover:shadow-elevated transition-all"
