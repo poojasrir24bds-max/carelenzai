@@ -43,10 +43,18 @@ const DoctorDashboard = () => {
   const fetchConsultations = async () => {
     const { data } = await supabase
       .from("consultations")
-      .select("*, scans(*), patient:profiles!consultations_patient_id_fkey(full_name)")
+      .select("*, scans(*)")
       .eq("doctor_id", user!.id)
       .order("created_at", { ascending: false });
-    setConsultations(data || []);
+    // Fetch patient names separately
+    if (data && data.length > 0) {
+      const patientIds = [...new Set(data.map(c => c.patient_id))];
+      const { data: profiles } = await supabase.from("profiles").select("user_id, full_name").in("user_id", patientIds);
+      const profileMap = Object.fromEntries((profiles || []).map(p => [p.user_id, p.full_name]));
+      setConsultations(data.map(c => ({ ...c, patient_name: profileMap[c.patient_id] || "Patient" })));
+    } else {
+      setConsultations([]);
+    }
   };
 
   const fetchDoubts = async () => {
