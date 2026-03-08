@@ -39,6 +39,18 @@ const ScanResults = () => {
   const [translating, setTranslating] = useState(false);
   const [lang, setLang] = useState<"en" | "ta">("en");
   const [translatedData, setTranslatedData] = useState<TranslatedResult | null>(null);
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+
+  // Preload voices - they load asynchronously
+  useEffect(() => {
+    const loadVoices = () => {
+      const v = window.speechSynthesis?.getVoices() || [];
+      if (v.length > 0) setVoices(v);
+    };
+    loadVoices();
+    window.speechSynthesis?.addEventListener("voiceschanged", loadVoices);
+    return () => window.speechSynthesis?.removeEventListener("voiceschanged", loadVoices);
+  }, []);
 
   useEffect(() => {
     if (result && (result.severity === "medium" || result.severity === "high")) {
