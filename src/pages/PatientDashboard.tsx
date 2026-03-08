@@ -109,28 +109,16 @@ const PatientDashboard = () => {
           <p className="text-muted-foreground text-sm">How are you feeling today?</p>
         </div>
 
-        {/* Quick Scan CTA */}
-        <Card className="gradient-primary border-0 shadow-elevated overflow-hidden">
-          <CardContent className="p-5 flex items-center justify-between">
-            <div>
-              <h2 className="font-display font-bold text-lg text-primary-foreground">Start Health Scan</h2>
-              <p className="text-primary-foreground/80 text-sm mt-1">Upload image or use camera</p>
-            </div>
-            <Button variant="secondary" size="lg" onClick={() => navigate("/patient/scan")} className="rounded-xl font-semibold">
-              <ScanLine className="h-5 w-5 mr-2" /> Scan Now
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Scan Area Selection */}
+        {/* Scan Area Selection - tap to go directly to scan with area pre-selected */}
         <div>
-          <h2 className="font-display font-semibold text-lg mb-3">Scan Area</h2>
-          <div className="grid grid-cols-3 gap-3">
+          <h2 className="font-display font-semibold text-lg mb-3">Select & Scan</h2>
+          <p className="text-muted-foreground text-sm mb-3">Tap an area to start scanning</p>
+          <div className="grid grid-cols-4 gap-3">
             {scanAreaItems.map((area) => (
               <button
                 key={area.id}
-                onClick={() => navigate("/patient/scan")}
-                className="bg-card rounded-2xl p-4 shadow-card border border-border hover:border-primary hover:shadow-elevated transition-all text-center"
+                onClick={() => navigate("/patient/scan", { state: { area: area.label } })}
+                className="bg-card rounded-2xl p-4 shadow-card border border-border hover:border-primary hover:shadow-elevated transition-all text-center active:scale-[0.97]"
               >
                 <span className="text-2xl block mb-1">{area.emoji}</span>
                 <span className="text-sm font-medium">{area.label}</span>
