@@ -31,7 +31,12 @@ const Login = () => {
     setLoading(false);
 
     if (error) {
-      toast({ title: "Login failed", description: error.message, variant: "destructive" });
+      const msg = error.message?.toLowerCase() || "";
+      if (msg.includes("email not confirmed")) {
+        toast({ title: "Email not verified", description: "Please check your email and click the verification link before logging in.", variant: "destructive" });
+      } else {
+        toast({ title: "Login failed", description: error.message, variant: "destructive" });
+      }
       return;
     }
 
