@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ScanLine, History, Calendar, User, LogOut, Stethoscope, Bell, MessageSquare, HeartPulse, Video, Crown, Lock, MapPin } from "lucide-react";
+import { ScanLine, History, Calendar, User, LogOut, Stethoscope, Bell, MessageSquare, HeartPulse, Video, Crown, Lock, MapPin, Star } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/hooks/useLanguage";
 import LanguageToggle from "@/components/LanguageToggle";
 import MedicalHistoryForm from "@/components/MedicalHistoryForm";
+import RatingStars, { AverageRating } from "@/components/RatingStars";
 
 const scanAreaItems = [
   { id: "dental", labelKey: "area.dental", emoji: "🦷" },
@@ -40,7 +41,10 @@ const PatientDashboard = () => {
   const [submittingDoubt, setSubmittingDoubt] = useState(false);
   const [myDoubts, setMyDoubts] = useState<any[]>([]);
   const [activeConsultations, setActiveConsultations] = useState<any[]>([]);
+  const [completedConsultations, setCompletedConsultations] = useState<any[]>([]);
   const [availableDoctors, setAvailableDoctors] = useState<any[]>([]);
+  const [patientRatings, setPatientRatings] = useState<Record<string, any>>({});
+  const [doctorAvgRatings, setDoctorAvgRatings] = useState<Record<string, { avg: number; count: number }>>({});
 
   const handleScanClick = (area?: string) => {
     if (!hasActiveSubscription) {
@@ -60,9 +64,32 @@ const PatientDashboard = () => {
       fetchScans();
       fetchDoubts();
       fetchActiveConsultations();
+      fetchCompletedConsultations();
       fetchAvailableDoctors();
+      fetchPatientRatings();
     }
   }, [user]);
+
+  const fetchPatientRatings = async () => {
+    const { data } = await supabase
+      .from("consultation_ratings" as any)
+      .select("*")
+      .eq("rated_by", user!.id);
+    const map: Record<string, any> = {};
+    (data as any[] || []).forEach((r: any) => { map[r.consultation_id] = r; });
+    setPatientRatings(map);
+  };
+
+  const fetchCompletedConsultations = async () => {
+    const { data } = await supabase
+      .from("consultations")
+      .select("*")
+      .eq("patient_id", user!.id)
+      .eq("status", "completed")
+      .order("created_at", { ascending: false })
+      .limit(10);
+    setCompletedConsultations(data || []);
+  };
 
   const fetchScans = async () => {
     const { data } = await supabase
@@ -106,6 +133,23 @@ const PatientDashboard = () => {
       const { data: profiles } = await supabase.from("profiles").select("user_id, full_name").in("user_id", userIds);
       const profileMap = Object.fromEntries((profiles || []).map(p => [p.user_id, p.full_name]));
       
+      // Fetch average ratings for each doctor
+      const { data: allRatings } = await supabase
+        .from("consultation_ratings" as any)
+        .select("rated_user, rating")
+        .in("rated_user", userIds);
+      const ratingMap: Record<string, { total: number; count: number }> = {};
+      (allRatings as any[] || []).forEach((r: any) => {
+        if (!ratingMap[r.rated_user]) ratingMap[r.rated_user] = { total: 0, count: 0 };
+        ratingMap[r.rated_user].total += r.rating;
+        ratingMap[r.rated_user].count += 1;
+      });
+      const avgMap: Record<string, { avg: number; count: number }> = {};
+      Object.entries(ratingMap).forEach(([uid, v]) => {
+        avgMap[uid] = { avg: v.total / v.count, count: v.count };
+      });
+      setDoctorAvgRatings(avgMap);
+
       const enrichedDoctors = doctors.map(d => ({ ...d, profile_name: profileMap[d.user_id] || "Doctor" }));
       
       // Sort by proximity: match patient address keywords against doctor address
@@ -118,8 +162,13 @@ const PatientDashboard = () => {
         return { ...doc, locationScore: matchCount, isNearby: matchCount >= 1 && patientWords.length > 0 };
       });
       
-      // Sort: nearby first (higher score), then others
-      scored.sort((a, b) => b.locationScore - a.locationScore);
+      // Sort: nearby first, then by rating
+      scored.sort((a, b) => {
+        if (b.locationScore !== a.locationScore) return b.locationScore - a.locationScore;
+        const aRating = avgMap[a.user_id]?.avg || 0;
+        const bRating = avgMap[b.user_id]?.avg || 0;
+        return bRating - aRating;
+      });
       setAvailableDoctors(scored);
     } else {
       setAvailableDoctors([]);
@@ -408,6 +457,10 @@ const PatientDashboard = () => {
                         {doc.address && (
                           <p className="text-xs text-muted-foreground">📍 {doc.address}</p>
                         )}
+                        <AverageRating
+                          rating={doctorAvgRatings[doc.user_id]?.avg || 0}
+                          count={doctorAvgRatings[doc.user_id]?.count || 0}
+                        />
                       </div>
                       <div className="flex flex-col items-end gap-1">
                         <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-success/20 text-success">✅ {t("patient.verified")}</span>
@@ -479,6 +532,33 @@ const PatientDashboard = () => {
                     {c.status === "pending" && (
                       <span className="text-xs text-warning font-medium animate-pulse">⏳ {t("patient.pending")}</span>
                     )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Completed Consultations - Rate Doctor */}
+        {completedConsultations.length > 0 && (
+          <div className="pb-4">
+            <h2 className="font-display font-semibold text-lg mb-3">Rate Your Doctor</h2>
+            <div className="space-y-3">
+              {completedConsultations.map((c: any) => (
+                <Card key={c.id} className="shadow-card border-border">
+                  <CardContent className="p-4">
+                    <p className="font-semibold text-sm">Consultation</p>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      {new Date(c.created_at).toLocaleDateString()} • ✅ Completed
+                    </p>
+                    <RatingStars
+                      consultationId={c.id}
+                      ratedBy={user!.id}
+                      ratedUser={c.doctor_id}
+                      existingRating={patientRatings[c.id]?.rating}
+                      existingReview={patientRatings[c.id]?.review}
+                      onRated={fetchPatientRatings}
+                    />
                   </CardContent>
                 </Card>
               ))}

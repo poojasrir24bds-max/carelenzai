@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import MedicalHistoryForm from "@/components/MedicalHistoryForm";
+import RatingStars from "@/components/RatingStars";
 
 const sevColors: Record<string, string> = {
   high: "bg-destructive text-destructive-foreground",
@@ -29,6 +30,7 @@ const DoctorDashboard = () => {
   const [patientHistory, setPatientHistory] = useState<Record<string, any[]>>({});
   const [doctorSub, setDoctorSub] = useState<any>(null);
   const [subLoading, setSubLoading] = useState(true);
+  const [ratings, setRatings] = useState<Record<string, any>>({});
 
   useEffect(() => {
     if (user) {
@@ -36,8 +38,19 @@ const DoctorDashboard = () => {
       fetchConsultations();
       fetchDoubts();
       fetchDoctorSubscription();
+      fetchRatings();
     }
   }, [user]);
+
+  const fetchRatings = async () => {
+    const { data } = await supabase
+      .from("consultation_ratings" as any)
+      .select("*")
+      .eq("rated_by", user!.id);
+    const map: Record<string, any> = {};
+    (data as any[] || []).forEach((r: any) => { map[r.consultation_id] = r; });
+    setRatings(map);
+  };
 
   const fetchDoctorSubscription = async () => {
     setSubLoading(true);
@@ -376,7 +389,20 @@ const DoctorDashboard = () => {
                       </div>
                     )}
                     {c.status === "completed" && (
-                      <p className="text-xs text-success mt-2 font-medium">✓ Consultation completed</p>
+                      <div className="mt-3 space-y-2">
+                        <p className="text-xs text-success font-medium">✓ Consultation completed</p>
+                        <div className="bg-accent/30 rounded-lg p-3">
+                          <p className="text-xs font-medium mb-1">Rate this patient:</p>
+                          <RatingStars
+                            consultationId={c.id}
+                            ratedBy={user!.id}
+                            ratedUser={c.patient_id}
+                            existingRating={ratings[c.id]?.rating}
+                            existingReview={ratings[c.id]?.review}
+                            onRated={fetchRatings}
+                          />
+                        </div>
+                      </div>
                     )}
                   </CardContent>
                 </Card>
