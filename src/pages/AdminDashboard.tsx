@@ -44,11 +44,26 @@ const AdminDashboard = () => {
   }, []);
 
   const fetchData = async () => {
-    const { data: profiles } = await supabase
+    // Fetch profiles and roles separately to avoid join issues
+    const { data: profiles, error: profilesError } = await supabase
       .from("profiles")
-      .select("*, user_roles(role)")
+      .select("*")
       .order("created_at", { ascending: false });
-    setAllUsers(profiles || []);
+    
+    console.log("Admin fetchData - profiles:", profiles?.length, "error:", profilesError?.message);
+
+    const { data: roles } = await supabase
+      .from("user_roles")
+      .select("user_id, role");
+
+    // Merge roles into profiles
+    const roleMap: Record<string, string> = {};
+    (roles || []).forEach((r: any) => { roleMap[r.user_id] = r.role; });
+    const enrichedProfiles = (profiles || []).map((p: any) => ({
+      ...p,
+      user_roles: roleMap[p.user_id] ? [{ role: roleMap[p.user_id] }] : [],
+    }));
+    setAllUsers(enrichedProfiles);
 
     // Pending patients with Aadhaar verification
     const pendingPats = (profiles || []).filter(
