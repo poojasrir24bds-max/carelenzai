@@ -99,7 +99,7 @@ const Register = () => {
           setTimeout(async () => {
             await supabase.from("doctor_profiles").update({
               license_document_url: filePath,
-            }).eq("user_id", data.user.id);
+            }).eq("user_id", signUpData.user.id);
 
             // Trigger license verification
             await supabase.functions.invoke("verify-license", {
