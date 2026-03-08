@@ -33,17 +33,24 @@ const Register = () => {
 
   const roleTitle = t(`role.${role || "patient"}`);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'license' | 'id') => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
         toast({ title: "File too large", description: "Maximum file size is 5MB", variant: "destructive" });
         return;
       }
-      setLicenseFile(file);
-      setLicensePreview(URL.createObjectURL(file));
+      if (type === 'license') {
+        setLicenseFile(file);
+        setLicensePreview(URL.createObjectURL(file));
+      } else {
+        setIdFile(file);
+        setIdPreview(URL.createObjectURL(file));
+      }
     }
   };
+
+  const isValidAadhaar = (num: string) => /^\d{12}$/.test(num.replace(/\s/g, ''));
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
