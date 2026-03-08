@@ -38,6 +38,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     fetchData();
     fetchRecordings();
+    fetchSubscriptions();
   }, []);
 
   const fetchData = async () => {
