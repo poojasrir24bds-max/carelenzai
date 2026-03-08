@@ -61,8 +61,7 @@ const Subscription = () => {
       .from("user_subscriptions" as any)
       .select("*, subscription_plans(*)")
       .eq("user_id", user!.id)
-      .eq("status", "active")
-      .gte("expires_at", new Date().toISOString())
+      .in("status", ["active", "pending"])
       .order("created_at", { ascending: false })
       .limit(1);
     setActiveSub((data as any[])?.[0] || null);
