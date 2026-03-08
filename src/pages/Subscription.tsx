@@ -58,7 +58,7 @@ const Subscription = () => {
   };
 
   const handleSubmitPayment = async () => {
-    if (!user || !selectedPlan || !transactionId.trim() || submitting) return;
+    if (!user || !selectedPlan || submitting) return;
     setSubmitting(true);
 
     try {
@@ -66,14 +66,12 @@ const Subscription = () => {
         user_id: user.id,
         plan_id: selectedPlan.id,
         status: "pending",
-        upi_transaction_id: transactionId.trim(),
         starts_at: new Date().toISOString(),
       } as any);
 
       if (error) throw error;
 
-      toast({ title: "Payment Submitted! ✅", description: "Your payment is under review. Admin will approve it shortly." });
-      setTransactionId("");
+      toast({ title: "Submitted! ✅", description: "Your request is under review. Admin will approve it shortly." });
       setSelectedPlan(null);
       fetchActiveSub();
     } catch (err: any) {
