@@ -282,6 +282,17 @@ const DoctorDashboard = () => {
                         </Button>
                       </div>
                     )}
+                    {c.status === "accepted" && (
+                      <div className="flex gap-2 mt-3">
+                        <Button
+                          size="sm"
+                          className="flex-1 rounded-lg text-xs"
+                          onClick={() => navigate("/video-call", { state: { roomId: c.room_id, consultationId: c.id, role: "doctor" } })}
+                        >
+                          <Video className="h-3.5 w-3.5 mr-1" /> Join Video Call
+                        </Button>
+                      </div>
+                    )}
                     {c.status === "completed" && (
                       <p className="text-xs text-success mt-2 font-medium">✓ Consultation completed</p>
                     )}
