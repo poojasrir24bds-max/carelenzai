@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import MedicalHistoryForm from "@/components/MedicalHistoryForm";
 import RatingStars from "@/components/RatingStars";
+import NotificationBell from "@/components/NotificationBell";
 
 const sevColors: Record<string, string> = {
   high: "bg-destructive text-destructive-foreground",
