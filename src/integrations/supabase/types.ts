@@ -32,6 +32,50 @@ export type Database = {
         }
         Relationships: []
       }
+      call_recordings: {
+        Row: {
+          consultation_id: string
+          created_at: string
+          doctor_id: string
+          duration_seconds: number | null
+          file_size_bytes: number | null
+          id: string
+          patient_id: string
+          recorded_by: string
+          recording_url: string
+        }
+        Insert: {
+          consultation_id: string
+          created_at?: string
+          doctor_id: string
+          duration_seconds?: number | null
+          file_size_bytes?: number | null
+          id?: string
+          patient_id: string
+          recorded_by: string
+          recording_url: string
+        }
+        Update: {
+          consultation_id?: string
+          created_at?: string
+          doctor_id?: string
+          duration_seconds?: number | null
+          file_size_bytes?: number | null
+          id?: string
+          patient_id?: string
+          recorded_by?: string
+          recording_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "call_recordings_consultation_id_fkey"
+            columns: ["consultation_id"]
+            isOneToOne: false
+            referencedRelation: "consultations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       consultations: {
         Row: {
           created_at: string
