@@ -1,21 +1,18 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Stethoscope, Check, QrCode, Crown } from "lucide-react";
+import { ArrowLeft, Stethoscope, Check, CreditCard, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import logo from "@/assets/logo.png";
-import phonepeQr from "@/assets/phonepe-qr.jpeg";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 const DoctorSubscription = () => {
   const navigate = useNavigate();
@@ -23,10 +20,7 @@ const DoctorSubscription = () => {
   const { toast } = useToast();
   const [plan, setPlan] = useState<any>(null);
   const [activeSub, setActiveSub] = useState<any>(null);
-  const [txnId, setTxnId] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [showQr, setShowQr] = useState(false);
-  const [showTxnInput, setShowTxnInput] = useState(false);
+  const [paying, setPaying] = useState(false);
 
   useEffect(() => {
     fetchPlan();
@@ -54,62 +48,72 @@ const DoctorSubscription = () => {
     setActiveSub((data as any[])?.[0] || null);
   };
 
-  const handleShowQr = () => {
-    setShowQr(true);
-    setShowTxnInput(false);
-    setTxnId("");
-  };
+  const handlePayWithRazorpay = async () => {
+    if (!user || !plan || paying) return;
+    setPaying(true);
 
-  const handleSubmitFromQr = async () => {
-    if (!txnId.trim() || !plan || !user) return;
-    setSubmitting(true);
+    try {
+      const { data: orderData, error: orderError } = await supabase.functions.invoke('razorpay-create-order', {
+        body: { plan_id: plan.id },
+      });
 
-    const now = new Date();
+      if (orderError || !orderData?.order_id) {
+        throw new Error(orderError?.message || 'Failed to create order');
+      }
 
-    const { error } = await supabase.from("user_subscriptions").insert({
-      user_id: user.id,
-      plan_id: plan.id,
-      status: "pending",
-      upi_transaction_id: txnId.trim(),
-      starts_at: now.toISOString(),
-      expires_at: null,
-    } as any);
+      const options = {
+        key: orderData.key_id,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: 'CARELENZ AI',
+        description: 'Doctor Registration',
+        image: logo,
+        order_id: orderData.order_id,
+        prefill: orderData.prefill,
+        theme: { color: '#2563eb' },
+        handler: async (response: any) => {
+          try {
+            const { data: verifyData, error: verifyError } = await supabase.functions.invoke('razorpay-verify-payment', {
+              body: {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                plan_id: plan.id,
+              },
+            });
 
-    setSubmitting(false);
-    setShowQr(false);
+            if (verifyError || !verifyData?.success) {
+              throw new Error(verifyError?.message || 'Payment verification failed');
+            }
 
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Payment Submitted!", description: "Your subscription will be activated after admin verifies your payment." });
-      navigate("/doctor");
+            toast({ title: "Payment Successful! ✅", description: "Your doctor registration is now active." });
+            navigate("/doctor");
+          } catch (err: any) {
+            toast({ title: "Verification Failed", description: err.message, variant: "destructive" });
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            setPaying(false);
+          },
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', (response: any) => {
+        toast({
+          title: "Payment Failed",
+          description: response.error?.description || "Something went wrong",
+          variant: "destructive",
+        });
+        setPaying(false);
+      });
+      rzp.open();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setPaying(false);
     }
-  };
-
-  const handleSubmitTxn = async () => {
-    if (!txnId.trim() || !plan || !user) return;
-    setSubmitting(true);
-
-    const now = new Date();
-
-    const { error } = await supabase.from("user_subscriptions").insert({
-      user_id: user.id,
-      plan_id: plan.id,
-      status: "pending",
-      upi_transaction_id: txnId.trim(),
-      starts_at: now.toISOString(),
-      expires_at: null,
-    } as any);
-
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Payment Submitted!", description: "Your subscription will be activated after admin approval." });
-      setShowTxnInput(false);
-      setTxnId("");
-      navigate("/doctor");
-    }
-    setSubmitting(false);
   };
 
   return (
@@ -200,76 +204,14 @@ const DoctorSubscription = () => {
                 </div>
               </div>
 
-              <Button className="w-full rounded-xl" onClick={handleShowQr}>
-                <QrCode className="h-4 w-4 mr-2" />
-                Pay ₹{plan.price_inr} — Scan QR
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Transaction ID Input */}
-        {showTxnInput && (
-          <Card className="shadow-elevated border-primary/30">
-            <CardContent className="p-5 space-y-3">
-              <h3 className="font-display font-semibold">Confirm Payment</h3>
-              <p className="text-sm text-muted-foreground">
-                After completing the payment of <strong>₹{plan?.price_inr}</strong>, enter your UPI Transaction ID below.
-              </p>
-              <div className="space-y-1.5">
-                <Label>UPI Transaction ID</Label>
-                <Input
-                  placeholder="e.g. UPI1234567890"
-                  value={txnId}
-                  onChange={(e) => setTxnId(e.target.value)}
-                />
-                <p className="text-xs text-muted-foreground">Find this in your UPI app payment history</p>
-              </div>
-              <Button
-                className="w-full rounded-xl"
-                onClick={handleSubmitTxn}
-                disabled={!txnId.trim() || submitting}
-              >
-                {submitting ? "Submitting..." : "Submit Payment"}
+              <Button className="w-full rounded-xl" onClick={handlePayWithRazorpay} disabled={paying}>
+                <CreditCard className="h-4 w-4 mr-2" />
+                {paying ? "Processing..." : `Pay ₹${plan.price_inr}`}
               </Button>
             </CardContent>
           </Card>
         )}
       </div>
-
-      {/* QR Code Dialog */}
-      <Dialog open={showQr} onOpenChange={setShowQr}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="text-center font-display">
-              Scan & Pay ₹{plan?.price_inr}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="flex flex-col items-center space-y-4 py-2">
-            <p className="text-sm text-muted-foreground text-center">
-              Scan the QR code below using any UPI app to complete your <strong>Doctor Registration</strong>
-            </p>
-            <div className="rounded-xl border-2 border-border overflow-hidden bg-white p-2">
-              <img src={phonepeQr} alt="PhonePe QR Code" className="w-64 h-64 object-contain" />
-            </div>
-            <p className="text-xs text-muted-foreground text-center">
-              Pay exactly <strong>₹{plan?.price_inr}</strong> to complete your registration
-            </p>
-            <div className="w-full space-y-2">
-              <Label>UPI Transaction ID</Label>
-              <Input
-                placeholder="e.g. UPI1234567890"
-                value={txnId}
-                onChange={(e) => setTxnId(e.target.value)}
-              />
-              <p className="text-xs text-muted-foreground">Find this in your UPI app payment history</p>
-            </div>
-            <Button className="w-full rounded-xl" onClick={handleSubmitFromQr} disabled={!txnId.trim() || submitting}>
-              {submitting ? "Submitting..." : "Submit Payment"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
