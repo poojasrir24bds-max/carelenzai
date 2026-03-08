@@ -103,7 +103,7 @@ const Subscription = () => {
       setSelectedPlan(null);
       setTxnId("");
       setShowTxnInput(false);
-      fetchActiveSub();
+      navigate("/patient");
     }
     setSubmitting(false);
   };
