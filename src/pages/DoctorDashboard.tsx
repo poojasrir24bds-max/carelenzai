@@ -118,6 +118,14 @@ const DoctorDashboard = () => {
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
+      // If accepted, increment consultations_used on doctor's subscription
+      if (status === "accepted" && doctorSub) {
+        await supabase
+          .from("user_subscriptions")
+          .update({ consultations_used: (doctorSub.consultations_used || 0) + 1 } as any)
+          .eq("id", doctorSub.id);
+        fetchDoctorSubscription();
+      }
       toast({ title: status === "accepted" ? "Consultation accepted" : "Consultation declined" });
       fetchConsultations();
     }
