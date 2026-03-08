@@ -14,16 +14,261 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      allowed_admins: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      consultations: {
+        Row: {
+          created_at: string
+          doctor_id: string
+          id: string
+          notes: string | null
+          patient_id: string
+          scan_id: string | null
+          scheduled_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          doctor_id: string
+          id?: string
+          notes?: string | null
+          patient_id: string
+          scan_id?: string | null
+          scheduled_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          doctor_id?: string
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          scan_id?: string | null
+          scheduled_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consultations_scan_id_fkey"
+            columns: ["scan_id"]
+            isOneToOne: false
+            referencedRelation: "scans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doctor_profiles: {
+        Row: {
+          created_at: string
+          doctor_id: string
+          hospital_name: string
+          id: string
+          is_active: boolean
+          is_verified: boolean
+          medical_license: string
+          specialization: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          doctor_id: string
+          hospital_name: string
+          id?: string
+          is_active?: boolean
+          is_verified?: boolean
+          medical_license: string
+          specialization: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          doctor_id?: string
+          hospital_name?: string
+          id?: string
+          is_active?: boolean
+          is_verified?: boolean
+          medical_license?: string
+          specialization?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      patient_doubts: {
+        Row: {
+          answer: string | null
+          created_at: string
+          doctor_id: string | null
+          id: string
+          patient_id: string
+          question: string
+          scan_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          answer?: string | null
+          created_at?: string
+          doctor_id?: string | null
+          id?: string
+          patient_id: string
+          question: string
+          scan_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          answer?: string | null
+          created_at?: string
+          doctor_id?: string | null
+          id?: string
+          patient_id?: string
+          question?: string
+          scan_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_doubts_scan_id_fkey"
+            columns: ["scan_id"]
+            isOneToOne: false
+            referencedRelation: "scans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          age: number | null
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          sex: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          age?: number | null
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          sex?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          age?: number | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          sex?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      scans: {
+        Row: {
+          area: string
+          causes: string[] | null
+          condition: string | null
+          confidence: number | null
+          created_at: string
+          definition: string | null
+          guidance: Json | null
+          id: string
+          image_url: string | null
+          severity: string | null
+          user_id: string
+        }
+        Insert: {
+          area: string
+          causes?: string[] | null
+          condition?: string | null
+          confidence?: number | null
+          created_at?: string
+          definition?: string | null
+          guidance?: Json | null
+          id?: string
+          image_url?: string | null
+          severity?: string | null
+          user_id: string
+        }
+        Update: {
+          area?: string
+          causes?: string[] | null
+          condition?: string | null
+          confidence?: number | null
+          created_at?: string
+          definition?: string | null
+          guidance?: Json | null
+          id?: string
+          image_url?: string | null
+          severity?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      admin_count: { Args: never; Returns: number }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_admin_email_allowed: { Args: { _email: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "patient" | "doctor"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +395,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "patient", "doctor"],
+    },
   },
 } as const
