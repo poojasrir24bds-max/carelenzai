@@ -35,6 +35,8 @@ const ScanResults = () => {
   const [doctors, setDoctors] = useState<any[]>([]);
   const [doubtText, setDoubtText] = useState("");
   const [submittingDoubt, setSubmittingDoubt] = useState(false);
+  const [aiAnswer, setAiAnswer] = useState<string | null>(null);
+  const [submittedQuestion, setSubmittedQuestion] = useState<string | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [translating, setTranslating] = useState(false);
   const [lang, setLang] = useState<"en" | "ta">("en");
@@ -98,7 +100,8 @@ const ScanResults = () => {
       return;
     }
 
-    toast({ title: "Question submitted! Getting AI response..." });
+    setSubmittedQuestion(question);
+    setAiAnswer(null);
     setDoubtText("");
 
     // Get AI answer in background (edge function saves it directly)
@@ -108,7 +111,9 @@ const ScanResults = () => {
       });
 
       if (!aiError && aiData?.answer) {
-        toast({ title: "AI has answered your question!" });
+        setAiAnswer(aiData.answer);
+      } else {
+        toast({ title: "Could not get AI response", variant: "destructive" });
       }
     } catch (e) {
       console.error("AI answer error:", e);
@@ -398,6 +403,31 @@ const ScanResults = () => {
                 ? (lang === "ta" ? "சமர்ப்பிக்கிறது..." : "Submitting...")
                 : (lang === "ta" ? "கேள்வியை சமர்ப்பிக்கவும்" : "Submit Question")}
             </Button>
+
+            {/* Show AI answer inline */}
+            {(submittingDoubt || aiAnswer || submittedQuestion) && (
+              <div className="mt-4 space-y-2">
+                {submittedQuestion && (
+                  <div className="bg-accent/30 rounded-lg p-2.5">
+                    <p className="text-xs font-medium">❓ {submittedQuestion}</p>
+                  </div>
+                )}
+                {submittingDoubt ? (
+                  <div className="bg-primary/5 rounded-lg p-3 flex items-center gap-2">
+                    <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
+                    <p className="text-xs text-muted-foreground">
+                      {lang === "ta" ? "AI பதில் பெறுகிறது..." : "Getting AI response..."}
+                    </p>
+                  </div>
+                ) : aiAnswer ? (
+                  <div className="bg-primary/5 rounded-lg p-3">
+                    <p className="text-xs text-muted-foreground font-medium mb-1">🤖 {lang === "ta" ? "AI பதில்:" : "AI Response:"}</p>
+                    <p className="text-sm">{aiAnswer}</p>
+                    <p className="text-xs text-muted-foreground mt-2">💡 {lang === "ta" ? "ஒரு மருத்துவரும் இதை மதிப்பாய்வு செய்யலாம்" : "A doctor may also review this"}</p>
+                  </div>
+                ) : null}
+              </div>
+            )}
           </CardContent>
         </Card>
 
