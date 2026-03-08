@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import { ScanLine, History, Calendar, User, LogOut, Stethoscope, Bell, MessageSquare, HeartPulse, Video, Crown } from "lucide-react";
+import { ScanLine, History, Calendar, User, LogOut, Stethoscope, Bell, MessageSquare, HeartPulse, Video, Crown, Lock } from "lucide-react";
+import { useSubscription } from "@/hooks/useSubscription";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
