@@ -133,6 +133,23 @@ const PatientDashboard = () => {
       const { data: profiles } = await supabase.from("profiles").select("user_id, full_name").in("user_id", userIds);
       const profileMap = Object.fromEntries((profiles || []).map(p => [p.user_id, p.full_name]));
       
+      // Fetch average ratings for each doctor
+      const { data: allRatings } = await supabase
+        .from("consultation_ratings" as any)
+        .select("rated_user, rating")
+        .in("rated_user", userIds);
+      const ratingMap: Record<string, { total: number; count: number }> = {};
+      (allRatings as any[] || []).forEach((r: any) => {
+        if (!ratingMap[r.rated_user]) ratingMap[r.rated_user] = { total: 0, count: 0 };
+        ratingMap[r.rated_user].total += r.rating;
+        ratingMap[r.rated_user].count += 1;
+      });
+      const avgMap: Record<string, { avg: number; count: number }> = {};
+      Object.entries(ratingMap).forEach(([uid, v]) => {
+        avgMap[uid] = { avg: v.total / v.count, count: v.count };
+      });
+      setDoctorAvgRatings(avgMap);
+
       const enrichedDoctors = doctors.map(d => ({ ...d, profile_name: profileMap[d.user_id] || "Doctor" }));
       
       // Sort by proximity: match patient address keywords against doctor address
@@ -145,8 +162,13 @@ const PatientDashboard = () => {
         return { ...doc, locationScore: matchCount, isNearby: matchCount >= 1 && patientWords.length > 0 };
       });
       
-      // Sort: nearby first (higher score), then others
-      scored.sort((a, b) => b.locationScore - a.locationScore);
+      // Sort: nearby first, then by rating
+      scored.sort((a, b) => {
+        if (b.locationScore !== a.locationScore) return b.locationScore - a.locationScore;
+        const aRating = avgMap[a.user_id]?.avg || 0;
+        const bRating = avgMap[b.user_id]?.avg || 0;
+        return bRating - aRating;
+      });
       setAvailableDoctors(scored);
     } else {
       setAvailableDoctors([]);
