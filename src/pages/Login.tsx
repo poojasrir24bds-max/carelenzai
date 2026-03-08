@@ -89,12 +89,10 @@ const Login = () => {
                 <Link to="/forgot-password" className="text-sm text-primary hover:underline">{t("login.forgotPassword")}</Link>
               </div>
             </form>
-            {role !== "admin" && (
-              <p className="text-center text-sm text-muted-foreground mt-4">
-                {t("login.noAccount")}{" "}
-                <Link to={`/register/${role}`} className="text-primary font-medium hover:underline">{t("login.register")}</Link>
-              </p>
-            )}
+            <p className="text-center text-sm text-muted-foreground mt-4">
+              {t("login.noAccount")}{" "}
+              <Link to={`/register/${role}`} className="text-primary font-medium hover:underline">{t("login.register")}</Link>
+            </p>
           </CardContent>
         </Card>
       </div>
