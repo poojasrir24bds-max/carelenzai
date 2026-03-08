@@ -69,7 +69,7 @@ const DoctorSubscription = () => {
     const { error } = await supabase.from("user_subscriptions").insert({
       user_id: user.id,
       plan_id: plan.id,
-      status: "active",
+      status: "pending",
       upi_transaction_id: txnId.trim(),
       starts_at: now.toISOString(),
       expires_at: null,
@@ -81,7 +81,7 @@ const DoctorSubscription = () => {
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Payment Submitted!", description: "Your subscription is now active." });
+      toast({ title: "Payment Submitted!", description: "Your subscription will be activated after admin verifies your payment." });
       navigate("/doctor");
     }
   };
@@ -95,7 +95,7 @@ const DoctorSubscription = () => {
     const { error } = await supabase.from("user_subscriptions").insert({
       user_id: user.id,
       plan_id: plan.id,
-      status: "active",
+      status: "pending",
       upi_transaction_id: txnId.trim(),
       starts_at: now.toISOString(),
       expires_at: null,

@@ -61,8 +61,7 @@ const Subscription = () => {
       .from("user_subscriptions" as any)
       .select("*, subscription_plans(*)")
       .eq("user_id", user!.id)
-      .eq("status", "active")
-      .gte("expires_at", new Date().toISOString())
+      .in("status", ["active", "pending"])
       .order("created_at", { ascending: false })
       .limit(1);
     setActiveSub((data as any[])?.[0] || null);
@@ -85,7 +84,7 @@ const Subscription = () => {
     const { error } = await supabase.from("user_subscriptions" as any).insert({
       user_id: user.id,
       plan_id: selectedPlan.id,
-      status: "active",
+      status: "pending",
       upi_transaction_id: txnId.trim(),
       starts_at: now.toISOString(),
       expires_at: expiresAt.toISOString(),
@@ -97,7 +96,7 @@ const Subscription = () => {
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: t("sub.submitted"), description: t("sub.submittedDesc") });
+      toast({ title: "Payment Submitted!", description: "Your subscription will be activated after admin verifies your payment." });
       navigate("/patient");
     }
   };
@@ -112,7 +111,7 @@ const Subscription = () => {
     const { error } = await supabase.from("user_subscriptions" as any).insert({
       user_id: user.id,
       plan_id: selectedPlan.id,
-      status: "active",
+      status: "pending",
       upi_transaction_id: txnId.trim(),
       starts_at: now.toISOString(),
       expires_at: expiresAt.toISOString(),
@@ -121,7 +120,7 @@ const Subscription = () => {
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: t("sub.submitted"), description: t("sub.submittedDesc") });
+      toast({ title: "Payment Submitted!", description: "Your subscription will be activated after admin verifies your payment." });
       setSelectedPlan(null);
       setTxnId("");
       setShowTxnInput(false);
@@ -145,31 +144,41 @@ const Subscription = () => {
       <div className="flex-1 container py-6 space-y-6">
         {/* Active Subscription */}
         {activeSub && (
-          <Card className="shadow-elevated border-success/30 bg-success/5">
+          <Card className={`shadow-elevated ${activeSub.status === 'pending' ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-success/30 bg-success/5'}`}>
             <CardContent className="p-5">
               <div className="flex items-center gap-3 mb-2">
-                <div className="bg-success/20 rounded-full p-2">
-                  <Check className="h-5 w-5 text-success" />
+                <div className={`rounded-full p-2 ${activeSub.status === 'pending' ? 'bg-yellow-500/20' : 'bg-success/20'}`}>
+                  {activeSub.status === 'pending' ? (
+                    <Crown className="h-5 w-5 text-yellow-600" />
+                  ) : (
+                    <Check className="h-5 w-5 text-success" />
+                  )}
                 </div>
                 <div>
-                  <p className="font-display font-bold text-sm">{t("sub.activePlan")}</p>
+                  <p className="font-display font-bold text-sm">
+                    {activeSub.status === 'pending' ? 'Payment Under Review' : t("sub.activePlan")}
+                  </p>
                   <p className="text-xs text-muted-foreground">
-                    {activeSub.subscription_plans?.name} • {t("sub.expires")} {new Date(activeSub.expires_at).toLocaleDateString("en-IN")}
+                    {activeSub.subscription_plans?.name} • {activeSub.status === 'pending' 
+                      ? 'Waiting for admin approval' 
+                      : `${t("sub.expires")} ${new Date(activeSub.expires_at).toLocaleDateString("en-IN")}`}
                   </p>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3 mt-3">
-                <div className="bg-background rounded-xl p-3 text-center">
-                  <ScanLine className="h-5 w-5 text-primary mx-auto mb-1" />
-                  <p className="text-lg font-bold">{activeSub.scans_used}/{activeSub.subscription_plans?.scan_limit}</p>
-                  <p className="text-xs text-muted-foreground">{t("sub.scansUsed")}</p>
+              {activeSub.status === 'active' && (
+                <div className="grid grid-cols-2 gap-3 mt-3">
+                  <div className="bg-background rounded-xl p-3 text-center">
+                    <ScanLine className="h-5 w-5 text-primary mx-auto mb-1" />
+                    <p className="text-lg font-bold">{activeSub.scans_used}/{activeSub.subscription_plans?.scan_limit}</p>
+                    <p className="text-xs text-muted-foreground">{t("sub.scansUsed")}</p>
+                  </div>
+                  <div className="bg-background rounded-xl p-3 text-center">
+                    <Stethoscope className="h-5 w-5 text-primary mx-auto mb-1" />
+                    <p className="text-lg font-bold">{activeSub.consultations_used}/{activeSub.subscription_plans?.doctor_consultations}</p>
+                    <p className="text-xs text-muted-foreground">{t("sub.consultationsUsed")}</p>
+                  </div>
                 </div>
-                <div className="bg-background rounded-xl p-3 text-center">
-                  <Stethoscope className="h-5 w-5 text-primary mx-auto mb-1" />
-                  <p className="text-lg font-bold">{activeSub.consultations_used}/{activeSub.subscription_plans?.doctor_consultations}</p>
-                  <p className="text-xs text-muted-foreground">{t("sub.consultationsUsed")}</p>
-                </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         )}
