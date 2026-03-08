@@ -149,25 +149,35 @@ const ScanResults = () => {
         </Card>
 
         {/* Voiceover Buttons */}
-        <div className="flex gap-3">
+        <div className="flex gap-2">
           <Button
             variant="outline"
             size="sm"
             className="flex-1 rounded-xl"
             onClick={() => handlePlayAudio("en")}
-            disabled={isSpeaking}
           >
-            <Volume2 className="h-4 w-4 mr-2" /> Play in English
+            {isSpeaking ? <Pause className="h-4 w-4 mr-2" /> : <Volume2 className="h-4 w-4 mr-2" />}
+            {isSpeaking ? "Pause" : "English"}
           </Button>
           <Button
             variant="outline"
             size="sm"
             className="flex-1 rounded-xl"
             onClick={() => handlePlayAudio("ta")}
-            disabled={isSpeaking}
           >
-            <Volume2 className="h-4 w-4 mr-2" /> தமிழில் கேளுங்கள்
+            {isSpeaking ? <Pause className="h-4 w-4 mr-2" /> : <Volume2 className="h-4 w-4 mr-2" />}
+            {isSpeaking ? "இடைநிறுத்து" : "தமிழ்"}
           </Button>
+          {(isSpeaking || window.speechSynthesis?.speaking) && (
+            <Button
+              variant="destructive"
+              size="sm"
+              className="rounded-xl"
+              onClick={handleStopAudio}
+            >
+              <Square className="h-4 w-4" />
+            </Button>
+          )}
         </div>
 
         {/* Definition */}
