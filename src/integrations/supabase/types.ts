@@ -175,6 +175,96 @@ export type Database = {
         }
         Relationships: []
       }
+      medical_history: {
+        Row: {
+          alcohol_status: string | null
+          allergy_details: string | null
+          blood_group: string | null
+          bp_reading: string | null
+          cancer_details: string | null
+          created_at: string
+          current_medications: string | null
+          diabetes_type: string | null
+          family_history: string | null
+          has_allergies: boolean
+          has_asthma: boolean
+          has_cancer: boolean
+          has_diabetes: boolean
+          has_epilepsy: boolean
+          has_heart_disease: boolean
+          has_hypertension: boolean
+          has_kidney_disease: boolean
+          has_liver_disease: boolean
+          has_thyroid: boolean
+          heart_condition_details: string | null
+          id: string
+          other_conditions: string | null
+          past_surgeries: string | null
+          smoking_status: string | null
+          thyroid_type: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          alcohol_status?: string | null
+          allergy_details?: string | null
+          blood_group?: string | null
+          bp_reading?: string | null
+          cancer_details?: string | null
+          created_at?: string
+          current_medications?: string | null
+          diabetes_type?: string | null
+          family_history?: string | null
+          has_allergies?: boolean
+          has_asthma?: boolean
+          has_cancer?: boolean
+          has_diabetes?: boolean
+          has_epilepsy?: boolean
+          has_heart_disease?: boolean
+          has_hypertension?: boolean
+          has_kidney_disease?: boolean
+          has_liver_disease?: boolean
+          has_thyroid?: boolean
+          heart_condition_details?: string | null
+          id?: string
+          other_conditions?: string | null
+          past_surgeries?: string | null
+          smoking_status?: string | null
+          thyroid_type?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          alcohol_status?: string | null
+          allergy_details?: string | null
+          blood_group?: string | null
+          bp_reading?: string | null
+          cancer_details?: string | null
+          created_at?: string
+          current_medications?: string | null
+          diabetes_type?: string | null
+          family_history?: string | null
+          has_allergies?: boolean
+          has_asthma?: boolean
+          has_cancer?: boolean
+          has_diabetes?: boolean
+          has_epilepsy?: boolean
+          has_heart_disease?: boolean
+          has_hypertension?: boolean
+          has_kidney_disease?: boolean
+          has_liver_disease?: boolean
+          has_thyroid?: boolean
+          heart_condition_details?: string | null
+          id?: string
+          other_conditions?: string | null
+          past_surgeries?: string | null
+          smoking_status?: string | null
+          thyroid_type?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       patient_doubts: {
         Row: {
           ai_answer: string | null
