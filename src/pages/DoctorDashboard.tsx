@@ -146,6 +146,11 @@ const DoctorDashboard = () => {
           .update(updateData)
           .eq("id", doctorSub.id);
         fetchDoctorSubscription();
+
+        // Also increment patient's consultations_used
+        if (consultation) {
+          await supabase.rpc("increment_consultations_used" as any, { _user_id: consultation.patient_id });
+        }
       }
 
       // Notify patient when doctor accepts/rejects
