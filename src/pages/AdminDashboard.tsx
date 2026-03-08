@@ -654,6 +654,16 @@ const AdminDashboard = () => {
                       {u.sex && <p className="text-xs text-muted-foreground">⚧ {u.sex}</p>}
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">📅 Joined: {new Date(u.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</p>
+                    {u.user_roles?.[0]?.role !== "admin" && (
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="mt-2 h-7 text-xs rounded-lg"
+                        onClick={() => handleDeleteUser(u.user_id, u.full_name)}
+                      >
+                        <Trash2 className="h-3 w-3 mr-1" /> Remove User
+                      </Button>
+                    )}
                   </CardContent>
                 </Card>
               ))
