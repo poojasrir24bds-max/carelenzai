@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ScanLine, History, Calendar, User, LogOut, Stethoscope, Bell, MessageSquare } from "lucide-react";
+import { ScanLine, History, Calendar, User, LogOut, Stethoscope, Bell, MessageSquare, HeartPulse } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,6 +10,7 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/hooks/useLanguage";
 import LanguageToggle from "@/components/LanguageToggle";
+import MedicalHistoryForm from "@/components/MedicalHistoryForm";
 
 const scanAreaItems = [
   { id: "dental", labelKey: "area.dental", emoji: "🦷" },
@@ -248,6 +249,11 @@ const PatientDashboard = () => {
             </div>
           )}
         </div>
+
+        {/* Medical History Section */}
+        {user && (
+          <MedicalHistoryForm userId={user.id} />
+        )}
 
         <div className="grid grid-cols-3 gap-3 pb-4">
           <button className="bg-card rounded-2xl p-4 shadow-card border border-border text-center hover:shadow-elevated transition-all">

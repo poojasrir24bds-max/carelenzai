@@ -4,11 +4,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { LogOut, Bell, Calendar, Clock, Users, CheckCircle, XCircle, FileText, Stethoscope, MessageSquare } from "lucide-react";
+import { LogOut, Bell, Calendar, Clock, Users, CheckCircle, XCircle, FileText, Stethoscope, MessageSquare, HeartPulse } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import MedicalHistoryForm from "@/components/MedicalHistoryForm";
 
 const sevColors: Record<string, string> = {
   high: "bg-destructive text-destructive-foreground",
@@ -232,14 +233,14 @@ const DoctorDashboard = () => {
 
                     {/* Patient History */}
                     {c.status === "accepted" && (
-                      <div className="mt-2">
+                      <div className="mt-2 space-y-2">
                         <Button
                           size="sm"
                           variant="outline"
                           className="text-xs mb-2"
                           onClick={() => fetchPatientHistory(c.patient_id)}
                         >
-                          <FileText className="h-3.5 w-3.5 mr-1" /> View Medical History
+                          <FileText className="h-3.5 w-3.5 mr-1" /> View Scan History
                         </Button>
                         {patientHistory[c.patient_id] && (
                           <div className="bg-accent/30 rounded-lg p-3 mt-2">
@@ -247,7 +248,7 @@ const DoctorDashboard = () => {
                               <p className="text-xs text-muted-foreground">No previous records found.</p>
                             ) : (
                               <div className="space-y-2">
-                                <p className="text-xs font-medium">Medical History Timeline:</p>
+                                <p className="text-xs font-medium">Scan History Timeline:</p>
                                 {patientHistory[c.patient_id].map((scan) => (
                                   <div key={scan.id} className="flex items-center gap-2 text-xs">
                                     <div className={`w-2 h-2 rounded-full ${
@@ -265,6 +266,9 @@ const DoctorDashboard = () => {
                             )}
                           </div>
                         )}
+
+                        {/* Patient Medical History (conditions) */}
+                        <MedicalHistoryForm userId={c.patient_id} readOnly />
                       </div>
                     )}
 
