@@ -1,22 +1,19 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Crown, Zap, ScanLine, Stethoscope, Check, QrCode, X } from "lucide-react";
+import { ArrowLeft, Crown, Zap, ScanLine, Stethoscope, Check, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import logo from "@/assets/logo.png";
-import phonepeQr from "@/assets/phonepe-qr.jpeg";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/hooks/useLanguage";
+
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 const planIcons: Record<string, any> = {
   Basic: Zap,
@@ -35,11 +32,7 @@ const Subscription = () => {
   const { t } = useLanguage();
   const [plans, setPlans] = useState<any[]>([]);
   const [activeSub, setActiveSub] = useState<any>(null);
-  const [selectedPlan, setSelectedPlan] = useState<any>(null);
-  const [txnId, setTxnId] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [showQr, setShowQr] = useState(false);
-  const [showTxnInput, setShowTxnInput] = useState(false);
+  const [paying, setPaying] = useState(false);
 
   useEffect(() => {
     fetchPlans();
@@ -67,66 +60,77 @@ const Subscription = () => {
     setActiveSub((data as any[])?.[0] || null);
   };
 
-  const handleSelectPlan = (plan: any) => {
-    setSelectedPlan(plan);
-    setShowQr(true);
-    setShowTxnInput(false);
-    setTxnId("");
-  };
+  const handlePayWithRazorpay = async (plan: any) => {
+    if (!user || paying) return;
+    setPaying(true);
 
-  const handleSubmitFromQr = async () => {
-    if (!txnId.trim() || !selectedPlan || !user) return;
-    setSubmitting(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
 
-    const now = new Date();
-    const expiresAt = new Date(now.getTime() + selectedPlan.duration_days * 24 * 60 * 60 * 1000);
+      // Create order via edge function
+      const { data: orderData, error: orderError } = await supabase.functions.invoke('razorpay-create-order', {
+        body: { plan_id: plan.id },
+      });
 
-    const { error } = await supabase.from("user_subscriptions" as any).insert({
-      user_id: user.id,
-      plan_id: selectedPlan.id,
-      status: "pending",
-      upi_transaction_id: txnId.trim(),
-      starts_at: now.toISOString(),
-      expires_at: expiresAt.toISOString(),
-    } as any);
+      if (orderError || !orderData?.order_id) {
+        throw new Error(orderError?.message || 'Failed to create order');
+      }
 
-    setSubmitting(false);
-    setShowQr(false);
+      // Open Razorpay checkout
+      const options = {
+        key: orderData.key_id,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: 'CARELENZ AI',
+        description: `${orderData.plan_name} Plan Subscription`,
+        image: logo,
+        order_id: orderData.order_id,
+        prefill: orderData.prefill,
+        theme: { color: '#2563eb' },
+        handler: async (response: any) => {
+          try {
+            const { data: verifyData, error: verifyError } = await supabase.functions.invoke('razorpay-verify-payment', {
+              body: {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                plan_id: plan.id,
+              },
+            });
 
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Payment Submitted!", description: "Your subscription will be activated after admin verifies your payment." });
-      navigate("/patient");
+            if (verifyError || !verifyData?.success) {
+              throw new Error(verifyError?.message || 'Payment verification failed');
+            }
+
+            toast({ title: "Payment Successful! ✅", description: "Your subscription is now active." });
+            navigate("/patient");
+          } catch (err: any) {
+            toast({ title: "Verification Failed", description: err.message, variant: "destructive" });
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            setPaying(false);
+          },
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', (response: any) => {
+        toast({
+          title: "Payment Failed",
+          description: response.error?.description || "Something went wrong",
+          variant: "destructive",
+        });
+        setPaying(false);
+      });
+      rzp.open();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setPaying(false);
     }
-  };
-
-  const handleSubmitTxn = async () => {
-    if (!txnId.trim() || !selectedPlan || !user) return;
-    setSubmitting(true);
-
-    const now = new Date();
-    const expiresAt = new Date(now.getTime() + selectedPlan.duration_days * 24 * 60 * 60 * 1000);
-
-    const { error } = await supabase.from("user_subscriptions" as any).insert({
-      user_id: user.id,
-      plan_id: selectedPlan.id,
-      status: "pending",
-      upi_transaction_id: txnId.trim(),
-      starts_at: now.toISOString(),
-      expires_at: expiresAt.toISOString(),
-    } as any);
-
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Payment Submitted!", description: "Your subscription will be activated after admin verifies your payment." });
-      setSelectedPlan(null);
-      setTxnId("");
-      setShowTxnInput(false);
-      navigate("/patient");
-    }
-    setSubmitting(false);
   };
 
   return (
@@ -159,8 +163,8 @@ const Subscription = () => {
                     {activeSub.status === 'pending' ? 'Payment Under Review' : t("sub.activePlan")}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {activeSub.subscription_plans?.name} • {activeSub.status === 'pending' 
-                      ? 'Waiting for admin approval' 
+                    {activeSub.subscription_plans?.name} • {activeSub.status === 'pending'
+                      ? 'Waiting for admin approval'
                       : `${t("sub.expires")} ${new Date(activeSub.expires_at).toLocaleDateString("en-IN")}`}
                   </p>
                 </div>
@@ -238,10 +242,11 @@ const Subscription = () => {
                     <Button
                       className="w-full rounded-xl"
                       variant={isPremium ? "default" : "outline"}
-                      onClick={() => handleSelectPlan(plan)}
+                      onClick={() => handlePayWithRazorpay(plan)}
+                      disabled={paying}
                     >
-                      <QrCode className="h-4 w-4 mr-2" />
-                      {t("sub.payWithUpi")} • ₹{plan.price_inr}
+                      <CreditCard className="h-4 w-4 mr-2" />
+                      {paying ? "Processing..." : `Pay ₹${plan.price_inr}`}
                     </Button>
                   </CardContent>
                 </Card>
@@ -249,69 +254,7 @@ const Subscription = () => {
             })}
           </div>
         </div>
-
-        {/* Transaction ID Submission */}
-        {showTxnInput && selectedPlan && (
-          <Card className="shadow-elevated border-primary/30">
-            <CardContent className="p-5 space-y-3">
-              <h3 className="font-display font-semibold">{t("sub.confirmPayment")}</h3>
-              <p className="text-sm text-muted-foreground">
-                {t("sub.confirmPaymentDesc")} <strong>{selectedPlan.name}</strong> (₹{selectedPlan.price_inr})
-              </p>
-              <div className="space-y-1.5">
-                <Label>{t("sub.transactionId")}</Label>
-                <Input
-                  placeholder="e.g. UPI1234567890"
-                  value={txnId}
-                  onChange={(e) => setTxnId(e.target.value)}
-                />
-                <p className="text-xs text-muted-foreground">{t("sub.transactionIdHint")}</p>
-              </div>
-              <Button
-                className="w-full rounded-xl"
-                onClick={handleSubmitTxn}
-                disabled={!txnId.trim() || submitting}
-              >
-                {submitting ? t("common.loading") : t("sub.submitPayment")}
-              </Button>
-            </CardContent>
-          </Card>
-        )}
       </div>
-
-      {/* QR Code Dialog */}
-      <Dialog open={showQr} onOpenChange={setShowQr}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="text-center font-display">
-              Scan & Pay ₹{selectedPlan?.price_inr}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="flex flex-col items-center space-y-4 py-2">
-            <p className="text-sm text-muted-foreground text-center">
-              Scan the QR code below using any UPI app to pay for <strong>{selectedPlan?.name} Plan</strong>
-            </p>
-            <div className="rounded-xl border-2 border-border overflow-hidden bg-white p-2">
-              <img src={phonepeQr} alt="PhonePe QR Code" className="w-64 h-64 object-contain" />
-            </div>
-            <p className="text-xs text-muted-foreground text-center">
-              Pay exactly <strong>₹{selectedPlan?.price_inr}</strong> to complete your subscription
-            </p>
-            <div className="w-full space-y-2">
-              <Label>{t("sub.transactionId")}</Label>
-              <Input
-                placeholder="e.g. UPI1234567890"
-                value={txnId}
-                onChange={(e) => setTxnId(e.target.value)}
-              />
-              <p className="text-xs text-muted-foreground">{t("sub.transactionIdHint")}</p>
-            </div>
-            <Button className="w-full rounded-xl" onClick={handleSubmitFromQr} disabled={!txnId.trim() || submitting}>
-              {submitting ? t("common.loading") : t("sub.submitPayment")}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
