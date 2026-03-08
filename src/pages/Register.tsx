@@ -200,6 +200,7 @@ const Register = () => {
                         <SelectItem value="trichologist">{t("register.trichologist")}</SelectItem>
                         <SelectItem value="ophthalmologist">{t("register.ophthalmologist")}</SelectItem>
                         <SelectItem value="general">{t("register.general")}</SelectItem>
+                        <SelectItem value="dentist">{t("register.dentist")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
