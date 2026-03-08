@@ -110,7 +110,12 @@ const AdminDashboard = () => {
     // Count patients (users with patient role)
     const patientCount = (roles || []).filter((r: any) => r.role === 'patient').length;
 
-     const totalRevenue = 0;
+     // Revenue from admin-approved subscriptions only
+     const { data: revenueSubs } = await supabase
+       .from("user_subscriptions")
+       .select("*, subscription_plans(price_inr)")
+       .eq("status", "active");
+     const totalRevenue = (revenueSubs || []).reduce((sum: number, s: any) => sum + ((s.subscription_plans as any)?.price_inr || 0), 0);
 
     setStats({
       users: userCount || 0,
