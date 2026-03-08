@@ -44,14 +44,29 @@ const AdminDashboard = () => {
   }, []);
 
   const fetchData = async () => {
-    const { data: profiles } = await supabase
+    // Fetch profiles and roles separately to avoid join issues
+    const { data: profiles, error: profilesError } = await supabase
       .from("profiles")
-      .select("*, user_roles(role)")
+      .select("*")
       .order("created_at", { ascending: false });
-    setAllUsers(profiles || []);
+    
+    console.log("Admin fetchData - profiles:", profiles?.length, "error:", profilesError?.message);
+
+    const { data: roles } = await supabase
+      .from("user_roles")
+      .select("user_id, role");
+
+    // Merge roles into profiles
+    const roleMap: Record<string, string> = {};
+    (roles || []).forEach((r: any) => { roleMap[r.user_id] = r.role; });
+    const enrichedProfiles = (profiles || []).map((p: any) => ({
+      ...p,
+      user_roles: roleMap[p.user_id] ? [{ role: roleMap[p.user_id] }] : [],
+    }));
+    setAllUsers(enrichedProfiles);
 
     // Pending patients with Aadhaar verification
-    const pendingPats = (profiles || []).filter(
+    const pendingPats = enrichedProfiles.filter(
       (p: any) => p.id_document_url && p.id_verification_status === 'pending'
     );
     setPendingPatients(pendingPats);
@@ -62,14 +77,14 @@ const AdminDashboard = () => {
       .eq("is_verified", false);
     
     const enrichedDoctors = (doctors || []).map((doc) => {
-      const profile = (profiles || []).find((p: any) => p.user_id === doc.user_id);
+      const profile = enrichedProfiles.find((p: any) => p.user_id === doc.user_id);
       return { ...doc, profiles: profile };
     });
     setPendingDoctors(enrichedDoctors);
 
     const { data: allDocs } = await supabase.from("doctor_profiles").select("*");
     const enrichedAllDocs = (allDocs || []).map((doc) => {
-      const profile = (profiles || []).find((p: any) => p.user_id === doc.user_id);
+      const profile = enrichedProfiles.find((p: any) => p.user_id === doc.user_id);
       return { ...doc, profiles: profile };
     });
     setAllDoctorProfiles(enrichedAllDocs);
