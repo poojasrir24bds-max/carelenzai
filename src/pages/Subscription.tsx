@@ -75,10 +75,9 @@ const Subscription = () => {
     setTxnId("");
   };
 
-  const handlePaidDone = async () => {
-    if (!selectedPlan || !user) return;
+  const handleSubmitFromQr = async () => {
+    if (!txnId.trim() || !selectedPlan || !user) return;
     setSubmitting(true);
-    setShowQr(false);
 
     const now = new Date();
     const expiresAt = new Date(now.getTime() + selectedPlan.duration_days * 24 * 60 * 60 * 1000);
@@ -87,11 +86,13 @@ const Subscription = () => {
       user_id: user.id,
       plan_id: selectedPlan.id,
       status: "active",
+      upi_transaction_id: txnId.trim(),
       starts_at: now.toISOString(),
       expires_at: expiresAt.toISOString(),
     } as any);
 
     setSubmitting(false);
+    setShowQr(false);
 
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -287,8 +288,17 @@ const Subscription = () => {
             <p className="text-xs text-muted-foreground text-center">
               Pay exactly <strong>₹{selectedPlan?.price_inr}</strong> to complete your subscription
             </p>
-            <Button className="w-full rounded-xl" onClick={handlePaidDone}>
-              I've Paid — Enter Transaction ID
+            <div className="w-full space-y-2">
+              <Label>{t("sub.transactionId")}</Label>
+              <Input
+                placeholder="e.g. UPI1234567890"
+                value={txnId}
+                onChange={(e) => setTxnId(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">{t("sub.transactionIdHint")}</p>
+            </div>
+            <Button className="w-full rounded-xl" onClick={handleSubmitFromQr} disabled={!txnId.trim() || submitting}>
+              {submitting ? t("common.loading") : t("sub.submitPayment")}
             </Button>
           </div>
         </DialogContent>
