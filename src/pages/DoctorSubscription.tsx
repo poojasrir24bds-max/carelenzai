@@ -60,10 +60,9 @@ const DoctorSubscription = () => {
     setTxnId("");
   };
 
-  const handlePaidDone = async () => {
-    if (!plan || !user) return;
+  const handleSubmitFromQr = async () => {
+    if (!txnId.trim() || !plan || !user) return;
     setSubmitting(true);
-    setShowQr(false);
 
     const now = new Date();
 
@@ -71,16 +70,18 @@ const DoctorSubscription = () => {
       user_id: user.id,
       plan_id: plan.id,
       status: "active",
+      upi_transaction_id: txnId.trim(),
       starts_at: now.toISOString(),
       expires_at: null,
     } as any);
 
     setSubmitting(false);
+    setShowQr(false);
 
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Payment Submitted!", description: "Your subscription will be activated after admin verification." });
+      toast({ title: "Payment Submitted!", description: "Your subscription is now active." });
       navigate("/doctor");
     }
   };
