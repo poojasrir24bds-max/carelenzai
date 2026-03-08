@@ -78,7 +78,7 @@ const Register = () => {
     if (role === "doctor" && licenseFile && signUpData?.user) {
       try {
         const fileExt = licenseFile.name.split('.').pop();
-        const filePath = `${data.user.id}/license.${fileExt}`;
+        const filePath = `${signUpData.user.id}/license.${fileExt}`;
 
         const { error: uploadError } = await supabase.storage
           .from("license-documents")
