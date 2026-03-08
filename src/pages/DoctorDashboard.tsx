@@ -4,11 +4,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { LogOut, Bell, Calendar, Clock, Users, CheckCircle, XCircle, FileText, Stethoscope, MessageSquare } from "lucide-react";
+import { LogOut, Bell, Calendar, Clock, Users, CheckCircle, XCircle, FileText, Stethoscope, MessageSquare, HeartPulse } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import MedicalHistoryForm from "@/components/MedicalHistoryForm";
 
 const sevColors: Record<string, string> = {
   high: "bg-destructive text-destructive-foreground",
