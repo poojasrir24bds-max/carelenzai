@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -17,6 +17,7 @@ const Register = () => {
   const { signUp } = useAuth();
   const [form, setForm] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const update = (key: string, value: string) => setForm((prev) => ({ ...prev, [key]: value }));
 
@@ -90,7 +91,12 @@ const Register = () => {
               </div>
               <div className="space-y-1.5">
                 <Label>Password</Label>
-                <Input type="password" placeholder="••••••••" onChange={(e) => update("password", e.target.value)} required minLength={6} />
+                <div className="relative">
+                  <Input type={showPassword ? "text" : "password"} placeholder="••••••••" className="pr-10" onChange={(e) => update("password", e.target.value)} required minLength={6} />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
