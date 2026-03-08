@@ -75,10 +75,9 @@ const Subscription = () => {
     setTxnId("");
   };
 
-  const handlePaidDone = async () => {
-    if (!selectedPlan || !user) return;
+  const handleSubmitFromQr = async () => {
+    if (!txnId.trim() || !selectedPlan || !user) return;
     setSubmitting(true);
-    setShowQr(false);
 
     const now = new Date();
     const expiresAt = new Date(now.getTime() + selectedPlan.duration_days * 24 * 60 * 60 * 1000);
@@ -87,11 +86,13 @@ const Subscription = () => {
       user_id: user.id,
       plan_id: selectedPlan.id,
       status: "active",
+      upi_transaction_id: txnId.trim(),
       starts_at: now.toISOString(),
       expires_at: expiresAt.toISOString(),
     } as any);
 
     setSubmitting(false);
+    setShowQr(false);
 
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
