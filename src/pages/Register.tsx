@@ -158,6 +158,7 @@ const Register = () => {
         hospital: form.hospital,
         aadhaar: form.aadhaar,
         phone: form.phone?.replace(/[\s-]/g, ""),
+        address: form.address,
       },
       role || "patient"
     );

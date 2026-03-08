@@ -113,6 +113,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           doctor_id: metadata.doctorId,
           specialization: metadata.specialization,
           hospital_name: metadata.hospital,
+          address: metadata.address || null,
         });
       }
 
