@@ -586,6 +586,9 @@ const AdminDashboard = () => {
               <div className="bg-accent/30 rounded-xl p-4 space-y-2">
                 <h4 className="font-semibold">{selectedPatient.full_name}</h4>
                 <p className="text-sm text-muted-foreground">📧 {selectedPatient.email}</p>
+                {selectedPatient.phone && (
+                  <p className="text-sm text-muted-foreground">📱 {selectedPatient.phone} {selectedPatient.phone_verified ? '✅' : '❌'}</p>
+                )}
                 {selectedPatient.age && <p className="text-sm text-muted-foreground">🎂 Age: {selectedPatient.age}</p>}
                 {selectedPatient.aadhaar_number && (
                   <p className="text-sm text-muted-foreground">🪪 Aadhaar: <span className="font-mono font-semibold">{selectedPatient.aadhaar_number}</span></p>
