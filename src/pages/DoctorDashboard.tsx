@@ -27,6 +27,8 @@ const DoctorDashboard = () => {
   const [doctorProfile, setDoctorProfile] = useState<any>(null);
   const [answerText, setAnswerText] = useState<Record<string, string>>({});
   const [patientHistory, setPatientHistory] = useState<Record<string, any[]>>({});
+  const [doctorSub, setDoctorSub] = useState<any>(null);
+  const [subLoading, setSubLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
