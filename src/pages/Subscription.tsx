@@ -1,19 +1,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Crown, Zap, ScanLine, Stethoscope, Check, CreditCard } from "lucide-react";
+import { ArrowLeft, Crown, Zap, ScanLine, Stethoscope, Check, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import logo from "@/assets/logo.png";
+import phonepeQr from "@/assets/phonepe-qr.jpeg";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/hooks/useLanguage";
-
-declare global {
-  interface Window {
-    Razorpay: any;
-  }
-}
 
 const planIcons: Record<string, any> = {
   Basic: Zap,
@@ -32,7 +28,9 @@ const Subscription = () => {
   const { t } = useLanguage();
   const [plans, setPlans] = useState<any[]>([]);
   const [activeSub, setActiveSub] = useState<any>(null);
-  const [paying, setPaying] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<any>(null);
+  const [transactionId, setTransactionId] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     fetchPlans();
@@ -60,76 +58,29 @@ const Subscription = () => {
     setActiveSub((data as any[])?.[0] || null);
   };
 
-  const handlePayWithRazorpay = async (plan: any) => {
-    if (!user || paying) return;
-    setPaying(true);
+  const handleSubmitPayment = async () => {
+    if (!user || !selectedPlan || !transactionId.trim() || submitting) return;
+    setSubmitting(true);
 
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData?.session?.access_token;
+      const { error } = await supabase.from("user_subscriptions").insert({
+        user_id: user.id,
+        plan_id: selectedPlan.id,
+        status: "pending",
+        upi_transaction_id: transactionId.trim(),
+        starts_at: new Date().toISOString(),
+      } as any);
 
-      // Create order via edge function
-      const { data: orderData, error: orderError } = await supabase.functions.invoke('razorpay-create-order', {
-        body: { plan_id: plan.id },
-      });
+      if (error) throw error;
 
-      if (orderError || !orderData?.order_id) {
-        throw new Error(orderError?.message || 'Failed to create order');
-      }
-
-      // Open Razorpay checkout
-      const options = {
-        key: orderData.key_id,
-        amount: orderData.amount,
-        currency: orderData.currency,
-        name: 'CARELENZ AI',
-        description: `${orderData.plan_name} Plan Subscription`,
-        image: logo,
-        order_id: orderData.order_id,
-        prefill: orderData.prefill,
-        theme: { color: '#2563eb' },
-        handler: async (response: any) => {
-          try {
-            const { data: verifyData, error: verifyError } = await supabase.functions.invoke('razorpay-verify-payment', {
-              body: {
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                plan_id: plan.id,
-              },
-            });
-
-            if (verifyError || !verifyData?.success) {
-              throw new Error(verifyError?.message || 'Payment verification failed');
-            }
-
-            toast({ title: "Payment Successful! ✅", description: "Your subscription is now active." });
-            navigate("/patient");
-          } catch (err: any) {
-            toast({ title: "Verification Failed", description: err.message, variant: "destructive" });
-          }
-        },
-        modal: {
-          ondismiss: () => {
-            setPaying(false);
-          },
-        },
-      };
-
-      const rzp = new window.Razorpay(options);
-      rzp.on('payment.failed', (response: any) => {
-        toast({
-          title: "Payment Failed",
-          description: response.error?.description || "Something went wrong",
-          variant: "destructive",
-        });
-        setPaying(false);
-      });
-      rzp.open();
+      toast({ title: "Payment Submitted! ✅", description: "Your payment is under review. Admin will approve it shortly." });
+      setTransactionId("");
+      setSelectedPlan(null);
+      fetchActiveSub();
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
-      setPaying(false);
+      setSubmitting(false);
     }
   };
 
@@ -146,7 +97,7 @@ const Subscription = () => {
       </header>
 
       <div className="flex-1 container py-6 space-y-6">
-        {/* Active Subscription */}
+        {/* Active / Pending Subscription */}
         {activeSub && (
           <Card className={`shadow-elevated ${activeSub.status === 'pending' ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-success/30 bg-success/5'}`}>
             <CardContent className="p-5">
@@ -160,7 +111,7 @@ const Subscription = () => {
                 </div>
                 <div>
                   <p className="font-display font-bold text-sm">
-                    {activeSub.status === 'pending' ? 'Payment Under Review' : t("sub.activePlan")}
+                    {activeSub.status === 'pending' ? '⏳ Payment Under Review' : t("sub.activePlan")}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {activeSub.subscription_plans?.name} • {activeSub.status === 'pending'
@@ -197,9 +148,14 @@ const Subscription = () => {
               const Icon = planIcons[plan.name] || Zap;
               const colorClass = planColors[plan.name] || "border-border";
               const isPremium = plan.name === "Premium";
+              const isSelected = selectedPlan?.id === plan.id;
 
               return (
-                <Card key={plan.id} className={`shadow-card border-2 ${colorClass} relative overflow-hidden`}>
+                <Card
+                  key={plan.id}
+                  className={`shadow-card border-2 ${isSelected ? "border-primary ring-2 ring-primary/20" : colorClass} relative overflow-hidden cursor-pointer transition-all`}
+                  onClick={() => setSelectedPlan(plan)}
+                >
                   {isPremium && (
                     <div className="absolute top-0 right-0 bg-yellow-500 text-white text-xs font-bold px-3 py-1 rounded-bl-xl">
                       ⭐ {t("sub.popular")}
@@ -218,7 +174,7 @@ const Subscription = () => {
                       </div>
                     </div>
 
-                    <div className="space-y-2 mb-4">
+                    <div className="space-y-2 mb-2">
                       <div className="flex items-center gap-2 text-sm">
                         <Check className="h-4 w-4 text-success" />
                         <span>{plan.scan_limit} {t("sub.aiScans")}</span>
@@ -238,22 +194,49 @@ const Subscription = () => {
                         </div>
                       )}
                     </div>
-
-                    <Button
-                      className="w-full rounded-xl"
-                      variant={isPremium ? "default" : "outline"}
-                      onClick={() => handlePayWithRazorpay(plan)}
-                      disabled={paying}
-                    >
-                      <CreditCard className="h-4 w-4 mr-2" />
-                      {paying ? "Processing..." : `Pay ₹${plan.price_inr}`}
-                    </Button>
                   </CardContent>
                 </Card>
               );
             })}
           </div>
         </div>
+
+        {/* PhonePe QR Payment Section */}
+        {selectedPlan && !activeSub && (
+          <Card className="shadow-elevated border-2 border-primary/30">
+            <CardContent className="p-5 space-y-4">
+              <h3 className="font-display font-bold text-lg text-center">
+                Pay ₹{selectedPlan.price_inr} via PhonePe
+              </h3>
+              <div className="flex justify-center">
+                <img
+                  src={phonepeQr}
+                  alt="PhonePe QR Code"
+                  className="w-56 h-56 rounded-xl border-2 border-muted object-contain"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground text-center">
+                Scan the QR code using PhonePe, Google Pay, or any UPI app. After payment, enter your UPI Transaction ID below.
+              </p>
+              <div className="space-y-3">
+                <Input
+                  placeholder="Enter UPI Transaction ID"
+                  value={transactionId}
+                  onChange={(e) => setTransactionId(e.target.value)}
+                  className="rounded-xl"
+                />
+                <Button
+                  className="w-full rounded-xl"
+                  onClick={handleSubmitPayment}
+                  disabled={!transactionId.trim() || submitting}
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  {submitting ? "Submitting..." : "Submit for Approval"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
