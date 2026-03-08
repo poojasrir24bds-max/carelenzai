@@ -28,6 +28,7 @@ const Subscription = () => {
   const [plans, setPlans] = useState<any[]>([]);
   const [activeSub, setActiveSub] = useState<any>(null);
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   // Check if credits are exhausted or subscription expired
   const subPlan = activeSub?.subscription_plans;
@@ -36,7 +37,6 @@ const Subscription = () => {
   const allCreditsUsed = !!(scansExhausted && consultationsExhausted);
   const isExpired = !!(activeSub?.status === 'active' && activeSub.expires_at && new Date(activeSub.expires_at) < new Date());
   const canResubscribe = !activeSub || allCreditsUsed || isExpired;
-  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     fetchPlans();
