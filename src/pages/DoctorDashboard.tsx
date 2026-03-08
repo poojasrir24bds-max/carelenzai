@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { LogOut, Bell, Calendar, Clock, Users, CheckCircle, XCircle, FileText, Stethoscope, MessageSquare, HeartPulse, Video } from "lucide-react";
+import { LogOut, Bell, Calendar, Clock, Users, CheckCircle, XCircle, FileText, Stethoscope, MessageSquare, HeartPulse, Video, CreditCard } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,14 +27,31 @@ const DoctorDashboard = () => {
   const [doctorProfile, setDoctorProfile] = useState<any>(null);
   const [answerText, setAnswerText] = useState<Record<string, string>>({});
   const [patientHistory, setPatientHistory] = useState<Record<string, any[]>>({});
+  const [doctorSub, setDoctorSub] = useState<any>(null);
+  const [subLoading, setSubLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
       fetchDoctorProfile();
       fetchConsultations();
       fetchDoubts();
+      fetchDoctorSubscription();
     }
   }, [user]);
+
+  const fetchDoctorSubscription = async () => {
+    setSubLoading(true);
+    const { data } = await supabase
+      .from("user_subscriptions")
+      .select("*, subscription_plans(*)")
+      .eq("user_id", user!.id)
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(1);
+    const sub = (data as any[])?.[0] || null;
+    setDoctorSub(sub);
+    setSubLoading(false);
+  };
 
   const fetchDoctorProfile = async () => {
     const { data } = await supabase.from("doctor_profiles").select("*").eq("user_id", user!.id).maybeSingle();
@@ -101,6 +118,14 @@ const DoctorDashboard = () => {
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
+      // If accepted, increment consultations_used on doctor's subscription
+      if (status === "accepted" && doctorSub) {
+        await supabase
+          .from("user_subscriptions")
+          .update({ consultations_used: (doctorSub.consultations_used || 0) + 1 } as any)
+          .eq("id", doctorSub.id);
+        fetchDoctorSubscription();
+      }
       toast({ title: status === "accepted" ? "Consultation accepted" : "Consultation declined" });
       fetchConsultations();
     }
@@ -128,6 +153,11 @@ const DoctorDashboard = () => {
     navigate("/");
   };
 
+  const hasActiveSub = !!doctorSub;
+  const consultationsRemaining = hasActiveSub
+    ? Math.max(0, (doctorSub.subscription_plans?.doctor_consultations || 5) - (doctorSub.consultations_used || 0))
+    : 0;
+
   if (doctorProfile && !doctorProfile.is_verified) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
@@ -141,6 +171,31 @@ const DoctorDashboard = () => {
               Your doctor account is awaiting admin verification. You'll be notified once approved.
             </p>
             <Button variant="outline" onClick={handleLogout}>Sign Out</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // If doctor is verified but has no active subscription, show subscription required
+  if (!subLoading && doctorProfile?.is_verified && !hasActiveSub) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+        <Card className="max-w-md shadow-elevated border-primary/30">
+          <CardContent className="p-6 text-center">
+            <div className="bg-primary/10 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+              <CreditCard className="h-8 w-8 text-primary" />
+            </div>
+            <h2 className="font-display text-xl font-bold mb-2">Subscription Required</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              To start accepting consultations, please subscribe to the Doctor Plan (₹99 for 5 consultations).
+            </p>
+            <div className="flex gap-2">
+              <Button className="flex-1 rounded-xl" onClick={() => navigate("/doctor/subscription")}>
+                <CreditCard className="h-4 w-4 mr-2" /> Subscribe Now
+              </Button>
+              <Button variant="outline" onClick={handleLogout}>Sign Out</Button>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -171,6 +226,21 @@ const DoctorDashboard = () => {
             {doctorProfile?.specialization} • {doctorProfile?.hospital_name}
           </p>
         </div>
+
+        {/* Subscription Status Banner */}
+        <Card className="shadow-card border-primary/20 bg-primary/5">
+          <CardContent className="p-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <CreditCard className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium">
+                Consultations: {consultationsRemaining} remaining
+              </span>
+            </div>
+            <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => navigate("/doctor/subscription")}>
+              {consultationsRemaining === 0 ? "Renew" : "Manage"}
+            </Button>
+          </CardContent>
+        </Card>
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3">
@@ -274,8 +344,14 @@ const DoctorDashboard = () => {
 
                     {c.status === "pending" && (
                       <div className="flex gap-2 mt-3">
-                        <Button size="sm" className="flex-1 rounded-lg text-xs" onClick={() => handleConsultation(c.id, "accepted")}>
-                          <CheckCircle className="h-3.5 w-3.5 mr-1" /> Accept
+                        <Button
+                          size="sm"
+                          className="flex-1 rounded-lg text-xs"
+                          disabled={consultationsRemaining <= 0}
+                          onClick={() => handleConsultation(c.id, "accepted")}
+                        >
+                          <CheckCircle className="h-3.5 w-3.5 mr-1" />
+                          {consultationsRemaining <= 0 ? "No consultations left" : "Accept"}
                         </Button>
                         <Button size="sm" variant="outline" className="flex-1 rounded-lg text-xs" onClick={() => handleConsultation(c.id, "rejected")}>
                           <XCircle className="h-3.5 w-3.5 mr-1" /> Decline
