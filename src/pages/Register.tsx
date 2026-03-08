@@ -240,7 +240,7 @@ const Register = () => {
     // Save medical history for patients
     if (role === "patient" && signUpData?.user) {
       const hasAnyCondition = Object.values(medicalConditions).some(v => v);
-      if (hasAnyCondition || form.blood_group || form.medications) {
+      if (hasAnyCondition || form.blood_group || form.medications || form.other_conditions) {
         setTimeout(async () => {
           await supabase.from("medical_history").insert({
             user_id: signUpData.user.id,
@@ -254,6 +254,7 @@ const Register = () => {
             has_kidney_disease: medicalConditions.kidney_disease || false,
             blood_group: form.blood_group || null,
             current_medications: form.medications || null,
+            other_conditions: form.other_conditions || null,
           });
         }, 2500);
       }
@@ -563,6 +564,11 @@ const Register = () => {
                     <div className="space-y-1.5">
                       <Label className="text-xs">Current Medications (if any)</Label>
                       <Input placeholder="e.g., Metformin, Amlodipine..." onChange={(e) => update("medications", e.target.value)} className="h-8 text-xs" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Other Medical Conditions</Label>
+                      <Input placeholder="e.g., PCOD, Arthritis, Migraine..." onChange={(e) => update("other_conditions", e.target.value)} className="h-8 text-xs" />
+                      <p className="text-xs text-muted-foreground">Type any conditions not listed above</p>
                     </div>
                   </div>
                 </>
