@@ -1,10 +1,10 @@
 project_id = "qrizwahrwfinggrspfqg"
 
 [functions.ai-diagnose]
-verify_jwt = true
+verify_jwt = false
 
 [functions.dental-analyze]
-verify_jwt = true
+verify_jwt = false
 
 [functions.dental-chat]
-verify_jwt = true
+verify_jwt = false
