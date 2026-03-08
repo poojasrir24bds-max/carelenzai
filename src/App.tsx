@@ -21,6 +21,7 @@ import DentalStudy from "./pages/dental/DentalStudy";
 import DentalChat from "./pages/dental/DentalChat";
 import NotFound from "./pages/NotFound";
 import VideoCall from "./pages/VideoCall";
+import Subscription from "./pages/Subscription";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +50,7 @@ const App = () => (
               <Route path="/dental/study" element={<DentalStudy />} />
               <Route path="/dental/chat" element={<DentalChat />} />
               <Route path="/video-call" element={<VideoCall />} />
+              <Route path="/subscription" element={<Subscription />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

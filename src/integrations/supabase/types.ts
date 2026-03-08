@@ -488,6 +488,39 @@ export type Database = {
         }
         Relationships: []
       }
+      subscription_plans: {
+        Row: {
+          created_at: string
+          doctor_consultations: number
+          duration_days: number
+          id: string
+          is_active: boolean
+          name: string
+          price_inr: number
+          scan_limit: number
+        }
+        Insert: {
+          created_at?: string
+          doctor_consultations?: number
+          duration_days?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          price_inr: number
+          scan_limit?: number
+        }
+        Update: {
+          created_at?: string
+          doctor_consultations?: number
+          duration_days?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          price_inr?: number
+          scan_limit?: number
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -505,6 +538,56 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_subscriptions: {
+        Row: {
+          consultations_used: number
+          created_at: string
+          expires_at: string | null
+          id: string
+          plan_id: string
+          scans_used: number
+          starts_at: string | null
+          status: string
+          updated_at: string
+          upi_transaction_id: string | null
+          user_id: string
+        }
+        Insert: {
+          consultations_used?: number
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          plan_id: string
+          scans_used?: number
+          starts_at?: string | null
+          status?: string
+          updated_at?: string
+          upi_transaction_id?: string | null
+          user_id: string
+        }
+        Update: {
+          consultations_used?: number
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          plan_id?: string
+          scans_used?: number
+          starts_at?: string | null
+          status?: string
+          updated_at?: string
+          upi_transaction_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

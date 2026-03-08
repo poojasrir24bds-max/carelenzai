@@ -27,6 +27,7 @@ const AdminDashboard = () => {
   const [pendingPatients, setPendingPatients] = useState<any[]>([]);
   const [stats, setStats] = useState({ users: 0, doctors: 0, scans: 0, pendingPatients: 0 });
   const [recordings, setRecordings] = useState<any[]>([]);
+  const [subscriptions, setSubscriptions] = useState<any[]>([]);
   const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [verifying, setVerifying] = useState(false);
@@ -37,6 +38,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     fetchData();
     fetchRecordings();
+    fetchSubscriptions();
   }, []);
 
   const fetchData = async () => {
@@ -117,6 +119,53 @@ const AdminDashboard = () => {
       a.href = data.signedUrl;
       a.download = `recording_${consultationId}.webm`;
       a.click();
+    }
+  };
+
+  const fetchSubscriptions = async () => {
+    const { data } = await supabase
+      .from("user_subscriptions" as any)
+      .select("*, subscription_plans(*)")
+      .order("created_at", { ascending: false });
+    
+    if (data && data.length > 0) {
+      const userIds = [...new Set((data as any[]).map((s: any) => s.user_id))];
+      const { data: profiles } = await supabase.from("profiles").select("user_id, full_name").in("user_id", userIds);
+      const profileMap = Object.fromEntries((profiles || []).map(p => [p.user_id, p.full_name]));
+      setSubscriptions((data as any[]).map((s: any) => ({
+        ...s,
+        patient_name: profileMap[s.user_id] || "Patient",
+        plan_name: (s as any).subscription_plans?.name || "Unknown",
+        plan_price: (s as any).subscription_plans?.price_inr || 0,
+      })));
+    } else {
+      setSubscriptions([]);
+    }
+  };
+
+  const handleApproveSub = async (subId: string) => {
+    const { error } = await supabase
+      .from("user_subscriptions" as any)
+      .update({ status: "active" } as any)
+      .eq("id", subId);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "✅ Subscription activated!" });
+      fetchSubscriptions();
+    }
+  };
+
+  const handleRejectSub = async (subId: string) => {
+    const { error } = await supabase
+      .from("user_subscriptions" as any)
+      .update({ status: "rejected" } as any)
+      .eq("id", subId);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "❌ Subscription rejected" });
+      fetchSubscriptions();
     }
   };
 
@@ -562,16 +611,62 @@ const AdminDashboard = () => {
             )}
           </TabsContent>
 
-          <TabsContent value="payments" className="mt-4">
+          <TabsContent value="payments" className="mt-4 space-y-3">
             <Card className="shadow-card border-border">
-              <CardContent className="p-5 text-center">
-                <DollarSign className="h-10 w-10 text-primary mx-auto mb-3" />
-                <h3 className="font-semibold mb-1">Payment System</h3>
-                <p className="text-sm text-muted-foreground mb-3">
-                  Stripe integration required for subscription payments. Contact admin to set up.
-                </p>
+              <CardContent className="p-4">
+                <h3 className="font-semibold text-sm mb-1 flex items-center gap-2">
+                  <DollarSign className="h-4 w-4 text-success" /> UPI Subscription Payments
+                </h3>
+                <p className="text-xs text-muted-foreground">Review and approve/reject subscription payments from patients.</p>
               </CardContent>
             </Card>
+            {subscriptions.length === 0 ? (
+              <Card className="shadow-card border-border">
+                <CardContent className="p-5 text-center text-sm text-muted-foreground">
+                  No subscription payments yet.
+                </CardContent>
+              </Card>
+            ) : (
+              subscriptions.map((sub: any) => (
+                <Card key={sub.id} className="shadow-card border-border">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <p className="font-semibold text-sm">{sub.patient_name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {sub.plan_name} Plan • ₹{sub.plan_price}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          📅 {new Date(sub.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                        </p>
+                        {sub.upi_transaction_id && (
+                          <p className="text-xs font-mono mt-1">UPI Txn: {sub.upi_transaction_id}</p>
+                        )}
+                      </div>
+                      <div className="flex flex-col items-end gap-1">
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                          sub.status === "active" ? "bg-success/20 text-success" :
+                          sub.status === "rejected" ? "bg-destructive/20 text-destructive" :
+                          "bg-warning/20 text-warning"
+                        }`}>
+                          {sub.status === "active" ? "✅ Active" : sub.status === "rejected" ? "❌ Rejected" : "⏳ Pending"}
+                        </span>
+                      </div>
+                    </div>
+                    {sub.status === "pending" && (
+                      <div className="flex gap-2 mt-2">
+                        <Button size="sm" className="flex-1 rounded-lg text-xs" onClick={() => handleApproveSub(sub.id)}>
+                          <CheckCircle className="h-3.5 w-3.5 mr-1" /> Approve
+                        </Button>
+                        <Button size="sm" variant="outline" className="flex-1 rounded-lg text-xs" onClick={() => handleRejectSub(sub.id)}>
+                          <XCircle className="h-3.5 w-3.5 mr-1" /> Reject
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </TabsContent>
         </Tabs>
       </div>
