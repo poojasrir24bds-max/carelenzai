@@ -154,9 +154,9 @@ const PatientDashboard = () => {
         <Card className="border-border shadow-card">
           <CardContent className="p-5">
             <h3 className="font-display font-semibold mb-2 flex items-center gap-2">
-              <MessageSquare className="h-5 w-5 text-primary" /> Ask a Doctor
+              <MessageSquare className="h-5 w-5 text-primary" /> Ask a Health Question
             </h3>
-            <p className="text-xs text-muted-foreground mb-3">Type your health question. A doctor will review and respond.</p>
+            <p className="text-xs text-muted-foreground mb-3">Type your health question. AI will answer instantly, and a doctor may also review.</p>
             <Textarea
               placeholder="e.g., Why does my skin feel itchy after sun exposure?"
               value={doubtText}
