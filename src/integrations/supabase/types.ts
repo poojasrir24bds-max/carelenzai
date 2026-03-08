@@ -644,6 +644,7 @@ export type Database = {
       }
       user_subscriptions: {
         Row: {
+          approved_at: string | null
           consultations_used: number
           created_at: string
           expires_at: string | null
@@ -657,6 +658,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          approved_at?: string | null
           consultations_used?: number
           created_at?: string
           expires_at?: string | null
@@ -670,6 +672,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          approved_at?: string | null
           consultations_used?: number
           created_at?: string
           expires_at?: string | null
