@@ -35,6 +35,8 @@ const ScanResults = () => {
   const [doctors, setDoctors] = useState<any[]>([]);
   const [doubtText, setDoubtText] = useState("");
   const [submittingDoubt, setSubmittingDoubt] = useState(false);
+  const [aiAnswer, setAiAnswer] = useState<string | null>(null);
+  const [submittedQuestion, setSubmittedQuestion] = useState<string | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [translating, setTranslating] = useState(false);
   const [lang, setLang] = useState<"en" | "ta">("en");
