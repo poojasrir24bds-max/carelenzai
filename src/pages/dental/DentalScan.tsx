@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,6 +8,7 @@ import logo from "@/assets/logo.png";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useSubscription } from "@/hooks/useSubscription";
 
 const categories = [
   { id: "dental", label: "🦷 Dental", types: ["Clinical Photo", "X-Ray", "Intraoral", "Panoramic"] },
@@ -19,11 +20,18 @@ const DentalScan = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
   const { toast } = useToast();
+  const { hasActiveSubscription, scansRemaining, loading: subLoading } = useSubscription();
   const [activeCategory, setActiveCategory] = useState("dental");
   const [selectedType, setSelectedType] = useState("Clinical Photo");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [scanning, setScanning] = useState(false);
+
+  useEffect(() => {
+    if (!subLoading && !hasActiveSubscription) {
+      navigate("/subscription");
+    }
+  }, [subLoading, hasActiveSubscription, navigate]);
 
   const currentCategory = categories.find((c) => c.id === activeCategory)!;
   const isDental = activeCategory === "dental";

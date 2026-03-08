@@ -1,12 +1,14 @@
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ScanLine, BookOpen, MessageCircle, Clock, GraduationCap, Shield, Eye, Hand, Scissors } from "lucide-react";
+import { ScanLine, BookOpen, MessageCircle, Clock, GraduationCap, Shield, Eye, Hand, Scissors, Lock, Crown } from "lucide-react";
 import DentalBottomNav from "@/components/dental/BottomNav";
 import logo from "@/assets/logo.png";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
+import { useSubscription } from "@/hooks/useSubscription";
+import { useToast } from "@/hooks/use-toast";
 
 const scanAreas = [
   { id: "dental", label: "Dental", emoji: "🦷", desc: "Teeth & gums" },
@@ -36,7 +38,22 @@ const severityColors: Record<string, string> = {
 const DentalHome = () => {
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
+  const { hasActiveSubscription, loading: subLoading, scansRemaining } = useSubscription();
+  const { toast } = useToast();
   const [recentScans, setRecentScans] = useState<any[]>([]);
+
+  const handleScanClick = () => {
+    if (!hasActiveSubscription) {
+      toast({ title: "Subscription Required", description: "Please subscribe to a plan to access scanning.", variant: "destructive" });
+      navigate("/subscription");
+      return;
+    }
+    if (scansRemaining <= 0) {
+      toast({ title: "Scan limit reached", description: "You have used all scans in your current plan.", variant: "destructive" });
+      return;
+    }
+    navigate("/dental/scan");
+  };
 
   useEffect(() => {
     if (user) fetchRecentScans();
@@ -82,12 +99,22 @@ const DentalHome = () => {
         <Card className="bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(180,60%,45%)] border-0 shadow-elevated overflow-hidden">
           <CardContent className="p-5 flex items-center justify-between">
             <div>
-              <h2 className="font-display font-bold text-lg text-white">Start AI Scan</h2>
-              <p className="text-white/80 text-sm mt-1">Dental, skin, eyes, hair & more</p>
+              <h2 className="font-display font-bold text-lg text-white">
+                {hasActiveSubscription ? "Start AI Scan" : "Subscribe to Scan"}
+              </h2>
+              <p className="text-white/80 text-sm mt-1">
+                {hasActiveSubscription ? `${scansRemaining} scans remaining` : "Get a plan to unlock AI scanning"}
+              </p>
             </div>
-            <Button variant="secondary" size="lg" onClick={() => navigate("/dental/scan")} className="rounded-xl font-semibold">
-              <ScanLine className="h-5 w-5 mr-2" /> Scan Now
-            </Button>
+            {hasActiveSubscription ? (
+              <Button variant="secondary" size="lg" onClick={handleScanClick} className="rounded-xl font-semibold">
+                <ScanLine className="h-5 w-5 mr-2" /> Scan Now
+              </Button>
+            ) : (
+              <Button variant="secondary" size="lg" onClick={() => navigate("/subscription")} className="rounded-xl font-semibold">
+                <Crown className="h-5 w-5 mr-2" /> Subscribe
+              </Button>
+            )}
           </CardContent>
         </Card>
 
@@ -98,8 +125,8 @@ const DentalHome = () => {
             {scanAreas.map((area) => (
               <button
                 key={area.id}
-                onClick={() => navigate("/dental/scan")}
-                className="bg-card rounded-2xl p-3 shadow-card border border-border hover:border-primary hover:shadow-elevated transition-all text-center active:scale-[0.97]"
+                onClick={handleScanClick}
+                className={`bg-card rounded-2xl p-3 shadow-card border border-border hover:border-primary hover:shadow-elevated transition-all text-center active:scale-[0.97] ${!hasActiveSubscription ? "opacity-60" : ""}`}
               >
                 <span className="text-xl block mb-1">{area.emoji}</span>
                 <span className="text-xs font-medium">{area.label}</span>
