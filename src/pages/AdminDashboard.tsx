@@ -122,7 +122,53 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleViewDoctor = async (doc: any) => {
+  const fetchSubscriptions = async () => {
+    const { data } = await supabase
+      .from("user_subscriptions" as any)
+      .select("*, subscription_plans(*)")
+      .order("created_at", { ascending: false });
+    
+    if (data && data.length > 0) {
+      const userIds = [...new Set((data as any[]).map((s: any) => s.user_id))];
+      const { data: profiles } = await supabase.from("profiles").select("user_id, full_name").in("user_id", userIds);
+      const profileMap = Object.fromEntries((profiles || []).map(p => [p.user_id, p.full_name]));
+      setSubscriptions((data as any[]).map((s: any) => ({
+        ...s,
+        patient_name: profileMap[s.user_id] || "Patient",
+        plan_name: (s as any).subscription_plans?.name || "Unknown",
+        plan_price: (s as any).subscription_plans?.price_inr || 0,
+      })));
+    } else {
+      setSubscriptions([]);
+    }
+  };
+
+  const handleApproveSub = async (subId: string) => {
+    const { error } = await supabase
+      .from("user_subscriptions" as any)
+      .update({ status: "active" } as any)
+      .eq("id", subId);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "✅ Subscription activated!" });
+      fetchSubscriptions();
+    }
+  };
+
+  const handleRejectSub = async (subId: string) => {
+    const { error } = await supabase
+      .from("user_subscriptions" as any)
+      .update({ status: "rejected" } as any)
+      .eq("id", subId);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "❌ Subscription rejected" });
+      fetchSubscriptions();
+    }
+  };
+
     setSelectedDoctor(doc);
     setRejectNotes("");
     setLicenseDocUrl(null);
