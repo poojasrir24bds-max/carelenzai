@@ -28,6 +28,7 @@ const ScanResults = () => {
   const [doubtText, setDoubtText] = useState("");
   const [submittingDoubt, setSubmittingDoubt] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [translating, setTranslating] = useState(false);
 
   useEffect(() => {
     if (result && (result.severity === "medium" || result.severity === "high")) {
