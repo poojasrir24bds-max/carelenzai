@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Stethoscope, Check, Send, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import logo from "@/assets/logo.png";
 import phonepeQr from "@/assets/phonepe-qr.jpeg";
 import { useAuth } from "@/hooks/useAuth";
@@ -16,7 +15,6 @@ const DoctorSubscription = () => {
   const { toast } = useToast();
   const [plan, setPlan] = useState<any>(null);
   const [activeSub, setActiveSub] = useState<any>(null);
-  const [transactionId, setTransactionId] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -46,7 +44,7 @@ const DoctorSubscription = () => {
   };
 
   const handleSubmitPayment = async () => {
-    if (!user || !plan || !transactionId.trim() || submitting) return;
+    if (!user || !plan || submitting) return;
     setSubmitting(true);
 
     try {
@@ -54,14 +52,12 @@ const DoctorSubscription = () => {
         user_id: user.id,
         plan_id: plan.id,
         status: "pending",
-        upi_transaction_id: transactionId.trim(),
         starts_at: new Date().toISOString(),
       } as any);
 
       if (error) throw error;
 
-      toast({ title: "Payment Submitted! ✅", description: "Your payment is under review. Admin will approve it shortly." });
-      setTransactionId("");
+      toast({ title: "Submitted! ✅", description: "Your request is under review. Admin will approve it shortly." });
       fetchActiveSub();
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -169,21 +165,15 @@ const DoctorSubscription = () => {
                   />
                 </div>
                 <p className="text-xs text-muted-foreground text-center">
-                  Scan the QR code using PhonePe, Google Pay, or any UPI app. After payment, enter your UPI Transaction ID below.
+                  Scan the QR code using PhonePe, Google Pay, or any UPI app and complete the payment.
                 </p>
-                <Input
-                  placeholder="Enter UPI Transaction ID"
-                  value={transactionId}
-                  onChange={(e) => setTransactionId(e.target.value)}
-                  className="rounded-xl"
-                />
                 <Button
                   className="w-full rounded-xl"
                   onClick={handleSubmitPayment}
-                  disabled={!transactionId.trim() || submitting}
+                  disabled={submitting}
                 >
                   <Send className="h-4 w-4 mr-2" />
-                  {submitting ? "Submitting..." : `Submit ₹${plan.price_inr} Payment`}
+                  {submitting ? "Submitting..." : `I have paid ₹${plan.price_inr}, Submit for Approval`}
                 </Button>
               </div>
             </CardContent>
