@@ -12,6 +12,12 @@ import DoctorDashboard from "./pages/DoctorDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import ScanPage from "./pages/ScanPage";
 import ScanResults from "./pages/ScanResults";
+import DentalHome from "./pages/dental/DentalHome";
+import DentalScan from "./pages/dental/DentalScan";
+import DentalResults from "./pages/dental/DentalResults";
+import DentalHistory from "./pages/dental/DentalHistory";
+import DentalStudy from "./pages/dental/DentalStudy";
+import DentalChat from "./pages/dental/DentalChat";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +38,12 @@ const App = () => (
             <Route path="/patient/results" element={<ScanResults />} />
             <Route path="/doctor" element={<DoctorDashboard />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/dental" element={<DentalHome />} />
+            <Route path="/dental/scan" element={<DentalScan />} />
+            <Route path="/dental/results" element={<DentalResults />} />
+            <Route path="/dental/history" element={<DentalHistory />} />
+            <Route path="/dental/study" element={<DentalStudy />} />
+            <Route path="/dental/chat" element={<DentalChat />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
