@@ -184,8 +184,12 @@ const Register = () => {
                 <>
                   <div className="space-y-1.5">
                     <Label>{t("register.license")}</Label>
-                    <Input placeholder="TN-12345 / ML-67890" onChange={(e) => update("license", e.target.value)} required />
-                    <p className="text-xs text-muted-foreground">Format: State code + number (e.g., TN-12345, KA-67890)</p>
+                    <Input placeholder={form.specialization === "dentist" ? "DCI-12345 / TN-D-67890 / SDC-12345" : "TN-12345 / NMC-67890"} onChange={(e) => update("license", e.target.value)} required />
+                    <p className="text-xs text-muted-foreground">
+                      {form.specialization === "dentist" 
+                        ? "Dental formats: DCI-XXXXX, SDC-XXXXX, State-D-Number (e.g., TN-D-12345)" 
+                        : "Medical formats: State-Number (e.g., TN-12345), NMC-XXXXX, MCI-XXXXX"}
+                    </p>
                   </div>
                   <div className="space-y-1.5">
                     <Label>{t("register.doctorId")}</Label>
