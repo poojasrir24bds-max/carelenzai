@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useSubscription } from "@/hooks/useSubscription";
 import LanguageToggle from "@/components/LanguageToggle";
 
 const scanAreas = ["Skin", "Hair", "Eyes", "Nails", "Lips", "Scalp", "Dental"];
