@@ -219,6 +219,21 @@ const DoctorDashboard = () => {
           </p>
         </div>
 
+        {/* Subscription Status Banner */}
+        <Card className="shadow-card border-primary/20 bg-primary/5">
+          <CardContent className="p-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <CreditCard className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium">
+                Consultations: {consultationsRemaining} remaining
+              </span>
+            </div>
+            <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => navigate("/doctor/subscription")}>
+              {consultationsRemaining === 0 ? "Renew" : "Manage"}
+            </Button>
+          </CardContent>
+        </Card>
+
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3">
           {[
