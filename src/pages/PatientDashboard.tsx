@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ScanLine, History, Calendar, User, LogOut, Stethoscope, Bell, MessageSquare, HeartPulse, Video, Crown, Lock } from "lucide-react";
+import { ScanLine, History, Calendar, User, LogOut, Stethoscope, Bell, MessageSquare, HeartPulse, Video, Crown, Lock, MapPin } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -105,7 +105,22 @@ const PatientDashboard = () => {
       const userIds = doctors.map(d => d.user_id);
       const { data: profiles } = await supabase.from("profiles").select("user_id, full_name").in("user_id", userIds);
       const profileMap = Object.fromEntries((profiles || []).map(p => [p.user_id, p.full_name]));
-      setAvailableDoctors(doctors.map(d => ({ ...d, profile_name: profileMap[d.user_id] || "Doctor" })));
+      
+      const enrichedDoctors = doctors.map(d => ({ ...d, profile_name: profileMap[d.user_id] || "Doctor" }));
+      
+      // Sort by proximity: match patient address keywords against doctor address
+      const patientAddress = (profile?.address || "").toLowerCase();
+      const patientWords = patientAddress.split(/[\s,]+/).filter((w: string) => w.length > 2);
+      
+      const scored = enrichedDoctors.map(doc => {
+        const docAddr = (doc.address || "").toLowerCase();
+        const matchCount = patientWords.filter((word: string) => docAddr.includes(word)).length;
+        return { ...doc, locationScore: matchCount, isNearby: matchCount >= 1 && patientWords.length > 0 };
+      });
+      
+      // Sort: nearby first (higher score), then others
+      scored.sort((a, b) => b.locationScore - a.locationScore);
+      setAvailableDoctors(scored);
     } else {
       setAvailableDoctors([]);
     }
@@ -380,7 +395,7 @@ const PatientDashboard = () => {
           ) : (
             <div className="space-y-3">
               {availableDoctors.map((doc: any) => (
-                <Card key={doc.id} className="shadow-card border-border">
+                <Card key={doc.id} className={`shadow-card border-border ${doc.isNearby ? "border-success/30 bg-success/5" : ""}`}>
                   <CardContent className="p-4">
                     <div className="flex items-center gap-3">
                       <div className="bg-primary/10 rounded-full p-2.5">
@@ -394,7 +409,14 @@ const PatientDashboard = () => {
                           <p className="text-xs text-muted-foreground">📍 {doc.address}</p>
                         )}
                       </div>
-                      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-success/20 text-success">✅ {t("patient.verified")}</span>
+                      <div className="flex flex-col items-end gap-1">
+                        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-success/20 text-success">✅ {t("patient.verified")}</span>
+                        {doc.isNearby && (
+                          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-primary/20 text-primary flex items-center gap-1">
+                            <MapPin className="h-3 w-3" /> Near You
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
