@@ -389,7 +389,21 @@ const DoctorDashboard = () => {
                       </div>
                     )}
                     {c.status === "completed" && (
-                      <p className="text-xs text-success mt-2 font-medium">✓ Consultation completed</p>
+                      <div className="mt-3 space-y-2">
+                        <p className="text-xs text-success font-medium">✓ Consultation completed</p>
+                        <div className="bg-accent/30 rounded-lg p-3">
+                          <p className="text-xs font-medium mb-1">Rate this patient:</p>
+                          <RatingStars
+                            consultationId={c.id}
+                            ratedBy={user!.id}
+                            ratedUser={c.patient_id}
+                            existingRating={ratings[c.id]?.rating}
+                            existingReview={ratings[c.id]?.review}
+                            onRated={fetchRatings}
+                          />
+                        </div>
+                      </div>
+                    )}
                     )}
                   </CardContent>
                 </Card>
