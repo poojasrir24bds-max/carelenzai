@@ -143,7 +143,7 @@ const ScanResults = () => {
     setSubmittingDoubt(false);
   };
 
-  const audioRef = React.useRef<HTMLAudioElement | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const splitTextForTTS = (text: string, maxLen = 180): string[] => {
     const sentences = text.split(/(?<=[.!?।,])\s+/);
