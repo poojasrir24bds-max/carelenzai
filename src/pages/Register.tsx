@@ -231,72 +231,8 @@ const Register = () => {
                 <Input placeholder="John Doe" onChange={(e) => update("name", e.target.value)} required />
               </div>
 
-              {/* Email with OTP verification */}
-              <div className="space-y-1.5">
-                <Label className="flex items-center gap-2">
-                  <Mail className="h-4 w-4" /> {t("login.email")} *
-                </Label>
-                <div className="flex gap-2">
-                  <Input 
-                    type="email" 
-                    placeholder="you@example.com" 
-                    onChange={(e) => {
-                      update("email", e.target.value);
-                      setOtpSent(false);
-                      setOtpVerified(false);
-                      setOtpValue("");
-                    }}
-                    disabled={otpVerified}
-                    className="flex-1"
-                    required 
-                  />
-                  {!otpVerified ? (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={handleSendOtp}
-                      disabled={sendingOtp || !form.email}
-                      className="whitespace-nowrap"
-                    >
-                      {sendingOtp ? <Loader2 className="h-4 w-4 animate-spin" /> : otpSent ? "Resend" : "Send OTP"}
-                    </Button>
-                  ) : (
-                    <div className="flex items-center gap-1 text-success px-2">
-                      <CheckCircle className="h-4 w-4" />
-                      <span className="text-xs font-medium">Verified</span>
-                    </div>
-                  )}
-                </div>
-              </div>
 
-              {/* OTP Input */}
-              {otpSent && !otpVerified && (
-                <div className="space-y-2 bg-accent/30 rounded-xl p-3">
-                  <Label className="text-sm">Enter 6-digit OTP sent to your email</Label>
-                  <div className="flex items-center gap-3">
-                    <InputOTP maxLength={6} value={otpValue} onChange={setOtpValue}>
-                      <InputOTPGroup>
-                        <InputOTPSlot index={0} />
-                        <InputOTPSlot index={1} />
-                        <InputOTPSlot index={2} />
-                        <InputOTPSlot index={3} />
-                        <InputOTPSlot index={4} />
-                        <InputOTPSlot index={5} />
-                      </InputOTPGroup>
-                    </InputOTP>
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={handleVerifyOtp}
-                      disabled={verifyingOtp || otpValue.length !== 6}
-                    >
-                      {verifyingOtp ? <Loader2 className="h-4 w-4 animate-spin" /> : "Verify"}
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">OTP expires in 5 minutes</p>
-                </div>
-              )}
+
 
               <div className="space-y-1.5">
                 <Label>{t("login.password")}</Label>
