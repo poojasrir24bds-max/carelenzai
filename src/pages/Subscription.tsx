@@ -1,18 +1,22 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Crown, Zap, ScanLine, Stethoscope, Check, ExternalLink } from "lucide-react";
+import { ArrowLeft, Crown, Zap, ScanLine, Stethoscope, Check, QrCode, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import logo from "@/assets/logo.png";
+import phonepeQr from "@/assets/phonepe-qr.jpeg";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/hooks/useLanguage";
-
-const UPI_ID = "9789887989@ybl";
-const UPI_NAME = "CARELENZ AI";
 
 const planIcons: Record<string, any> = {
   Basic: Zap,
@@ -34,6 +38,8 @@ const Subscription = () => {
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const [txnId, setTxnId] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showQr, setShowQr] = useState(false);
+  const [showTxnInput, setShowTxnInput] = useState(false);
 
   useEffect(() => {
     fetchPlans();
@@ -62,11 +68,16 @@ const Subscription = () => {
     setActiveSub((data as any[])?.[0] || null);
   };
 
-  const handleUpiPay = (plan: any) => {
+  const handleSelectPlan = (plan: any) => {
     setSelectedPlan(plan);
-    const amount = plan.price_inr;
-    const upiUrl = `upi://pay?pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent(UPI_NAME)}&am=${amount}&cu=INR&tn=${encodeURIComponent(`CARELENZ ${plan.name} Plan`)}`;
-    window.open(upiUrl, "_blank");
+    setShowQr(true);
+    setShowTxnInput(false);
+    setTxnId("");
+  };
+
+  const handlePaidDone = () => {
+    setShowQr(false);
+    setShowTxnInput(true);
   };
 
   const handleSubmitTxn = async () => {
@@ -91,6 +102,7 @@ const Subscription = () => {
       toast({ title: t("sub.submitted"), description: t("sub.submittedDesc") });
       setSelectedPlan(null);
       setTxnId("");
+      setShowTxnInput(false);
       fetchActiveSub();
     }
     setSubmitting(false);
@@ -195,9 +207,9 @@ const Subscription = () => {
                     <Button
                       className="w-full rounded-xl"
                       variant={isPremium ? "default" : "outline"}
-                      onClick={() => handleUpiPay(plan)}
+                      onClick={() => handleSelectPlan(plan)}
                     >
-                      <ExternalLink className="h-4 w-4 mr-2" />
+                      <QrCode className="h-4 w-4 mr-2" />
                       {t("sub.payWithUpi")} • ₹{plan.price_inr}
                     </Button>
                   </CardContent>
@@ -208,7 +220,7 @@ const Subscription = () => {
         </div>
 
         {/* Transaction ID Submission */}
-        {selectedPlan && (
+        {showTxnInput && selectedPlan && (
           <Card className="shadow-elevated border-primary/30">
             <CardContent className="p-5 space-y-3">
               <h3 className="font-display font-semibold">{t("sub.confirmPayment")}</h3>
@@ -234,8 +246,32 @@ const Subscription = () => {
             </CardContent>
           </Card>
         )}
-
       </div>
+
+      {/* QR Code Dialog */}
+      <Dialog open={showQr} onOpenChange={setShowQr}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-center font-display">
+              Scan & Pay ₹{selectedPlan?.price_inr}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center space-y-4 py-2">
+            <p className="text-sm text-muted-foreground text-center">
+              Scan the QR code below using any UPI app to pay for <strong>{selectedPlan?.name} Plan</strong>
+            </p>
+            <div className="rounded-xl border-2 border-border overflow-hidden bg-white p-2">
+              <img src={phonepeQr} alt="PhonePe QR Code" className="w-64 h-64 object-contain" />
+            </div>
+            <p className="text-xs text-muted-foreground text-center">
+              Pay exactly <strong>₹{selectedPlan?.price_inr}</strong> to complete your subscription
+            </p>
+            <Button className="w-full rounded-xl" onClick={handlePaidDone}>
+              I've Paid — Enter Transaction ID
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
