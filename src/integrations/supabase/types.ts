@@ -76,6 +76,44 @@ export type Database = {
           },
         ]
       }
+      consultation_ratings: {
+        Row: {
+          consultation_id: string
+          created_at: string
+          id: string
+          rated_by: string
+          rated_user: string
+          rating: number
+          review: string | null
+        }
+        Insert: {
+          consultation_id: string
+          created_at?: string
+          id?: string
+          rated_by: string
+          rated_user: string
+          rating: number
+          review?: string | null
+        }
+        Update: {
+          consultation_id?: string
+          created_at?: string
+          id?: string
+          rated_by?: string
+          rated_user?: string
+          rating?: number
+          review?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consultation_ratings_consultation_id_fkey"
+            columns: ["consultation_id"]
+            isOneToOne: false
+            referencedRelation: "consultations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       consultations: {
         Row: {
           created_at: string
