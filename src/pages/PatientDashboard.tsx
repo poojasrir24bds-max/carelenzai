@@ -250,6 +250,11 @@ const PatientDashboard = () => {
           )}
         </div>
 
+        {/* Medical History Section */}
+        {user && (
+          <MedicalHistoryForm userId={user.id} />
+        )}
+
         <div className="grid grid-cols-3 gap-3 pb-4">
           <button className="bg-card rounded-2xl p-4 shadow-card border border-border text-center hover:shadow-elevated transition-all">
             <Stethoscope className="h-6 w-6 text-primary mx-auto mb-1" />
