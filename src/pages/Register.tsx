@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Eye, EyeOff, Upload, FileCheck, Phone, CheckCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Upload, FileCheck, Phone, Mail, CheckCircle, Loader2 } from "lucide-react";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import logo from "@/assets/logo.png";
 import { useToast } from "@/hooks/use-toast";
@@ -61,23 +61,28 @@ const Register = () => {
   const isValidAadhaar = (num: string) => /^\d{12}$/.test(num.replace(/\s/g, ''));
 
   const handleSendOtp = async () => {
-    const phone = form.phone?.replace(/[\s-]/g, "");
-    if (!phone || phone.length < 10) {
-      toast({ title: "Invalid phone", description: "Enter a valid mobile number (e.g., +91XXXXXXXXXX)", variant: "destructive" });
+    const email = form.email?.trim();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast({ title: "Enter email first", description: "Please enter a valid email address above, then send OTP", variant: "destructive" });
       return;
     }
 
     setSendingOtp(true);
     try {
       const { data, error } = await supabase.functions.invoke("send-otp", {
-        body: { phone },
+        body: { email },
       });
 
       if (error) throw error;
 
       if (data?.success) {
         setOtpSent(true);
-        toast({ title: "OTP Sent! 📱", description: data.debug_otp ? `Test OTP: ${data.debug_otp}` : "Check your phone for the OTP" });
+        toast({ 
+          title: "OTP Sent! 📧", 
+          description: data.debug_otp 
+            ? `Your verification code: ${data.debug_otp}` 
+            : `Check your email ${email} for the OTP`
+        });
       } else {
         throw new Error(data?.error || "Failed to send OTP");
       }
@@ -96,14 +101,14 @@ const Register = () => {
     setVerifyingOtp(true);
     try {
       const { data, error } = await supabase.functions.invoke("verify-otp", {
-        body: { phone: form.phone?.replace(/[\s-]/g, ""), otp: otpValue },
+        body: { email: form.email?.trim(), otp: otpValue },
       });
 
       if (error) throw error;
 
       if (data?.verified) {
         setOtpVerified(true);
-        toast({ title: "✅ Phone verified!" });
+        toast({ title: "✅ Email verified!" });
       } else {
         toast({ title: "Invalid OTP", description: data?.error || "Please try again", variant: "destructive" });
       }
@@ -117,9 +122,9 @@ const Register = () => {
     e.preventDefault();
     setLoading(true);
 
-    // Require phone verification
+    // Require email OTP verification
     if (!otpVerified) {
-      toast({ title: "Phone not verified", description: "Please verify your mobile number with OTP", variant: "destructive" });
+      toast({ title: "Email not verified", description: "Please verify your email with OTP before registering", variant: "destructive" });
       setLoading(false);
       return;
     }
@@ -225,7 +230,7 @@ const Register = () => {
       setTimeout(async () => {
         await supabase.from("profiles").update({
           phone: form.phone.replace(/[\s-]/g, ""),
-          phone_verified: otpVerified,
+          phone_verified: true,
         }).eq("user_id", signUpData.user.id);
       }, 2000);
     }
@@ -264,37 +269,25 @@ const Register = () => {
                 <Label>{t("register.fullName")}</Label>
                 <Input placeholder="John Doe" onChange={(e) => update("name", e.target.value)} required />
               </div>
-              <div className="space-y-1.5">
-                <Label>{t("login.email")}</Label>
-                <Input type="email" placeholder="you@example.com" onChange={(e) => update("email", e.target.value)} required />
-              </div>
-              <div className="space-y-1.5">
-                <Label>{t("login.password")}</Label>
-                <div className="relative">
-                  <Input type={showPassword ? "text" : "password"} placeholder="••••••••" className="pr-10" onChange={(e) => update("password", e.target.value)} required minLength={6} />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </div>
 
-              {/* Mobile Number + OTP */}
+              {/* Email with OTP verification */}
               <div className="space-y-1.5">
                 <Label className="flex items-center gap-2">
-                  <Phone className="h-4 w-4" /> Mobile Number *
+                  <Mail className="h-4 w-4" /> {t("login.email")} *
                 </Label>
                 <div className="flex gap-2">
-                  <Input
-                    placeholder="+91XXXXXXXXXX"
+                  <Input 
+                    type="email" 
+                    placeholder="you@example.com" 
                     onChange={(e) => {
-                      update("phone", e.target.value);
+                      update("email", e.target.value);
                       setOtpSent(false);
                       setOtpVerified(false);
                       setOtpValue("");
                     }}
                     disabled={otpVerified}
                     className="flex-1"
-                    required
+                    required 
                   />
                   {!otpVerified ? (
                     <Button
@@ -302,7 +295,7 @@ const Register = () => {
                       variant="outline"
                       size="sm"
                       onClick={handleSendOtp}
-                      disabled={sendingOtp || !form.phone}
+                      disabled={sendingOtp || !form.email}
                       className="whitespace-nowrap"
                     >
                       {sendingOtp ? <Loader2 className="h-4 w-4 animate-spin" /> : otpSent ? "Resend" : "Send OTP"}
@@ -319,7 +312,7 @@ const Register = () => {
               {/* OTP Input */}
               {otpSent && !otpVerified && (
                 <div className="space-y-2 bg-accent/30 rounded-xl p-3">
-                  <Label className="text-sm">Enter 6-digit OTP</Label>
+                  <Label className="text-sm">Enter 6-digit OTP sent to your email</Label>
                   <div className="flex items-center gap-3">
                     <InputOTP maxLength={6} value={otpValue} onChange={setOtpValue}>
                       <InputOTPGroup>
@@ -343,6 +336,28 @@ const Register = () => {
                   <p className="text-xs text-muted-foreground">OTP expires in 5 minutes</p>
                 </div>
               )}
+
+              <div className="space-y-1.5">
+                <Label>{t("login.password")}</Label>
+                <div className="relative">
+                  <Input type={showPassword ? "text" : "password"} placeholder="••••••••" className="pr-10" onChange={(e) => update("password", e.target.value)} required minLength={6} />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Mobile Number */}
+              <div className="space-y-1.5">
+                <Label className="flex items-center gap-2">
+                  <Phone className="h-4 w-4" /> Mobile Number
+                </Label>
+                <Input
+                  placeholder="+91XXXXXXXXXX"
+                  onChange={(e) => update("phone", e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">Optional - for contact purposes</p>
+              </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
@@ -395,7 +410,6 @@ const Register = () => {
                     <Input placeholder="City Medical Center" onChange={(e) => update("hospital", e.target.value)} required />
                   </div>
 
-                  {/* License Document Upload */}
                   <div className="space-y-1.5">
                     <Label className="flex items-center gap-2">
                       <FileCheck className="h-4 w-4" />

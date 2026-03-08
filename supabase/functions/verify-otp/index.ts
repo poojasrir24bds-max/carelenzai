@@ -11,10 +11,10 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { phone, otp } = await req.json();
+    const { email, otp } = await req.json();
 
-    if (!phone || !otp) {
-      return new Response(JSON.stringify({ error: "Phone and OTP required" }), {
+    if (!email || !otp) {
+      return new Response(JSON.stringify({ error: "Email and OTP required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -24,13 +24,11 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const cleanPhone = phone.replace(/\s/g, "");
-
-    // Find valid OTP
+    // Find valid OTP (phone column stores email)
     const { data: otpRecord } = await supabase
       .from("phone_otp")
       .select("*")
-      .eq("phone", cleanPhone)
+      .eq("phone", email)
       .eq("otp_code", otp)
       .eq("verified", false)
       .gte("expires_at", new Date().toISOString())
@@ -49,7 +47,7 @@ Deno.serve(async (req) => {
     await supabase.from("phone_otp").update({ verified: true }).eq("id", otpRecord.id);
 
     return new Response(
-      JSON.stringify({ verified: true, message: "Phone verified successfully" }),
+      JSON.stringify({ verified: true, message: "Email verified successfully" }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
