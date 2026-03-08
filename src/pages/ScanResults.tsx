@@ -151,7 +151,21 @@ const ScanResults = () => {
     const text = `${displayCondition}. ${displayDefinition}. ${displayGuidance.join(". ")}`;
 
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = lang === "en" ? "en-US" : "ta-IN";
+    const targetLang = lang === "en" ? "en" : "ta";
+    utterance.lang = targetLang === "en" ? "en-US" : "ta-IN";
+    
+    // Try to find a matching voice for the language
+    const voices = window.speechSynthesis.getVoices();
+    const matchingVoice = voices.find(v => v.lang.startsWith(targetLang)) 
+      || voices.find(v => v.lang.toLowerCase().includes(targetLang));
+    if (matchingVoice) {
+      utterance.voice = matchingVoice;
+    } else if (targetLang === "ta") {
+      // No Tamil voice available - still speak the Tamil text with default voice
+      console.warn("No Tamil voice found, using default voice for Tamil text");
+    }
+    
+    utterance.rate = 0.9;
     utterance.onstart = () => setIsSpeaking(true);
     utterance.onend = () => setIsSpeaking(false);
     utterance.onpause = () => setIsSpeaking(false);
