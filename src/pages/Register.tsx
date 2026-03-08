@@ -564,6 +564,11 @@ const Register = () => {
                       <Label className="text-xs">Current Medications (if any)</Label>
                       <Input placeholder="e.g., Metformin, Amlodipine..." onChange={(e) => update("medications", e.target.value)} className="h-8 text-xs" />
                     </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Other Medical Conditions</Label>
+                      <Input placeholder="e.g., PCOD, Arthritis, Migraine..." onChange={(e) => update("other_conditions", e.target.value)} className="h-8 text-xs" />
+                      <p className="text-xs text-muted-foreground">Type any conditions not listed above</p>
+                    </div>
                   </div>
                 </>
               )}
