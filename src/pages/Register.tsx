@@ -273,7 +273,7 @@ const Register = () => {
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div className="flex items-center gap-2">
-            <img src={logo} alt="HealthScan AI" className="h-7 w-7" />
+            <img src={logo} alt="CARELENZ AI" className="h-7 w-7" />
             <span className="font-display font-bold text-primary-foreground">{t("app.name")}</span>
           </div>
         </div>

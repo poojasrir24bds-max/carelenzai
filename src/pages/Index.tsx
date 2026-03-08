@@ -26,7 +26,7 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <header className="gradient-header px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <img src={logo} alt="HealthScan AI" className="h-8 w-8" />
+          <img src={logo} alt="CARELENZ AI" className="h-8 w-8" />
           <span className="font-display font-bold text-lg text-primary-foreground">{t("app.name")}</span>
         </div>
         <LanguageToggle variant="header" />
