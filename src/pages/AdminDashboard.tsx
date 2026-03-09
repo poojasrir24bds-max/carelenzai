@@ -27,7 +27,7 @@ const AdminDashboard = () => {
   const [pendingPatients, setPendingPatients] = useState<any[]>([]);
   const [patientScans, setPatientScans] = useState<Record<string, number>>({});
   const [patientSubs, setPatientSubs] = useState<Record<string, any>>({});
-  const [stats, setStats] = useState({ users: 0, doctors: 0, patients: 0, scans: 0, revenue: 0, pendingPatients: 0 });
+  const [stats, setStats] = useState({ users: 0, doctors: 0, patients: 0, scans: 0, revenue: 0, pendingPatients: 0, subscribedPatients: 0 });
   const [recordings, setRecordings] = useState<any[]>([]);
   const [subscriptions, setSubscriptions] = useState<any[]>([]);
   const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
@@ -119,6 +119,9 @@ const AdminDashboard = () => {
        .not("approved_at", "is", null);
      const totalRevenue = (revenueSubs || []).filter((s: any) => !adminUserIds.includes(s.user_id)).reduce((sum: number, s: any) => sum + ((s.subscription_plans as any)?.price_inr || 0), 0);
 
+    // Count subscribed patients (active subs, excluding admins)
+    const subscribedPatientCount = (revenueSubs || []).filter((s: any) => !adminUserIds.includes(s.user_id)).length;
+
     setStats({
       users: userCount || 0,
       doctors: doctorCount || 0,
@@ -126,6 +129,7 @@ const AdminDashboard = () => {
       scans: (scanCount || 0) + (dentalScanCount || 0),
       revenue: totalRevenue,
       pendingPatients: pendingPats.length,
+      subscribedPatients: subscribedPatientCount,
     });
 
     // Fetch scan counts per patient
@@ -136,13 +140,14 @@ const AdminDashboard = () => {
     (allDentalScans || []).forEach((s: any) => { scanCounts[s.user_id] = (scanCounts[s.user_id] || 0) + 1; });
     setPatientScans(scanCounts);
 
-    // Fetch active subscriptions per patient
+    // Fetch active & pending subscriptions per patient
     const { data: allSubs } = await supabase
       .from("user_subscriptions")
       .select("*, subscription_plans(name, scan_limit, doctor_consultations)")
-      .eq("status", "active");
+      .in("status", ["active", "pending"])
+      .order("created_at", { ascending: false });
     const subMap: Record<string, any> = {};
-    (allSubs || []).forEach((s: any) => { subMap[s.user_id] = s; });
+    (allSubs || []).forEach((s: any) => { if (!subMap[s.user_id]) subMap[s.user_id] = s; });
     setPatientSubs(subMap);
   };
 
@@ -405,10 +410,11 @@ const AdminDashboard = () => {
         <h1 className="font-display text-2xl font-bold">Admin Dashboard 🛡️</h1>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
           {[
             { icon: Users, label: "Total Users", value: String(stats.users), color: "text-primary" },
             { icon: Users, label: "Patients", value: String(stats.patients), color: "text-accent-foreground" },
+            { icon: CreditCard, label: "Subscribed", value: String(stats.subscribedPatients), color: "text-success" },
             { icon: Stethoscope, label: "Doctors", value: String(stats.doctors), color: "text-secondary" },
             { icon: ScanLine, label: "Total Scans", value: String(stats.scans), color: "text-warning" },
             { icon: DollarSign, label: "Revenue", value: `₹${stats.revenue}`, color: "text-success" },
@@ -604,14 +610,19 @@ const AdminDashboard = () => {
                         <p className="text-xs text-muted-foreground">📅 Joined: {new Date(pat.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</p>
                         <p className="text-xs text-muted-foreground">🔬 Total Scans: {patientScans[pat.user_id] || 0}</p>
                         {patientSubs[pat.user_id] ? (
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-success/20 text-success">
-                              ✅ {patientSubs[pat.user_id].subscription_plans?.name} Plan
+                          <div className="flex items-center gap-2 mt-1 flex-wrap">
+                            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                              patientSubs[pat.user_id].status === 'active' ? 'bg-success/20 text-success' : 'bg-warning/20 text-warning'
+                            }`}>
+                              {patientSubs[pat.user_id].status === 'active' ? '✅' : '⏳'} {patientSubs[pat.user_id].subscription_plans?.name} Plan
+                              {patientSubs[pat.user_id].status === 'pending' ? ' (Pending)' : ''}
                             </span>
-                            <span className="text-xs text-muted-foreground">
-                              Scans: {patientSubs[pat.user_id].scans_used}/{patientSubs[pat.user_id].subscription_plans?.scan_limit} • 
-                              Consults: {patientSubs[pat.user_id].consultations_used}/{patientSubs[pat.user_id].subscription_plans?.doctor_consultations}
-                            </span>
+                            {patientSubs[pat.user_id].status === 'active' && (
+                              <span className="text-xs text-muted-foreground">
+                                Scans: {patientSubs[pat.user_id].scans_used}/{patientSubs[pat.user_id].subscription_plans?.scan_limit} • 
+                                Consults: {patientSubs[pat.user_id].consultations_used}/{patientSubs[pat.user_id].subscription_plans?.doctor_consultations}
+                              </span>
+                            )}
                           </div>
                         ) : (
                           <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground mt-1 inline-block">No Subscription</span>
