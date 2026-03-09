@@ -410,7 +410,7 @@ const AdminDashboard = () => {
         <h1 className="font-display text-2xl font-bold">Admin Dashboard 🛡️</h1>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
           {[
             { icon: Users, label: "Total Users", value: String(stats.users), color: "text-primary" },
             { icon: Users, label: "Patients", value: String(stats.patients), color: "text-accent-foreground" },
