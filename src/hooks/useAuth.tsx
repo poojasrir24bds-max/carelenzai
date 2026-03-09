@@ -110,17 +110,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Role is now auto-assigned by database trigger via user metadata
       // No need to insert into user_roles here
 
-      // If doctor, create doctor profile
-      if (userRole === "doctor" && metadata.license) {
-        await supabase.from("doctor_profiles").insert({
-          user_id: data.user.id,
-          medical_license: metadata.license,
-          doctor_id: metadata.doctorId,
-          specialization: metadata.specialization,
-          hospital_name: metadata.hospital,
-          address: metadata.address || null,
-        });
-      }
+      // Doctor profile is now auto-created by database trigger via user metadata
+      // No need to insert into doctor_profiles here
 
       setRole(userRole);
     }
