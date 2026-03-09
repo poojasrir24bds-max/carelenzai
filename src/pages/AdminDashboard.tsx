@@ -119,6 +119,9 @@ const AdminDashboard = () => {
        .not("approved_at", "is", null);
      const totalRevenue = (revenueSubs || []).filter((s: any) => !adminUserIds.includes(s.user_id)).reduce((sum: number, s: any) => sum + ((s.subscription_plans as any)?.price_inr || 0), 0);
 
+    // Count subscribed patients (active subs, excluding admins)
+    const subscribedPatientCount = (revenueSubs || []).filter((s: any) => !adminUserIds.includes(s.user_id)).length;
+
     setStats({
       users: userCount || 0,
       doctors: doctorCount || 0,
@@ -126,6 +129,7 @@ const AdminDashboard = () => {
       scans: (scanCount || 0) + (dentalScanCount || 0),
       revenue: totalRevenue,
       pendingPatients: pendingPats.length,
+      subscribedPatients: subscribedPatientCount,
     });
 
     // Fetch scan counts per patient
