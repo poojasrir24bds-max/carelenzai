@@ -136,13 +136,14 @@ const AdminDashboard = () => {
     (allDentalScans || []).forEach((s: any) => { scanCounts[s.user_id] = (scanCounts[s.user_id] || 0) + 1; });
     setPatientScans(scanCounts);
 
-    // Fetch active subscriptions per patient
+    // Fetch active & pending subscriptions per patient
     const { data: allSubs } = await supabase
       .from("user_subscriptions")
       .select("*, subscription_plans(name, scan_limit, doctor_consultations)")
-      .eq("status", "active");
+      .in("status", ["active", "pending"])
+      .order("created_at", { ascending: false });
     const subMap: Record<string, any> = {};
-    (allSubs || []).forEach((s: any) => { subMap[s.user_id] = s; });
+    (allSubs || []).forEach((s: any) => { if (!subMap[s.user_id]) subMap[s.user_id] = s; });
     setPatientSubs(subMap);
   };
 
