@@ -610,14 +610,19 @@ const AdminDashboard = () => {
                         <p className="text-xs text-muted-foreground">📅 Joined: {new Date(pat.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</p>
                         <p className="text-xs text-muted-foreground">🔬 Total Scans: {patientScans[pat.user_id] || 0}</p>
                         {patientSubs[pat.user_id] ? (
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-success/20 text-success">
-                              ✅ {patientSubs[pat.user_id].subscription_plans?.name} Plan
+                          <div className="flex items-center gap-2 mt-1 flex-wrap">
+                            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                              patientSubs[pat.user_id].status === 'active' ? 'bg-success/20 text-success' : 'bg-warning/20 text-warning'
+                            }`}>
+                              {patientSubs[pat.user_id].status === 'active' ? '✅' : '⏳'} {patientSubs[pat.user_id].subscription_plans?.name} Plan
+                              {patientSubs[pat.user_id].status === 'pending' ? ' (Pending)' : ''}
                             </span>
-                            <span className="text-xs text-muted-foreground">
-                              Scans: {patientSubs[pat.user_id].scans_used}/{patientSubs[pat.user_id].subscription_plans?.scan_limit} • 
-                              Consults: {patientSubs[pat.user_id].consultations_used}/{patientSubs[pat.user_id].subscription_plans?.doctor_consultations}
-                            </span>
+                            {patientSubs[pat.user_id].status === 'active' && (
+                              <span className="text-xs text-muted-foreground">
+                                Scans: {patientSubs[pat.user_id].scans_used}/{patientSubs[pat.user_id].subscription_plans?.scan_limit} • 
+                                Consults: {patientSubs[pat.user_id].consultations_used}/{patientSubs[pat.user_id].subscription_plans?.doctor_consultations}
+                              </span>
+                            )}
                           </div>
                         ) : (
                           <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground mt-1 inline-block">No Subscription</span>
