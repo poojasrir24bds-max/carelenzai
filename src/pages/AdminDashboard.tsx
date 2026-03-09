@@ -107,8 +107,11 @@ const AdminDashboard = () => {
     const { count: scanCount } = await supabase.from("scans").select("*", { count: "exact", head: true });
     const { count: dentalScanCount } = await supabase.from("dental_scans").select("*", { count: "exact", head: true });
 
-    // Count patients (users with patient role)
-    const patientCount = (roles || []).filter((r: any) => r.role === 'patient').length;
+    // Count patients: users with 'patient' role OR users with no role (not doctor/admin/moderator)
+    const doctorUserIds = (roles || []).filter((r: any) => r.role === 'doctor').map((r: any) => r.user_id);
+    const adminModUserIds = (roles || []).filter((r: any) => r.role === 'admin' || r.role === 'moderator').map((r: any) => r.user_id);
+    const nonPatientUserIds = new Set([...doctorUserIds, ...adminModUserIds]);
+    const patientCount = (enrichedProfiles || []).filter((p: any) => !nonPatientUserIds.has(p.user_id)).length;
 
      // Revenue only from admin-approved subscriptions (approved_at is set), excluding admin users
      const adminUserIds = (roles || []).filter((r: any) => r.role === 'admin').map((r: any) => r.user_id);
