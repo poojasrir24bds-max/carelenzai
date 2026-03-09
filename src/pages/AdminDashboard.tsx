@@ -103,7 +103,7 @@ const AdminDashboard = () => {
     setAllDoctorProfiles(enrichedAllDocs);
 
     const { count: userCount } = await supabase.from("profiles").select("*", { count: "exact", head: true });
-    const { count: doctorCount } = await supabase.from("doctor_profiles").select("*", { count: "exact", head: true });
+    const doctorCount = (roles || []).filter((r: any) => r.role === 'doctor').length;
     const { count: scanCount } = await supabase.from("scans").select("*", { count: "exact", head: true });
     const { count: dentalScanCount } = await supabase.from("dental_scans").select("*", { count: "exact", head: true });
 
