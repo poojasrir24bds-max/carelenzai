@@ -414,6 +414,7 @@ const AdminDashboard = () => {
           {[
             { icon: Users, label: "Total Users", value: String(stats.users), color: "text-primary" },
             { icon: Users, label: "Patients", value: String(stats.patients), color: "text-accent-foreground" },
+            { icon: CreditCard, label: "Subscribed", value: String(stats.subscribedPatients), color: "text-success" },
             { icon: Stethoscope, label: "Doctors", value: String(stats.doctors), color: "text-secondary" },
             { icon: ScanLine, label: "Total Scans", value: String(stats.scans), color: "text-warning" },
             { icon: DollarSign, label: "Revenue", value: `₹${stats.revenue}`, color: "text-success" },
