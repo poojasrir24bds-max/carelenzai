@@ -96,9 +96,26 @@ const AdminDashboard = () => {
     setPendingDoctors(enrichedDoctors);
 
     const { data: allDocs } = await supabase.from("doctor_profiles").select("*");
-    const enrichedAllDocs = (allDocs || []).map((doc) => {
-      const profile = enrichedProfiles.find((p: any) => p.user_id === doc.user_id);
-      return { ...doc, profiles: profile };
+    // Build doctor list from user_roles (role='doctor') enriched with profiles and doctor_profiles
+    const doctorRoleUserIds = (roles || []).filter((r: any) => r.role === 'doctor').map((r: any) => r.user_id);
+    const enrichedAllDocs = doctorRoleUserIds.map((userId: string) => {
+      const profile = enrichedProfiles.find((p: any) => p.user_id === userId);
+      const docProfile = (allDocs || []).find((d: any) => d.user_id === userId);
+      return {
+        id: docProfile?.id || userId,
+        user_id: userId,
+        profiles: profile,
+        hospital_name: docProfile?.hospital_name || 'N/A',
+        specialization: docProfile?.specialization || 'N/A',
+        medical_license: docProfile?.medical_license || 'N/A',
+        doctor_id: docProfile?.doctor_id || 'N/A',
+        is_verified: docProfile?.is_verified || false,
+        license_verification_status: docProfile?.license_verification_status || 'pending',
+        license_document_url: docProfile?.license_document_url || null,
+        address: docProfile?.address || profile?.address || null,
+        verified_at: docProfile?.verified_at || null,
+        created_at: docProfile?.created_at || profile?.created_at || new Date().toISOString(),
+      };
     });
     setAllDoctorProfiles(enrichedAllDocs);
 
