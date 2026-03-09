@@ -85,7 +85,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: metadata.full_name, ...metadata } },
+      options: { data: { full_name: metadata.full_name, role: userRole, ...metadata } },
     });
 
     if (error) return { error };
@@ -107,8 +107,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         address: metadata.address || null,
       }).eq("user_id", data.user.id);
 
-      // Assign role
-      await supabase.from("user_roles").insert([{ user_id: data.user.id, role: userRole as "admin" | "doctor" | "moderator" | "patient" }]);
+      // Role is now auto-assigned by database trigger via user metadata
+      // No need to insert into user_roles here
 
       // If doctor, create doctor profile
       if (userRole === "doctor" && metadata.license) {
