@@ -27,11 +27,7 @@ const DentalScan = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [scanning, setScanning] = useState(false);
 
-  useEffect(() => {
-    if (!subLoading && !hasActiveSubscription) {
-      navigate("/subscription");
-    }
-  }, [subLoading, hasActiveSubscription, navigate]);
+  // Subscription check moved to handleScan - allow upload without subscription
 
   const currentCategory = categories.find((c) => c.id === activeCategory)!;
   const isDental = activeCategory === "dental";
