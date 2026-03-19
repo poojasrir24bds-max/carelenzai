@@ -1,11 +1,12 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Volume2, VolumeX, AlertTriangle, CheckCircle, Info, Globe, Loader2 } from "lucide-react";
+import { ArrowLeft, Volume2, VolumeX, AlertTriangle, CheckCircle, Info, Globe, Loader2, Lock } from "lucide-react";
 import DentalBottomNav from "@/components/dental/BottomNav";
 import logo from "@/assets/logo.png";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useSubscription } from "@/hooks/useSubscription";
 
 const severityConfig: Record<string, { color: string; icon: any; label: string; labelTa: string }> = {
   normal: { color: "bg-success/20 text-success", icon: CheckCircle, label: "Normal", labelTa: "இயல்பு" },
