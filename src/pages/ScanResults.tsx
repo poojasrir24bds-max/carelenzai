@@ -20,6 +20,7 @@ const ScanResults = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { t, lang } = useLanguage();
+  const { hasActiveSubscription, loading: subLoading } = useSubscription();
   const result = location.state?.result;
   const scanId = location.state?.scanId;
   const [doctors, setDoctors] = useState<any[]>([]);

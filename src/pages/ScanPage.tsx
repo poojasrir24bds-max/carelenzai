@@ -51,11 +51,6 @@ const ScanPage = () => {
 
   const handleScan = async () => {
     if (!selectedFile || !user) return;
-    if (!hasActiveSubscription || scansRemaining <= 0) {
-      toast({ title: "Subscription required", description: "Please subscribe to a plan to analyze your scan.", variant: "destructive" });
-      navigate("/subscription");
-      return;
-    }
     setScanning(true);
 
     try {
