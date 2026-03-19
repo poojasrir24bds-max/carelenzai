@@ -2,13 +2,14 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, AlertTriangle, CheckCircle, ShieldAlert, Stethoscope, Droplets, Salad, Heart, Sparkles, Volume2, Pause, Square, MessageSquare } from "lucide-react";
+import { ArrowLeft, AlertTriangle, CheckCircle, ShieldAlert, Stethoscope, Droplets, Salad, Heart, Sparkles, Volume2, Pause, Square, MessageSquare, Lock } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useSubscription } from "@/hooks/useSubscription";
 import LanguageToggle from "@/components/LanguageToggle";
 
 const guidanceIcons = [Droplets, Salad, Heart, Sparkles];
@@ -19,6 +20,7 @@ const ScanResults = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { t, lang } = useLanguage();
+  const { hasActiveSubscription, loading: subLoading } = useSubscription();
   const result = location.state?.result;
   const scanId = location.state?.scanId;
   const [doctors, setDoctors] = useState<any[]>([]);
@@ -288,6 +290,27 @@ const ScanResults = () => {
       </header>
 
       <div className="flex-1 container py-6 space-y-5">
+        {/* Subscription Wall */}
+        {!subLoading && !hasActiveSubscription && (
+          <Card className="border-warning shadow-elevated">
+            <CardContent className="p-6 text-center space-y-3">
+              <Lock className="h-10 w-10 text-warning mx-auto" />
+              <h3 className="font-display font-bold text-lg">Subscribe to View Results</h3>
+              <p className="text-sm text-muted-foreground">
+                Your scan is complete! Subscribe to a plan to unlock your detailed analysis, causes, and guidance.
+              </p>
+              <Button className="w-full rounded-xl h-12 text-base font-semibold" onClick={() => navigate("/subscription")}>
+                View Subscription Plans
+              </Button>
+              <Button variant="outline" className="w-full rounded-xl" onClick={() => navigate("/patient")}>
+                Back to Dashboard
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {(hasActiveSubscription || subLoading) && (
+        <>
         {translating && (
           <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -450,6 +473,8 @@ const ScanResults = () => {
         )}
 
         <p className="text-xs text-muted-foreground text-center pb-4">{t("results.disclaimer")}</p>
+        </>
+        )}
       </div>
     </div>
   );
