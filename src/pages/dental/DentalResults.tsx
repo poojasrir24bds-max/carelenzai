@@ -249,6 +249,27 @@ const DentalResults = () => {
       </header>
 
       <div className="flex-1 container py-5 space-y-4">
+        {/* Subscription Wall */}
+        {!subLoading && !hasActiveSubscription && (
+          <Card className="border-warning shadow-elevated">
+            <CardContent className="p-6 text-center space-y-3">
+              <Lock className="h-10 w-10 text-warning mx-auto" />
+              <h3 className="font-display font-bold text-lg">Subscribe to View Results</h3>
+              <p className="text-sm text-muted-foreground">
+                Your scan is complete! Subscribe to a plan to unlock your detailed analysis and recommendations.
+              </p>
+              <Button className="w-full rounded-xl h-12 text-base font-semibold" onClick={() => navigate("/subscription")}>
+                View Subscription Plans
+              </Button>
+              <Button variant="outline" className="w-full rounded-xl" onClick={() => navigate("/dental")}>
+                Back to Dashboard
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {(hasActiveSubscription || subLoading) && (
+        <>
         {/* Language Toggle */}
         <div className="flex items-center justify-center gap-2">
           <Globe className="h-4 w-4 text-muted-foreground" />
