@@ -437,6 +437,8 @@ const DentalResults = () => {
         <Button className="w-full rounded-xl h-12" onClick={() => navigate("/dental/scan")}>
           {labels.scanAnother}
         </Button>
+        </>
+        )}
       </div>
 
       <DentalBottomNav />
