@@ -239,6 +239,51 @@ const AdminDashboard = () => {
     }
   };
 
+  const fetchRatings = async () => {
+    const { data: cRatings } = await supabase
+      .from("consultation_ratings")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    const { data: aRatings } = await supabase
+      .from("app_ratings")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    const allUserIds = [
+      ...new Set([
+        ...(cRatings || []).flatMap((r: any) => [r.rated_by, r.rated_user]),
+        ...(aRatings || []).map((r: any) => r.user_id),
+      ]),
+    ];
+
+    if (allUserIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, full_name")
+        .in("user_id", allUserIds);
+      const profileMap = Object.fromEntries(
+        (profiles || []).map((p) => [p.user_id, p.full_name])
+      );
+      setConsultationRatings(
+        (cRatings || []).map((r: any) => ({
+          ...r,
+          rated_by_name: profileMap[r.rated_by] || "Unknown",
+          rated_user_name: profileMap[r.rated_user] || "Unknown",
+        }))
+      );
+      setAppRatings(
+        (aRatings || []).map((r: any) => ({
+          ...r,
+          user_name: profileMap[r.user_id] || "Unknown",
+        }))
+      );
+    } else {
+      setConsultationRatings([]);
+      setAppRatings([]);
+    }
+  };
+
   const handleApproveSub = async (subId: string) => {
     const { error } = await supabase
       .from("user_subscriptions" as any)
