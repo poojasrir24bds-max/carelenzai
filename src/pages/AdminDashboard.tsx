@@ -707,6 +707,75 @@ const AdminDashboard = () => {
             )}
           </TabsContent>
 
+          {/* Reviews Tab */}
+          <TabsContent value="reviews" className="mt-4 space-y-4">
+            <Card className="shadow-card border-border">
+              <CardContent className="p-4">
+                <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                  <Star className="h-4 w-4 text-warning" /> Consultation Ratings ({consultationRatings.length})
+                </h3>
+                {consultationRatings.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No consultation ratings yet.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {consultationRatings.map((r: any) => (
+                      <div key={r.id} className="border-b border-border pb-3 last:border-0 last:pb-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <div>
+                            <p className="text-sm font-medium">{r.rated_by_name} → {r.rated_user_name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              📅 {new Date(r.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star key={star} className={`h-3.5 w-3.5 ${r.rating >= star ? "text-warning fill-warning" : "text-muted-foreground/30"}`} />
+                            ))}
+                            <span className="text-xs text-muted-foreground ml-1">{r.rating}/5</span>
+                          </div>
+                        </div>
+                        {r.review && <p className="text-xs text-muted-foreground italic ml-1">"{r.review}"</p>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-card border-border">
+              <CardContent className="p-4">
+                <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4 text-primary" /> App Ratings ({appRatings.length})
+                </h3>
+                {appRatings.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No app ratings yet.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {appRatings.map((r: any) => (
+                      <div key={r.id} className="border-b border-border pb-3 last:border-0 last:pb-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <div>
+                            <p className="text-sm font-medium">{r.user_name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              📅 {new Date(r.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star key={star} className={`h-3.5 w-3.5 ${r.rating >= star ? "text-warning fill-warning" : "text-muted-foreground/30"}`} />
+                            ))}
+                            <span className="text-xs text-muted-foreground ml-1">{r.rating}/5</span>
+                          </div>
+                        </div>
+                        {r.review && <p className="text-xs text-muted-foreground italic ml-1">"{r.review}"</p>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           {/* Recordings Tab */}
           <TabsContent value="recordings" className="mt-4 space-y-3">
             <Card className="shadow-card border-border">
