@@ -38,6 +38,7 @@ const DentalResults = () => {
   const navigate = useNavigate();
   const result = location.state?.result;
   const scanMode = location.state?.scanMode || "dental";
+  const { hasActiveSubscription, loading: subLoading } = useSubscription();
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [lang, setLang] = useState<"en" | "ta">("en");
   const [translating, setTranslating] = useState(false);
