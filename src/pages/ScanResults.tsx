@@ -473,6 +473,8 @@ const ScanResults = () => {
         )}
 
         <p className="text-xs text-muted-foreground text-center pb-4">{t("results.disclaimer")}</p>
+        </>
+        )}
       </div>
     </div>
   );
