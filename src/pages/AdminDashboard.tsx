@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { LogOut, Users, Stethoscope, ScanLine, DollarSign, CheckCircle, XCircle, BarChart3, Shield, Settings, FileCheck, AlertTriangle, Eye, Loader2, CreditCard, Video, Play, Download, Trash2 } from "lucide-react";
+import { LogOut, Users, Stethoscope, ScanLine, DollarSign, CheckCircle, XCircle, BarChart3, Shield, Settings, FileCheck, AlertTriangle, Eye, Loader2, CreditCard, Video, Play, Download, Trash2, Star, MessageSquare } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,6 +30,8 @@ const AdminDashboard = () => {
   const [stats, setStats] = useState({ users: 0, doctors: 0, patients: 0, scans: 0, revenue: 0, pendingPatients: 0, subscribedPatients: 0 });
   const [recordings, setRecordings] = useState<any[]>([]);
   const [subscriptions, setSubscriptions] = useState<any[]>([]);
+  const [consultationRatings, setConsultationRatings] = useState<any[]>([]);
+  const [appRatings, setAppRatings] = useState<any[]>([]);
   const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [verifying, setVerifying] = useState(false);
@@ -41,6 +43,7 @@ const AdminDashboard = () => {
     fetchData();
     fetchRecordings();
     fetchSubscriptions();
+    fetchRatings();
 
     // Realtime: auto-refresh stats when users/roles/subscriptions change
     const channel = supabase
@@ -233,6 +236,51 @@ const AdminDashboard = () => {
       })));
     } else {
       setSubscriptions([]);
+    }
+  };
+
+  const fetchRatings = async () => {
+    const { data: cRatings } = await supabase
+      .from("consultation_ratings")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    const { data: aRatings } = await supabase
+      .from("app_ratings")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    const allUserIds = [
+      ...new Set([
+        ...(cRatings || []).flatMap((r: any) => [r.rated_by, r.rated_user]),
+        ...(aRatings || []).map((r: any) => r.user_id),
+      ]),
+    ];
+
+    if (allUserIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, full_name")
+        .in("user_id", allUserIds);
+      const profileMap = Object.fromEntries(
+        (profiles || []).map((p) => [p.user_id, p.full_name])
+      );
+      setConsultationRatings(
+        (cRatings || []).map((r: any) => ({
+          ...r,
+          rated_by_name: profileMap[r.rated_by] || "Unknown",
+          rated_user_name: profileMap[r.rated_user] || "Unknown",
+        }))
+      );
+      setAppRatings(
+        (aRatings || []).map((r: any) => ({
+          ...r,
+          user_name: profileMap[r.user_id] || "Unknown",
+        }))
+      );
+    } else {
+      setConsultationRatings([]);
+      setAppRatings([]);
     }
   };
 
@@ -451,11 +499,12 @@ const AdminDashboard = () => {
 
         {/* Tabs */}
         <Tabs value={tab} onValueChange={setTab}>
-          <TabsList className="w-full grid grid-cols-6">
+          <TabsList className="w-full grid grid-cols-7">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="doctors">Doctors</TabsTrigger>
             <TabsTrigger value="patients">Patients</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
+            <TabsTrigger value="reviews">Reviews</TabsTrigger>
             <TabsTrigger value="recordings">Recordings</TabsTrigger>
             <TabsTrigger value="payments">Payments</TabsTrigger>
           </TabsList>
@@ -701,6 +750,75 @@ const AdminDashboard = () => {
                 </Card>
               ))
             )}
+          </TabsContent>
+
+          {/* Reviews Tab */}
+          <TabsContent value="reviews" className="mt-4 space-y-4">
+            <Card className="shadow-card border-border">
+              <CardContent className="p-4">
+                <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                  <Star className="h-4 w-4 text-warning" /> Consultation Ratings ({consultationRatings.length})
+                </h3>
+                {consultationRatings.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No consultation ratings yet.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {consultationRatings.map((r: any) => (
+                      <div key={r.id} className="border-b border-border pb-3 last:border-0 last:pb-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <div>
+                            <p className="text-sm font-medium">{r.rated_by_name} → {r.rated_user_name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              📅 {new Date(r.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star key={star} className={`h-3.5 w-3.5 ${r.rating >= star ? "text-warning fill-warning" : "text-muted-foreground/30"}`} />
+                            ))}
+                            <span className="text-xs text-muted-foreground ml-1">{r.rating}/5</span>
+                          </div>
+                        </div>
+                        {r.review && <p className="text-xs text-muted-foreground italic ml-1">"{r.review}"</p>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-card border-border">
+              <CardContent className="p-4">
+                <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4 text-primary" /> App Ratings ({appRatings.length})
+                </h3>
+                {appRatings.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No app ratings yet.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {appRatings.map((r: any) => (
+                      <div key={r.id} className="border-b border-border pb-3 last:border-0 last:pb-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <div>
+                            <p className="text-sm font-medium">{r.user_name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              📅 {new Date(r.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star key={star} className={`h-3.5 w-3.5 ${r.rating >= star ? "text-warning fill-warning" : "text-muted-foreground/30"}`} />
+                            ))}
+                            <span className="text-xs text-muted-foreground ml-1">{r.rating}/5</span>
+                          </div>
+                        </div>
+                        {r.review && <p className="text-xs text-muted-foreground italic ml-1">"{r.review}"</p>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Recordings Tab */}
