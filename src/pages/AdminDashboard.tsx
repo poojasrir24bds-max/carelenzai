@@ -43,6 +43,7 @@ const AdminDashboard = () => {
     fetchData();
     fetchRecordings();
     fetchSubscriptions();
+    fetchRatings();
 
     // Realtime: auto-refresh stats when users/roles/subscriptions change
     const channel = supabase
