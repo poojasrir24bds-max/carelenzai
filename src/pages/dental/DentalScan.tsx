@@ -50,6 +50,27 @@ const DentalScan = () => {
 
   const handleScan = async () => {
     if (!selectedFile || !user) return;
+
+    // Check subscription before running AI analysis
+    if (!hasActiveSubscription) {
+      toast({
+        title: "Subscription Required",
+        description: "Subscribe to a plan to unlock AI analysis results.",
+      });
+      navigate("/subscription");
+      return;
+    }
+
+    if (scansRemaining <= 0) {
+      toast({
+        title: "Scan limit reached",
+        description: "You have used all your scans. Please upgrade your plan.",
+        variant: "destructive",
+      });
+      navigate("/subscription");
+      return;
+    }
+
     setScanning(true);
 
     try {
