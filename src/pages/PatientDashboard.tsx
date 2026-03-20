@@ -304,9 +304,9 @@ const PatientDashboard = () => {
           <h2 className="font-display font-semibold text-lg mb-3">{t("patient.selectScan")}</h2>
           <p className="text-muted-foreground text-sm mb-3">{t("patient.tapToScan")}</p>
           {!hasActiveSubscription && !subLoading && (
-            <div className="bg-warning/10 border border-warning/30 rounded-xl p-3 mb-3 flex items-center gap-2">
-              <Lock className="h-4 w-4 text-warning shrink-0" />
-              <p className="text-xs text-foreground"><strong>Subscribe to unlock scanning.</strong> Choose a plan to start AI health scans.</p>
+            <div className="bg-primary/10 border border-primary/30 rounded-xl p-3 mb-3 flex items-center gap-2">
+              <ScanLine className="h-4 w-4 text-primary shrink-0" />
+              <p className="text-xs text-foreground"><strong>Free scanning!</strong> Upload & scan for free. Subscribe to view detailed results.</p>
             </div>
           )}
           <div className="grid grid-cols-4 gap-3">
