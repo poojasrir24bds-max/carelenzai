@@ -18,6 +18,7 @@ const categories = [
 const DentalScan = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
   const { toast } = useToast();
   const { hasActiveSubscription, scansRemaining, loading: subLoading } = useSubscription();
