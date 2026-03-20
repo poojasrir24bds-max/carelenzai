@@ -335,9 +335,8 @@ const PatientDashboard = () => {
               onChange={(e) => setDoubtText(e.target.value)}
               rows={3}
               className="mb-3"
-              disabled={!hasActiveSubscription}
             />
-            <Button onClick={handleSubmitDoubt} disabled={!doubtText.trim() || submittingDoubt || !hasActiveSubscription} className="w-full rounded-xl" size="sm">
+            <Button onClick={handleSubmitDoubt} disabled={!doubtText.trim() || submittingDoubt} className="w-full rounded-xl" size="sm">
               {submittingDoubt ? t("patient.submitting") : t("patient.submitQuestion")}
             </Button>
 
