@@ -81,6 +81,15 @@ const DoctorDashboard = () => {
   const fetchDoctorProfile = async () => {
     const { data } = await supabase.from("doctor_profiles").select("*").eq("user_id", user!.id).maybeSingle();
     setDoctorProfile(data);
+    if (data) {
+      setEditForm({
+        medical_license: data.medical_license || "",
+        doctor_id: data.doctor_id || "",
+        specialization: data.specialization || "",
+        hospital_name: data.hospital_name || "",
+        address: data.address || "",
+      });
+    }
   };
 
   const fetchConsultations = async () => {
