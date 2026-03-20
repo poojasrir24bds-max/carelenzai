@@ -17,6 +17,7 @@ const ScanPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -180,6 +181,7 @@ const ScanPage = () => {
               </div>
             )}
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+            <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFileChange} />
           </CardContent>
         </Card>
 
@@ -187,7 +189,7 @@ const ScanPage = () => {
           <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="rounded-xl h-12">
             <Upload className="h-4 w-4 mr-2" /> {t("scan.upload")}
           </Button>
-          <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="rounded-xl h-12">
+          <Button variant="outline" onClick={() => cameraInputRef.current?.click()} className="rounded-xl h-12">
             <Camera className="h-4 w-4 mr-2" /> {t("scan.camera")}
           </Button>
         </div>
