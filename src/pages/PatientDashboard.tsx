@@ -252,42 +252,7 @@ const PatientDashboard = () => {
     high: t("patient.highRisk"),
   };
 
-  // Block access if no active subscription
-  if (!subLoading && !hasActiveSubscription) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-        <Card className="max-w-md shadow-elevated border-primary/30">
-          <CardContent className="p-6 text-center">
-            <div className={`rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center ${hasPendingSubscription ? "bg-warning/10" : "bg-primary/10"}`}>
-              {hasPendingSubscription ? (
-                <Clock className="h-8 w-8 text-warning" />
-              ) : (
-                <CreditCard className="h-8 w-8 text-primary" />
-              )}
-            </div>
-            <h2 className="font-display text-xl font-bold mb-2">
-              {hasPendingSubscription ? "⏳ Approval Pending" : "Subscription Required"}
-            </h2>
-            <p className="text-sm text-muted-foreground mb-4">
-              {hasPendingSubscription
-                ? "Your payment is under review. You'll get access once admin approves it."
-                : "To access the dashboard, please subscribe to a plan first."}
-            </p>
-            <div className="flex gap-2 justify-center">
-              {!hasPendingSubscription && (
-                <Button className="rounded-xl" onClick={() => navigate("/subscription")}>
-                  <CreditCard className="h-4 w-4 mr-2" /> Subscribe Now
-                </Button>
-              )}
-              <Button variant="outline" className="rounded-xl" onClick={handleLogout}>
-                <LogOut className="h-4 w-4 mr-2" /> Sign Out
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // Dashboard is accessible to all users - scanning is free, results are gated behind subscription
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
