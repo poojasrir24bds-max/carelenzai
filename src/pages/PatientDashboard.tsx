@@ -323,15 +323,8 @@ const PatientDashboard = () => {
           </div>
         </div>
 
-        <Card className={`border-border shadow-card ${!hasActiveSubscription ? "opacity-60 relative" : ""}`}>
+        <Card className="border-border shadow-card">
           <CardContent className="p-5">
-            {!hasActiveSubscription && (
-              <div className="absolute inset-0 bg-background/50 rounded-lg flex flex-col items-center justify-center z-10 cursor-pointer" onClick={() => navigate("/subscription")}>
-                <Lock className="h-6 w-6 text-warning mb-2" />
-                <p className="text-sm font-semibold">Subscribe to unlock</p>
-                <p className="text-xs text-muted-foreground">Choose a plan to ask health questions</p>
-              </div>
-            )}
             <h3 className="font-display font-semibold mb-2 flex items-center gap-2">
               <MessageSquare className="h-5 w-5 text-primary" /> {t("patient.askQuestion")}
             </h3>
