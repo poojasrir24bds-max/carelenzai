@@ -34,6 +34,15 @@ const DoctorDashboard = () => {
   const [doctorSub, setDoctorSub] = useState<any>(null);
   const [subLoading, setSubLoading] = useState(true);
   const [ratings, setRatings] = useState<Record<string, any>>({});
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [editForm, setEditForm] = useState({
+    medical_license: "",
+    doctor_id: "",
+    specialization: "",
+    hospital_name: "",
+    address: "",
+  });
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (user) {
