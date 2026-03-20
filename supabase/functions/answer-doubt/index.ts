@@ -10,6 +10,26 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    // Authenticate user
+    const authHeader = req.headers.get("authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!
+    );
+    const { data: { user }, error: authError } = await supabase.auth.getUser(
+      authHeader.replace("Bearer ", "")
+    );
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { question, doubtId } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
@@ -62,12 +82,26 @@ Guidelines:
 
     if (!answer) throw new Error("No response from AI");
 
-    // Save AI answer directly using service role key
+    // Save AI answer using service role, but verify ownership first
     if (doubtId) {
       const supabaseAdmin = createClient(
         Deno.env.get("SUPABASE_URL")!,
         Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
       );
+      
+      // Verify the doubt belongs to the authenticated user
+      const { data: doubt, error: doubtError } = await supabaseAdmin
+        .from("patient_doubts")
+        .select("patient_id")
+        .eq("id", doubtId)
+        .single();
+      
+      if (doubtError || !doubt || doubt.patient_id !== user.id) {
+        return new Response(JSON.stringify({ error: "Forbidden: not your doubt" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      
       await supabaseAdmin.from("patient_doubts").update({
         ai_answer: answer,
       }).eq("id", doubtId);

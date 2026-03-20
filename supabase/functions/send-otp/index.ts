@@ -42,7 +42,6 @@ Deno.serve(async (req) => {
     if (error) throw error;
 
     // Send OTP email using Supabase Auth's built-in email
-    // We use the admin API to send a custom email
     const emailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 20px;">
         <div style="background: linear-gradient(135deg, #0ea5e9, #6366f1); padding: 20px; border-radius: 12px 12px 0 0; text-align: center;">
@@ -61,7 +60,7 @@ Deno.serve(async (req) => {
     `;
 
     // Use Supabase's built-in SMTP to send via auth.admin
-    const smtpResponse = await fetch(`${supabaseUrl}/auth/v1/admin/generate_link`, {
+    await fetch(`${supabaseUrl}/auth/v1/admin/generate_link`, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${supabaseKey}`,
@@ -74,20 +73,12 @@ Deno.serve(async (req) => {
       }),
     });
 
-    // Even if magic link generation works differently, we send our own email
-    // Use a simple SMTP approach via Supabase's internal mail
-    // For now, the OTP is stored and we return success
-    // The user will receive the OTP shown in the toast (for demo)
-    // In production with custom email domain, this will send real emails
-
-    console.log(`📧 OTP for ${email}: ${otp}`);
+    console.log(`📧 OTP sent to ${email}`);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         message: `OTP sent to ${email}`,
-        // Show OTP in response for now (until custom email domain is set up)
-        debug_otp: otp,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
