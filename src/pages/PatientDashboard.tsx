@@ -314,7 +314,7 @@ const PatientDashboard = () => {
               <button
                 key={area.id}
                 onClick={() => handleScanClick(t(area.labelKey))}
-                className={`bg-card rounded-2xl p-4 shadow-card border border-border hover:border-primary hover:shadow-elevated transition-all text-center active:scale-[0.97] ${!hasActiveSubscription ? "opacity-60" : ""}`}
+                className="bg-card rounded-2xl p-4 shadow-card border border-border hover:border-primary hover:shadow-elevated transition-all text-center active:scale-[0.97]"
               >
                 <span className="text-2xl block mb-1">{area.emoji}</span>
                 <span className="text-sm font-medium">{t(area.labelKey)}</span>
