@@ -215,6 +215,7 @@ const DentalScan = () => {
               </div>
             )}
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+            <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFileChange} />
           </CardContent>
         </Card>
 
@@ -223,7 +224,7 @@ const DentalScan = () => {
           <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="rounded-xl h-11">
             <Upload className="h-4 w-4 mr-2" /> Upload
           </Button>
-          <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="rounded-xl h-11">
+          <Button variant="outline" onClick={() => cameraInputRef.current?.click()} className="rounded-xl h-11">
             <Camera className="h-4 w-4 mr-2" /> Camera
           </Button>
         </div>
