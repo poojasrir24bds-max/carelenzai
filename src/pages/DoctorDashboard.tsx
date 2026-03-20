@@ -490,22 +490,94 @@ const DoctorDashboard = () => {
             )}
           </TabsContent>
 
-          <TabsContent value="profile" className="mt-4">
+          <TabsContent value="profile" className="mt-4 space-y-4">
             <Card className="shadow-card border-border">
-              <CardContent className="p-5 space-y-3">
-                {[
-                  ["Name", profile?.full_name || "-"],
-                  ["Mobile", profile?.phone ? `${profile.phone} ${profile.phone_verified ? '✅' : '❌ Not verified'}` : "-"],
-                  ["Specialization", doctorProfile?.specialization || "-"],
-                  ["License", doctorProfile?.medical_license || "-"],
-                  ["Hospital", doctorProfile?.hospital_name || "-"],
-                  ["Status", doctorProfile?.is_verified ? "✅ Verified" : "⏳ Pending"],
-                ].map(([label, value]) => (
-                  <div key={label} className="flex justify-between py-2 border-b border-border last:border-0">
-                    <span className="text-sm text-muted-foreground">{label}</span>
-                    <span className="text-sm font-medium">{value}</span>
+              <CardContent className="p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-display font-semibold text-base">Doctor Profile</h3>
+                  {!editingProfile ? (
+                    <Button size="sm" variant="outline" onClick={() => setEditingProfile(true)}>
+                      <Pencil className="h-3.5 w-3.5 mr-1" /> Edit
+                    </Button>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" onClick={() => { setEditingProfile(false); fetchDoctorProfile(); }}>
+                        Cancel
+                      </Button>
+                      <Button size="sm" disabled={saving} onClick={async () => {
+                        if (!editForm.medical_license.trim() || !editForm.doctor_id.trim() || !editForm.specialization.trim() || !editForm.hospital_name.trim()) {
+                          toast({ title: "Please fill all required fields", variant: "destructive" });
+                          return;
+                        }
+                        setSaving(true);
+                        const { error } = await supabase.from("doctor_profiles").update({
+                          medical_license: editForm.medical_license.trim(),
+                          doctor_id: editForm.doctor_id.trim(),
+                          specialization: editForm.specialization.trim(),
+                          hospital_name: editForm.hospital_name.trim(),
+                          address: editForm.address.trim() || null,
+                        }).eq("user_id", user!.id);
+                        setSaving(false);
+                        if (error) {
+                          toast({ title: "Update failed", description: error.message, variant: "destructive" });
+                        } else {
+                          toast({ title: "Profile updated successfully!" });
+                          setEditingProfile(false);
+                          fetchDoctorProfile();
+                        }
+                      }}>
+                        <Save className="h-3.5 w-3.5 mr-1" /> {saving ? "Saving..." : "Save"}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
+                {editingProfile ? (
+                  <div className="space-y-3">
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Name</Label>
+                      <Input value={profile?.full_name || ""} disabled className="bg-muted/50" />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Medical License Number *</Label>
+                      <Input value={editForm.medical_license} onChange={(e) => setEditForm(f => ({ ...f, medical_license: e.target.value }))} placeholder="Enter license number" />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Doctor ID *</Label>
+                      <Input value={editForm.doctor_id} onChange={(e) => setEditForm(f => ({ ...f, doctor_id: e.target.value }))} placeholder="Enter doctor ID" />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Specialization *</Label>
+                      <Input value={editForm.specialization} onChange={(e) => setEditForm(f => ({ ...f, specialization: e.target.value }))} placeholder="e.g. Dermatologist" />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Hospital Name *</Label>
+                      <Input value={editForm.hospital_name} onChange={(e) => setEditForm(f => ({ ...f, hospital_name: e.target.value }))} placeholder="Enter hospital name" />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Address</Label>
+                      <Input value={editForm.address} onChange={(e) => setEditForm(f => ({ ...f, address: e.target.value }))} placeholder="Enter address (optional)" />
+                    </div>
                   </div>
-                ))}
+                ) : (
+                  <div className="space-y-3">
+                    {[
+                      ["Name", profile?.full_name || "-"],
+                      ["Mobile", profile?.phone ? `${profile.phone} ${profile.phone_verified ? '✅' : '❌ Not verified'}` : "-"],
+                      ["Doctor ID", doctorProfile?.doctor_id || "-"],
+                      ["License", doctorProfile?.medical_license || "-"],
+                      ["Specialization", doctorProfile?.specialization || "-"],
+                      ["Hospital", doctorProfile?.hospital_name || "-"],
+                      ["Address", doctorProfile?.address || "-"],
+                      ["Status", doctorProfile?.is_verified ? "✅ Verified" : "⏳ Pending"],
+                    ].map(([label, value]) => (
+                      <div key={label} className="flex justify-between py-2 border-b border-border last:border-0">
+                        <span className="text-sm text-muted-foreground">{label}</span>
+                        <span className="text-sm font-medium">{value}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
