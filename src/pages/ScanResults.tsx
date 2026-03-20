@@ -168,6 +168,10 @@ const ScanResults = () => {
     setIsSpeaking(true);
     const chunks = splitTextForTTS(text);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+      if (!accessToken) throw new Error("Not authenticated");
+
       for (const chunk of chunks) {
         const response = await fetch(
           `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tts-tamil`,
@@ -176,7 +180,7 @@ const ScanResults = () => {
             headers: {
               "Content-Type": "application/json",
               apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-              Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+              Authorization: `Bearer ${accessToken}`,
             },
             body: JSON.stringify({ text: chunk }),
           }
