@@ -49,15 +49,6 @@ const PatientDashboard = () => {
   const [doctorAvgRatings, setDoctorAvgRatings] = useState<Record<string, { avg: number; count: number }>>({});
 
   const handleScanClick = (area?: string) => {
-    if (!hasActiveSubscription) {
-      toast({ title: t("sub.subscriptionRequired") || "Subscription Required", description: t("sub.pleaseSubscribe") || "Please subscribe to a plan to access scanning.", variant: "destructive" });
-      navigate("/subscription");
-      return;
-    }
-    if (scansRemaining <= 0) {
-      toast({ title: "Scan limit reached", description: "You have used all scans in your current plan.", variant: "destructive" });
-      return;
-    }
     navigate("/patient/scan", area ? { state: { area } } : undefined);
   };
 
@@ -261,42 +252,7 @@ const PatientDashboard = () => {
     high: t("patient.highRisk"),
   };
 
-  // Block access if no active subscription
-  if (!subLoading && !hasActiveSubscription) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-        <Card className="max-w-md shadow-elevated border-primary/30">
-          <CardContent className="p-6 text-center">
-            <div className={`rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center ${hasPendingSubscription ? "bg-warning/10" : "bg-primary/10"}`}>
-              {hasPendingSubscription ? (
-                <Clock className="h-8 w-8 text-warning" />
-              ) : (
-                <CreditCard className="h-8 w-8 text-primary" />
-              )}
-            </div>
-            <h2 className="font-display text-xl font-bold mb-2">
-              {hasPendingSubscription ? "⏳ Approval Pending" : "Subscription Required"}
-            </h2>
-            <p className="text-sm text-muted-foreground mb-4">
-              {hasPendingSubscription
-                ? "Your payment is under review. You'll get access once admin approves it."
-                : "To access the dashboard, please subscribe to a plan first."}
-            </p>
-            <div className="flex gap-2 justify-center">
-              {!hasPendingSubscription && (
-                <Button className="rounded-xl" onClick={() => navigate("/subscription")}>
-                  <CreditCard className="h-4 w-4 mr-2" /> Subscribe Now
-                </Button>
-              )}
-              <Button variant="outline" className="rounded-xl" onClick={handleLogout}>
-                <LogOut className="h-4 w-4 mr-2" /> Sign Out
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // Dashboard is accessible to all users - scanning is free, results are gated behind subscription
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -348,9 +304,9 @@ const PatientDashboard = () => {
           <h2 className="font-display font-semibold text-lg mb-3">{t("patient.selectScan")}</h2>
           <p className="text-muted-foreground text-sm mb-3">{t("patient.tapToScan")}</p>
           {!hasActiveSubscription && !subLoading && (
-            <div className="bg-warning/10 border border-warning/30 rounded-xl p-3 mb-3 flex items-center gap-2">
-              <Lock className="h-4 w-4 text-warning shrink-0" />
-              <p className="text-xs text-foreground"><strong>Subscribe to unlock scanning.</strong> Choose a plan to start AI health scans.</p>
+            <div className="bg-primary/10 border border-primary/30 rounded-xl p-3 mb-3 flex items-center gap-2">
+              <ScanLine className="h-4 w-4 text-primary shrink-0" />
+              <p className="text-xs text-foreground"><strong>Free scanning!</strong> Upload & scan for free. Subscribe to view detailed results.</p>
             </div>
           )}
           <div className="grid grid-cols-4 gap-3">
@@ -358,7 +314,7 @@ const PatientDashboard = () => {
               <button
                 key={area.id}
                 onClick={() => handleScanClick(t(area.labelKey))}
-                className={`bg-card rounded-2xl p-4 shadow-card border border-border hover:border-primary hover:shadow-elevated transition-all text-center active:scale-[0.97] ${!hasActiveSubscription ? "opacity-60" : ""}`}
+                className="bg-card rounded-2xl p-4 shadow-card border border-border hover:border-primary hover:shadow-elevated transition-all text-center active:scale-[0.97]"
               >
                 <span className="text-2xl block mb-1">{area.emoji}</span>
                 <span className="text-sm font-medium">{t(area.labelKey)}</span>
@@ -367,15 +323,8 @@ const PatientDashboard = () => {
           </div>
         </div>
 
-        <Card className={`border-border shadow-card ${!hasActiveSubscription ? "opacity-60 relative" : ""}`}>
+        <Card className="border-border shadow-card">
           <CardContent className="p-5">
-            {!hasActiveSubscription && (
-              <div className="absolute inset-0 bg-background/50 rounded-lg flex flex-col items-center justify-center z-10 cursor-pointer" onClick={() => navigate("/subscription")}>
-                <Lock className="h-6 w-6 text-warning mb-2" />
-                <p className="text-sm font-semibold">Subscribe to unlock</p>
-                <p className="text-xs text-muted-foreground">Choose a plan to ask health questions</p>
-              </div>
-            )}
             <h3 className="font-display font-semibold mb-2 flex items-center gap-2">
               <MessageSquare className="h-5 w-5 text-primary" /> {t("patient.askQuestion")}
             </h3>
@@ -386,9 +335,8 @@ const PatientDashboard = () => {
               onChange={(e) => setDoubtText(e.target.value)}
               rows={3}
               className="mb-3"
-              disabled={!hasActiveSubscription}
             />
-            <Button onClick={handleSubmitDoubt} disabled={!doubtText.trim() || submittingDoubt || !hasActiveSubscription} className="w-full rounded-xl" size="sm">
+            <Button onClick={handleSubmitDoubt} disabled={!doubtText.trim() || submittingDoubt} className="w-full rounded-xl" size="sm">
               {submittingDoubt ? t("patient.submitting") : t("patient.submitQuestion")}
             </Button>
 
