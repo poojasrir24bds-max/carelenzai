@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LogOut, Bell, Calendar, Clock, Users, CheckCircle, XCircle, FileText, Stethoscope, MessageSquare, HeartPulse, Video, CreditCard } from "lucide-react";
+import { LogOut, Bell, Calendar, Clock, Users, CheckCircle, XCircle, FileText, Stethoscope, MessageSquare, HeartPulse, Video, CreditCard, Pencil, Save } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
