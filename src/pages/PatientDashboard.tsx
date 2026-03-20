@@ -49,15 +49,6 @@ const PatientDashboard = () => {
   const [doctorAvgRatings, setDoctorAvgRatings] = useState<Record<string, { avg: number; count: number }>>({});
 
   const handleScanClick = (area?: string) => {
-    if (!hasActiveSubscription) {
-      toast({ title: t("sub.subscriptionRequired") || "Subscription Required", description: t("sub.pleaseSubscribe") || "Please subscribe to a plan to access scanning.", variant: "destructive" });
-      navigate("/subscription");
-      return;
-    }
-    if (scansRemaining <= 0) {
-      toast({ title: "Scan limit reached", description: "You have used all scans in your current plan.", variant: "destructive" });
-      return;
-    }
     navigate("/patient/scan", area ? { state: { area } } : undefined);
   };
 
