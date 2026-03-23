@@ -572,10 +572,10 @@ const AdminDashboard = () => {
 
             <div className="grid grid-cols-2 gap-3">
               {[
-                { icon: BarChart3, label: "Analytics" },
-                { icon: Settings, label: "Settings" },
+                { icon: BarChart3, label: "Analytics", tab: "analytics" },
+                { icon: Settings, label: "Settings", tab: "settings" },
               ].map((a) => (
-                <Card key={a.label} className="shadow-card border-border cursor-pointer hover:shadow-elevated transition-all">
+                <Card key={a.label} className="shadow-card border-border cursor-pointer hover:shadow-elevated transition-all" onClick={() => setTab(a.tab)}>
                   <CardContent className="p-4 text-center">
                     <a.icon className="h-8 w-8 text-primary mx-auto mb-2" />
                     <p className="font-medium text-sm">{a.label}</p>
