@@ -499,7 +499,7 @@ const AdminDashboard = () => {
 
         {/* Tabs */}
         <Tabs value={tab} onValueChange={setTab}>
-          <TabsList className="w-full grid grid-cols-7">
+          <TabsList className="w-full grid grid-cols-3 md:grid-cols-9 gap-1">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="doctors">Doctors</TabsTrigger>
             <TabsTrigger value="patients">Patients</TabsTrigger>
@@ -507,6 +507,8 @@ const AdminDashboard = () => {
             <TabsTrigger value="reviews">Reviews</TabsTrigger>
             <TabsTrigger value="recordings">Recordings</TabsTrigger>
             <TabsTrigger value="payments">Payments</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-4 mt-4">
