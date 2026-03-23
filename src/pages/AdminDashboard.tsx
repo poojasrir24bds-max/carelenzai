@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { LogOut, Users, Stethoscope, ScanLine, DollarSign, CheckCircle, XCircle, BarChart3, Shield, Settings, FileCheck, AlertTriangle, Eye, Loader2, CreditCard, Video, Play, Download, Trash2, Star, MessageSquare } from "lucide-react";
+import { LogOut, Users, Stethoscope, ScanLine, DollarSign, CheckCircle, XCircle, BarChart3, Shield, Settings, FileCheck, AlertTriangle, Eye, Loader2, CreditCard, Video, Play, Download, Trash2, Star, MessageSquare, TrendingUp, Activity } from "lucide-react";
+import { BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import logo from "@/assets/logo.png";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -474,42 +475,50 @@ const AdminDashboard = () => {
         </button>
       </header>
 
-      <div className="flex-1 container py-6 space-y-5">
-        <h1 className="font-display text-2xl font-bold">Admin Dashboard 🛡️</h1>
+      <div className="flex-1 container py-4 space-y-4 px-3">
+        <h1 className="font-display text-xl font-bold">Admin Dashboard 🛡️</h1>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+        {/* Stats Grid - Compact 3-column on mobile */}
+        <div className="grid grid-cols-3 gap-2">
           {[
-            { icon: Users, label: "Total Users", value: String(stats.users), color: "text-primary" },
-            { icon: Users, label: "Patients", value: String(stats.patients), color: "text-accent-foreground" },
-            { icon: CreditCard, label: "Subscribed", value: String(stats.subscribedPatients), color: "text-success" },
-            { icon: Stethoscope, label: "Doctors", value: String(stats.doctors), color: "text-secondary" },
-            { icon: ScanLine, label: "Total Scans", value: String(stats.scans), color: "text-warning" },
-            { icon: DollarSign, label: "Revenue", value: `₹${stats.revenue}`, color: "text-success" },
+            { icon: Users, label: "Users", value: String(stats.users), bg: "bg-primary/10", color: "text-primary" },
+            { icon: Users, label: "Patients", value: String(stats.patients), bg: "bg-accent/30", color: "text-accent-foreground" },
+            { icon: CreditCard, label: "Subscribed", value: String(stats.subscribedPatients), bg: "bg-success/10", color: "text-success" },
+            { icon: Stethoscope, label: "Doctors", value: String(stats.doctors), bg: "bg-secondary/10", color: "text-secondary" },
+            { icon: ScanLine, label: "Scans", value: String(stats.scans), bg: "bg-warning/10", color: "text-warning" },
+            { icon: DollarSign, label: "Revenue", value: `₹${stats.revenue.toLocaleString("en-IN")}`, bg: "bg-success/10", color: "text-success" },
           ].map((s) => (
-            <Card key={s.label} className="shadow-card border-border">
-              <CardContent className="p-4">
-                <s.icon className={`h-6 w-6 ${s.color} mb-2`} />
-                <p className="font-bold text-xl">{s.value}</p>
-                <p className="text-xs text-muted-foreground">{s.label}</p>
+            <Card key={s.label} className={`border-0 shadow-sm ${s.bg}`}>
+              <CardContent className="p-3 flex flex-col items-center text-center gap-1">
+                <s.icon className={`h-4 w-4 ${s.color}`} />
+                <p className="font-bold text-lg leading-tight">{s.value}</p>
+                <p className="text-[10px] text-muted-foreground leading-tight">{s.label}</p>
               </CardContent>
             </Card>
           ))}
         </div>
 
-        {/* Tabs */}
+        {/* Tabs - scrollable on mobile */}
         <Tabs value={tab} onValueChange={setTab}>
-          <TabsList className="w-full grid grid-cols-3 md:grid-cols-9 gap-1">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="doctors">Doctors</TabsTrigger>
-            <TabsTrigger value="patients">Patients</TabsTrigger>
-            <TabsTrigger value="users">Users</TabsTrigger>
-            <TabsTrigger value="reviews">Reviews</TabsTrigger>
-            <TabsTrigger value="recordings">Recordings</TabsTrigger>
-            <TabsTrigger value="payments">Payments</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto -mx-3 px-3">
+            <TabsList className="inline-flex w-auto min-w-full gap-1 h-auto p-1">
+              {[
+                { value: "overview", label: "Overview" },
+                { value: "doctors", label: "Doctors" },
+                { value: "patients", label: "Patients" },
+                { value: "users", label: "Users" },
+                { value: "reviews", label: "Reviews" },
+                { value: "recordings", label: "Recordings" },
+                { value: "payments", label: "Payments" },
+                { value: "analytics", label: "Analytics" },
+                { value: "settings", label: "Settings" },
+              ].map((t) => (
+                <TabsTrigger key={t.value} value={t.value} className="text-xs px-3 py-1.5 whitespace-nowrap">
+                  {t.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
 
           <TabsContent value="overview" className="space-y-4 mt-4">
             <Card className="shadow-card border-border">
@@ -941,99 +950,173 @@ const AdminDashboard = () => {
 
           {/* Analytics Tab */}
           <TabsContent value="analytics" className="mt-4 space-y-4">
-            <Card className="shadow-card border-border">
-              <CardContent className="p-4">
-                <h3 className="font-semibold text-sm mb-4 flex items-center gap-2">
-                  <BarChart3 className="h-4 w-4 text-primary" /> Platform Analytics
-                </h3>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-primary/10 rounded-xl p-4 text-center">
-                    <p className="text-2xl font-bold text-primary">{stats.users}</p>
-                    <p className="text-xs text-muted-foreground mt-1">Total Users</p>
-                  </div>
-                  <div className="bg-secondary/10 rounded-xl p-4 text-center">
-                    <p className="text-2xl font-bold text-secondary">{stats.doctors}</p>
-                    <p className="text-xs text-muted-foreground mt-1">Doctors</p>
-                  </div>
-                  <div className="bg-success/10 rounded-xl p-4 text-center">
-                    <p className="text-2xl font-bold text-success">{stats.patients}</p>
-                    <p className="text-xs text-muted-foreground mt-1">Patients</p>
-                  </div>
-                  <div className="bg-warning/10 rounded-xl p-4 text-center">
-                    <p className="text-2xl font-bold text-warning">{stats.scans}</p>
-                    <p className="text-xs text-muted-foreground mt-1">Total Scans</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
+            {/* User Distribution Pie Chart */}
             <Card className="shadow-card border-border">
               <CardContent className="p-4">
                 <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
-                  <DollarSign className="h-4 w-4 text-success" /> Revenue Overview
+                  <Activity className="h-4 w-4 text-primary" /> User Distribution
                 </h3>
-                <div className="bg-success/10 rounded-xl p-4 text-center mb-3">
-                  <p className="text-3xl font-bold text-success">₹{stats.revenue.toLocaleString("en-IN")}</p>
-                  <p className="text-xs text-muted-foreground mt-1">Total Revenue (Approved Subscriptions)</p>
+                <div className="h-52">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: "Patients", value: stats.patients, fill: "hsl(var(--primary))" },
+                          { name: "Doctors", value: stats.doctors, fill: "hsl(var(--secondary))" },
+                          { name: "Subscribed", value: stats.subscribedPatients, fill: "hsl(var(--success))" },
+                        ].filter(d => d.value > 0)}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={40}
+                        outerRadius={70}
+                        paddingAngle={4}
+                        dataKey="value"
+                        label={({ name, value }) => `${name}: ${value}`}
+                        labelLine={false}
+                      >
+                        {[
+                          { fill: "hsl(var(--primary))" },
+                          { fill: "hsl(var(--secondary))" },
+                          { fill: "hsl(var(--success))" },
+                        ].map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="border border-border rounded-xl p-3 text-center">
-                    <p className="text-lg font-bold">{stats.subscribedPatients}</p>
-                    <p className="text-xs text-muted-foreground">Active Subscribers</p>
-                  </div>
-                  <div className="border border-border rounded-xl p-3 text-center">
-                    <p className="text-lg font-bold">{subscriptions.filter((s: any) => s.status === "pending").length}</p>
-                    <p className="text-xs text-muted-foreground">Pending Payments</p>
-                  </div>
+                <div className="flex justify-center gap-4 mt-2">
+                  <span className="flex items-center gap-1 text-[10px]"><span className="w-2.5 h-2.5 rounded-full bg-primary inline-block" /> Patients</span>
+                  <span className="flex items-center gap-1 text-[10px]"><span className="w-2.5 h-2.5 rounded-full bg-secondary inline-block" /> Doctors</span>
+                  <span className="flex items-center gap-1 text-[10px]"><span className="w-2.5 h-2.5 rounded-full bg-success inline-block" /> Subscribed</span>
                 </div>
               </CardContent>
             </Card>
 
+            {/* Platform Overview Bar Chart */}
+            <Card className="shadow-card border-border">
+              <CardContent className="p-4">
+                <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4 text-secondary" /> Platform Overview
+                </h3>
+                <div className="h-56">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={[
+                      { name: "Users", count: stats.users },
+                      { name: "Patients", count: stats.patients },
+                      { name: "Doctors", count: stats.doctors },
+                      { name: "Scans", count: stats.scans },
+                      { name: "Subscribers", count: stats.subscribedPatients },
+                      { name: "Recordings", count: recordings.length },
+                    ]} margin={{ top: 5, right: 10, left: -15, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                      <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+                      <YAxis tick={{ fontSize: 10 }} />
+                      <Tooltip />
+                      <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Revenue & Subscriptions */}
+            <Card className="shadow-card border-border">
+              <CardContent className="p-4">
+                <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 text-success" /> Revenue & Subscriptions
+                </h3>
+                <div className="bg-gradient-to-r from-success/10 to-primary/10 rounded-xl p-4 text-center mb-4">
+                  <p className="text-3xl font-bold text-success">₹{stats.revenue.toLocaleString("en-IN")}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Total Revenue</p>
+                </div>
+                <div className="h-48">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={[
+                      { name: "Active", count: subscriptions.filter((s: any) => s.status === "active").length },
+                      { name: "Pending", count: subscriptions.filter((s: any) => s.status === "pending").length },
+                      { name: "Rejected", count: subscriptions.filter((s: any) => s.status === "rejected").length },
+                    ]} margin={{ top: 5, right: 10, left: -15, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                      <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                      <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                      <Tooltip />
+                      <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                        <Cell fill="hsl(var(--success))" />
+                        <Cell fill="hsl(var(--warning))" />
+                        <Cell fill="hsl(var(--destructive))" />
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Ratings Summary with visual */}
             <Card className="shadow-card border-border">
               <CardContent className="p-4">
                 <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
                   <Star className="h-4 w-4 text-warning" /> Ratings Summary
                 </h3>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="border border-border rounded-xl p-3 text-center">
-                    <p className="text-lg font-bold">{consultationRatings.length}</p>
-                    <p className="text-xs text-muted-foreground">Consultation Ratings</p>
-                    {consultationRatings.length > 0 && (
-                      <p className="text-xs text-warning mt-1">
-                        Avg: {(consultationRatings.reduce((sum: number, r: any) => sum + r.rating, 0) / consultationRatings.length).toFixed(1)} ⭐
-                      </p>
-                    )}
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div className="bg-warning/10 rounded-xl p-3 text-center">
+                    <p className="text-2xl font-bold text-warning">
+                      {consultationRatings.length > 0
+                        ? (consultationRatings.reduce((sum: number, r: any) => sum + r.rating, 0) / consultationRatings.length).toFixed(1)
+                        : "—"}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground mt-1">Avg Consultation ⭐</p>
+                    <p className="text-[10px] text-muted-foreground">{consultationRatings.length} reviews</p>
                   </div>
-                  <div className="border border-border rounded-xl p-3 text-center">
-                    <p className="text-lg font-bold">{appRatings.length}</p>
-                    <p className="text-xs text-muted-foreground">App Ratings</p>
-                    {appRatings.length > 0 && (
-                      <p className="text-xs text-warning mt-1">
-                        Avg: {(appRatings.reduce((sum: number, r: any) => sum + r.rating, 0) / appRatings.length).toFixed(1)} ⭐
-                      </p>
-                    )}
+                  <div className="bg-primary/10 rounded-xl p-3 text-center">
+                    <p className="text-2xl font-bold text-primary">
+                      {appRatings.length > 0
+                        ? (appRatings.reduce((sum: number, r: any) => sum + r.rating, 0) / appRatings.length).toFixed(1)
+                        : "—"}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground mt-1">Avg App Rating ⭐</p>
+                    <p className="text-[10px] text-muted-foreground">{appRatings.length} reviews</p>
                   </div>
                 </div>
+                {(consultationRatings.length > 0 || appRatings.length > 0) && (
+                  <div className="h-40">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={[1, 2, 3, 4, 5].map(star => ({
+                        star: `${star}★`,
+                        consultations: consultationRatings.filter((r: any) => r.rating === star).length,
+                        app: appRatings.filter((r: any) => r.rating === star).length,
+                      }))} margin={{ top: 5, right: 10, left: -15, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                        <XAxis dataKey="star" tick={{ fontSize: 10 }} />
+                        <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
+                        <Tooltip />
+                        <Bar dataKey="consultations" name="Consultations" fill="hsl(var(--warning))" radius={[3, 3, 0, 0]} />
+                        <Bar dataKey="app" name="App" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
-            <Card className="shadow-card border-border">
-              <CardContent className="p-4">
-                <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
-                  <Video className="h-4 w-4 text-destructive" /> Consultation Stats
-                </h3>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="border border-border rounded-xl p-3 text-center">
-                    <p className="text-lg font-bold">{recordings.length}</p>
-                    <p className="text-xs text-muted-foreground">Call Recordings</p>
-                  </div>
-                  <div className="border border-border rounded-xl p-3 text-center">
-                    <p className="text-lg font-bold">{stats.pendingPatients}</p>
-                    <p className="text-xs text-muted-foreground">Pending ID Verifications</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Quick stats row */}
+            <div className="grid grid-cols-2 gap-2">
+              <Card className="border-0 shadow-sm bg-destructive/10">
+                <CardContent className="p-3 text-center">
+                  <Video className="h-4 w-4 text-destructive mx-auto mb-1" />
+                  <p className="text-lg font-bold">{recordings.length}</p>
+                  <p className="text-[10px] text-muted-foreground">Call Recordings</p>
+                </CardContent>
+              </Card>
+              <Card className="border-0 shadow-sm bg-warning/10">
+                <CardContent className="p-3 text-center">
+                  <AlertTriangle className="h-4 w-4 text-warning mx-auto mb-1" />
+                  <p className="text-lg font-bold">{stats.pendingPatients}</p>
+                  <p className="text-[10px] text-muted-foreground">Pending Verifications</p>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           {/* Settings Tab */}
