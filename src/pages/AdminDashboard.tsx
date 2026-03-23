@@ -938,6 +938,180 @@ const AdminDashboard = () => {
               ))
             )}
           </TabsContent>
+
+          {/* Analytics Tab */}
+          <TabsContent value="analytics" className="mt-4 space-y-4">
+            <Card className="shadow-card border-border">
+              <CardContent className="p-4">
+                <h3 className="font-semibold text-sm mb-4 flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4 text-primary" /> Platform Analytics
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-primary/10 rounded-xl p-4 text-center">
+                    <p className="text-2xl font-bold text-primary">{stats.users}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Total Users</p>
+                  </div>
+                  <div className="bg-secondary/10 rounded-xl p-4 text-center">
+                    <p className="text-2xl font-bold text-secondary">{stats.doctors}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Doctors</p>
+                  </div>
+                  <div className="bg-success/10 rounded-xl p-4 text-center">
+                    <p className="text-2xl font-bold text-success">{stats.patients}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Patients</p>
+                  </div>
+                  <div className="bg-warning/10 rounded-xl p-4 text-center">
+                    <p className="text-2xl font-bold text-warning">{stats.scans}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Total Scans</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-card border-border">
+              <CardContent className="p-4">
+                <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                  <DollarSign className="h-4 w-4 text-success" /> Revenue Overview
+                </h3>
+                <div className="bg-success/10 rounded-xl p-4 text-center mb-3">
+                  <p className="text-3xl font-bold text-success">₹{stats.revenue.toLocaleString("en-IN")}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Total Revenue (Approved Subscriptions)</p>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="border border-border rounded-xl p-3 text-center">
+                    <p className="text-lg font-bold">{stats.subscribedPatients}</p>
+                    <p className="text-xs text-muted-foreground">Active Subscribers</p>
+                  </div>
+                  <div className="border border-border rounded-xl p-3 text-center">
+                    <p className="text-lg font-bold">{subscriptions.filter((s: any) => s.status === "pending").length}</p>
+                    <p className="text-xs text-muted-foreground">Pending Payments</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-card border-border">
+              <CardContent className="p-4">
+                <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                  <Star className="h-4 w-4 text-warning" /> Ratings Summary
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="border border-border rounded-xl p-3 text-center">
+                    <p className="text-lg font-bold">{consultationRatings.length}</p>
+                    <p className="text-xs text-muted-foreground">Consultation Ratings</p>
+                    {consultationRatings.length > 0 && (
+                      <p className="text-xs text-warning mt-1">
+                        Avg: {(consultationRatings.reduce((sum: number, r: any) => sum + r.rating, 0) / consultationRatings.length).toFixed(1)} ⭐
+                      </p>
+                    )}
+                  </div>
+                  <div className="border border-border rounded-xl p-3 text-center">
+                    <p className="text-lg font-bold">{appRatings.length}</p>
+                    <p className="text-xs text-muted-foreground">App Ratings</p>
+                    {appRatings.length > 0 && (
+                      <p className="text-xs text-warning mt-1">
+                        Avg: {(appRatings.reduce((sum: number, r: any) => sum + r.rating, 0) / appRatings.length).toFixed(1)} ⭐
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-card border-border">
+              <CardContent className="p-4">
+                <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                  <Video className="h-4 w-4 text-destructive" /> Consultation Stats
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="border border-border rounded-xl p-3 text-center">
+                    <p className="text-lg font-bold">{recordings.length}</p>
+                    <p className="text-xs text-muted-foreground">Call Recordings</p>
+                  </div>
+                  <div className="border border-border rounded-xl p-3 text-center">
+                    <p className="text-lg font-bold">{stats.pendingPatients}</p>
+                    <p className="text-xs text-muted-foreground">Pending ID Verifications</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Settings Tab */}
+          <TabsContent value="settings" className="mt-4 space-y-4">
+            <Card className="shadow-card border-border">
+              <CardContent className="p-4">
+                <h3 className="font-semibold text-sm mb-4 flex items-center gap-2">
+                  <Shield className="h-4 w-4 text-primary" /> Admin Account
+                </h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center border-b border-border pb-2">
+                    <span className="text-sm text-muted-foreground">Email</span>
+                    <span className="text-sm font-medium">{user?.email}</span>
+                  </div>
+                  <div className="flex justify-between items-center border-b border-border pb-2">
+                    <span className="text-sm text-muted-foreground">Role</span>
+                    <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-destructive/20 text-destructive">Admin</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">User ID</span>
+                    <span className="text-xs font-mono text-muted-foreground">{user?.id?.slice(0, 8)}...</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-card border-border">
+              <CardContent className="p-4">
+                <h3 className="font-semibold text-sm mb-4 flex items-center gap-2">
+                  <Users className="h-4 w-4 text-secondary" /> Platform Summary
+                </h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center border-b border-border pb-2">
+                    <span className="text-sm text-muted-foreground">Total Users</span>
+                    <span className="text-sm font-medium">{stats.users}</span>
+                  </div>
+                  <div className="flex justify-between items-center border-b border-border pb-2">
+                    <span className="text-sm text-muted-foreground">Verified Doctors</span>
+                    <span className="text-sm font-medium">{allDoctorProfiles.filter((d: any) => d.is_verified).length}</span>
+                  </div>
+                  <div className="flex justify-between items-center border-b border-border pb-2">
+                    <span className="text-sm text-muted-foreground">Pending Doctors</span>
+                    <span className="text-sm font-medium">{pendingDoctors.length}</span>
+                  </div>
+                  <div className="flex justify-between items-center border-b border-border pb-2">
+                    <span className="text-sm text-muted-foreground">Pending Patient IDs</span>
+                    <span className="text-sm font-medium">{pendingPatients.length}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Active Subscribers</span>
+                    <span className="text-sm font-medium">{stats.subscribedPatients}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-card border-border">
+              <CardContent className="p-4">
+                <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                  <Settings className="h-4 w-4 text-warning" /> Actions
+                </h3>
+                <div className="space-y-2">
+                  <Button variant="outline" className="w-full justify-start text-sm" onClick={() => setTab("payments")}>
+                    <CreditCard className="h-4 w-4 mr-2" /> Manage Payments
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start text-sm" onClick={() => setTab("doctors")}>
+                    <Stethoscope className="h-4 w-4 mr-2" /> Manage Doctors
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start text-sm" onClick={() => setTab("patients")}>
+                    <Users className="h-4 w-4 mr-2" /> Manage Patients
+                  </Button>
+                  <Button variant="destructive" className="w-full justify-start text-sm mt-3" onClick={handleLogout}>
+                    <LogOut className="h-4 w-4 mr-2" /> Logout
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </div>
 
