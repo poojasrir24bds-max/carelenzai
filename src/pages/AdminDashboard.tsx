@@ -475,42 +475,50 @@ const AdminDashboard = () => {
         </button>
       </header>
 
-      <div className="flex-1 container py-6 space-y-5">
-        <h1 className="font-display text-2xl font-bold">Admin Dashboard 🛡️</h1>
+      <div className="flex-1 container py-4 space-y-4 px-3">
+        <h1 className="font-display text-xl font-bold">Admin Dashboard 🛡️</h1>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+        {/* Stats Grid - Compact 3-column on mobile */}
+        <div className="grid grid-cols-3 gap-2">
           {[
-            { icon: Users, label: "Total Users", value: String(stats.users), color: "text-primary" },
-            { icon: Users, label: "Patients", value: String(stats.patients), color: "text-accent-foreground" },
-            { icon: CreditCard, label: "Subscribed", value: String(stats.subscribedPatients), color: "text-success" },
-            { icon: Stethoscope, label: "Doctors", value: String(stats.doctors), color: "text-secondary" },
-            { icon: ScanLine, label: "Total Scans", value: String(stats.scans), color: "text-warning" },
-            { icon: DollarSign, label: "Revenue", value: `₹${stats.revenue}`, color: "text-success" },
+            { icon: Users, label: "Users", value: String(stats.users), bg: "bg-primary/10", color: "text-primary" },
+            { icon: Users, label: "Patients", value: String(stats.patients), bg: "bg-accent/30", color: "text-accent-foreground" },
+            { icon: CreditCard, label: "Subscribed", value: String(stats.subscribedPatients), bg: "bg-success/10", color: "text-success" },
+            { icon: Stethoscope, label: "Doctors", value: String(stats.doctors), bg: "bg-secondary/10", color: "text-secondary" },
+            { icon: ScanLine, label: "Scans", value: String(stats.scans), bg: "bg-warning/10", color: "text-warning" },
+            { icon: DollarSign, label: "Revenue", value: `₹${stats.revenue.toLocaleString("en-IN")}`, bg: "bg-success/10", color: "text-success" },
           ].map((s) => (
-            <Card key={s.label} className="shadow-card border-border">
-              <CardContent className="p-4">
-                <s.icon className={`h-6 w-6 ${s.color} mb-2`} />
-                <p className="font-bold text-xl">{s.value}</p>
-                <p className="text-xs text-muted-foreground">{s.label}</p>
+            <Card key={s.label} className={`border-0 shadow-sm ${s.bg}`}>
+              <CardContent className="p-3 flex flex-col items-center text-center gap-1">
+                <s.icon className={`h-4 w-4 ${s.color}`} />
+                <p className="font-bold text-lg leading-tight">{s.value}</p>
+                <p className="text-[10px] text-muted-foreground leading-tight">{s.label}</p>
               </CardContent>
             </Card>
           ))}
         </div>
 
-        {/* Tabs */}
+        {/* Tabs - scrollable on mobile */}
         <Tabs value={tab} onValueChange={setTab}>
-          <TabsList className="w-full grid grid-cols-3 md:grid-cols-9 gap-1">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="doctors">Doctors</TabsTrigger>
-            <TabsTrigger value="patients">Patients</TabsTrigger>
-            <TabsTrigger value="users">Users</TabsTrigger>
-            <TabsTrigger value="reviews">Reviews</TabsTrigger>
-            <TabsTrigger value="recordings">Recordings</TabsTrigger>
-            <TabsTrigger value="payments">Payments</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto -mx-3 px-3">
+            <TabsList className="inline-flex w-auto min-w-full gap-1 h-auto p-1">
+              {[
+                { value: "overview", label: "Overview" },
+                { value: "doctors", label: "Doctors" },
+                { value: "patients", label: "Patients" },
+                { value: "users", label: "Users" },
+                { value: "reviews", label: "Reviews" },
+                { value: "recordings", label: "Recordings" },
+                { value: "payments", label: "Payments" },
+                { value: "analytics", label: "Analytics" },
+                { value: "settings", label: "Settings" },
+              ].map((t) => (
+                <TabsTrigger key={t.value} value={t.value} className="text-xs px-3 py-1.5 whitespace-nowrap">
+                  {t.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
 
           <TabsContent value="overview" className="space-y-4 mt-4">
             <Card className="shadow-card border-border">
