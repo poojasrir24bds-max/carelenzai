@@ -100,7 +100,7 @@ const ScanPage = () => {
       // Increment scans_used
       await supabase.rpc("increment_scans_used" as any, { _user_id: user.id });
 
-      navigate("/patient/results", { state: { result: data, scanId: scanData.id } });
+      navigate("/patient/results", { state: { result: data, scanId: scanData.id, area: selectedArea.toLowerCase() } });
     } catch (err: any) {
       console.error("Scan error:", err);
       toast({
