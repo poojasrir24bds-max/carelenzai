@@ -384,40 +384,102 @@ const PatientDashboard = () => {
             </Card>
           ) : (
             <div className="space-y-3">
-              {recentScans.map((scan) => (
-                <Card
-                  key={scan.id}
-                  className="shadow-card border-border cursor-pointer hover:shadow-elevated transition-all"
-                  onClick={() => navigate("/patient/results", {
-                    state: {
-                      result: {
-                        condition: scan.condition,
-                        definition: scan.definition,
-                        causes: scan.causes,
-                        severity: scan.severity,
-                        confidence: scan.confidence,
-                        guidance: scan.guidance,
-                      },
-                      scanId: scan.id,
-                    },
-                  })}
-                >
-                  <CardContent className="p-4 flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold text-sm capitalize">{scan.area} {t("patient.scan")}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {new Date(scan.created_at).toLocaleDateString()}
-                      </p>
-                      <p className="text-xs text-muted-foreground">{scan.condition}</p>
-                    </div>
-                    {scan.severity && (
-                      <span className={`${severityColors[scan.severity as keyof typeof severityColors]} text-xs font-semibold px-3 py-1 rounded-full`}>
-                        {severityLabels[scan.severity as keyof typeof severityLabels]}
-                      </span>
+              {recentScans.map((scan) => {
+                // Map scan area to doctor specialization keywords
+                const areaLower = (scan.area || "").toLowerCase();
+                const specMap: Record<string, string[]> = {
+                  dental: ["dentist", "dental", "orthodont", "endodont", "periodon"],
+                  skin: ["dermatolog", "skin"],
+                  hair: ["dermatolog", "tricholog", "hair"],
+                  eyes: ["ophthalmolog", "optom", "eye"],
+                  nails: ["dermatolog", "nail"],
+                  lips: ["dermatolog", "cosmetic"],
+                  scalp: ["dermatolog", "tricholog", "scalp"],
+                };
+                const matchKeywords = Object.entries(specMap).find(([key]) => areaLower.includes(key))?.[1] || [];
+                const relatedDoctors = matchKeywords.length > 0
+                  ? availableDoctors.filter((doc: any) => {
+                      const spec = (doc.specialization || "").toLowerCase();
+                      return matchKeywords.some(kw => spec.includes(kw));
+                    })
+                  : [];
+                // Fallback: if no specialty match, show general doctors
+                const fallbackDoctors = relatedDoctors.length === 0
+                  ? availableDoctors.filter((doc: any) => (doc.specialization || "").toLowerCase().includes("general")).slice(0, 2)
+                  : [];
+                const doctorsToShow = relatedDoctors.length > 0 ? relatedDoctors : fallbackDoctors;
+
+                return (
+                  <div key={scan.id} className="space-y-2">
+                    <Card
+                      className="shadow-card border-border cursor-pointer hover:shadow-elevated transition-all"
+                      onClick={() => navigate("/patient/results", {
+                        state: {
+                          result: {
+                            condition: scan.condition,
+                            definition: scan.definition,
+                            causes: scan.causes,
+                            severity: scan.severity,
+                            confidence: scan.confidence,
+                            guidance: scan.guidance,
+                          },
+                          scanId: scan.id,
+                        },
+                      })}
+                    >
+                      <CardContent className="p-4 flex items-center justify-between">
+                        <div>
+                          <p className="font-semibold text-sm capitalize">{scan.area} {t("patient.scan")}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {new Date(scan.created_at).toLocaleDateString()}
+                          </p>
+                          <p className="text-xs text-muted-foreground">{scan.condition}</p>
+                        </div>
+                        {scan.severity && (
+                          <span className={`${severityColors[scan.severity as keyof typeof severityColors]} text-xs font-semibold px-3 py-1 rounded-full`}>
+                            {severityLabels[scan.severity as keyof typeof severityLabels]}
+                          </span>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    {/* Recommended doctors for this scan */}
+                    {doctorsToShow.length > 0 && (
+                      <div className="ml-3 pl-3 border-l-2 border-primary/20 space-y-2">
+                        <p className="text-xs font-semibold text-primary">
+                          🩺 Recommended {relatedDoctors.length > 0 ? `${scan.area}` : ""} Doctors
+                        </p>
+                        {doctorsToShow.slice(0, 3).map((doc: any) => (
+                          <Card key={doc.id} className="shadow-sm border-border bg-primary/5">
+                            <CardContent className="p-3 flex items-center gap-3">
+                              <div className="bg-primary/10 rounded-full p-2">
+                                <Stethoscope className="h-4 w-4 text-primary" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold truncate">{doc.profile_name}</p>
+                                <p className="text-xs text-muted-foreground capitalize">🩺 {doc.specialization}</p>
+                                <p className="text-xs text-muted-foreground truncate">🏥 {doc.hospital_name}</p>
+                                <AverageRating
+                                  rating={doctorAvgRatings[doc.user_id]?.avg || 0}
+                                  count={doctorAvgRatings[doc.user_id]?.count || 0}
+                                />
+                              </div>
+                              <div className="flex flex-col items-end gap-1">
+                                <span className="text-xs px-2 py-0.5 rounded-full bg-success/20 text-success">✅ Verified</span>
+                                {doc.isNearby && (
+                                  <span className="text-xs px-1.5 py-0.5 rounded-full bg-primary/20 text-primary flex items-center gap-0.5">
+                                    <MapPin className="h-3 w-3" /> Near
+                                  </span>
+                                )}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
                     )}
-                  </CardContent>
-                </Card>
-              ))}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
