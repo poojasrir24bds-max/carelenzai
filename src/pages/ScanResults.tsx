@@ -446,35 +446,53 @@ const ScanResults = () => {
         </Card>
 
         {/* Recommended Doctors */}
-        {(result.severity === "medium" || result.severity === "high") && (
-          <Card className="border-border shadow-card">
-            <CardContent className="p-5">
-              <h3 className="font-display font-semibold mb-3">{t("results.recommendedDoctors")}</h3>
-              {doctors.length === 0 ? (
-                <p className="text-sm text-muted-foreground">{t("results.noDoctors")}</p>
-              ) : (
-                <div className="space-y-3">
-                  {doctors.map((doc) => (
-                    <div key={doc.id} className="flex items-center justify-between bg-card border border-border rounded-xl p-3">
-                      <div className="flex items-center gap-3">
-                        <div className="bg-primary/10 rounded-full p-2.5">
-                          <Stethoscope className="h-5 w-5 text-primary" />
+        {(() => {
+          const scanArea = (location.state?.result?.area || location.state?.area || "").toLowerCase();
+          const specMap: Record<string, string[]> = {
+            dental: ["dentist", "dental", "orthodont", "endodont", "periodon"],
+            skin: ["dermatolog", "skin"],
+            hair: ["dermatolog", "tricholog", "hair"],
+            eyes: ["ophthalmolog", "optom", "eye"],
+            nails: ["dermatolog", "nail"],
+            lips: ["dermatolog", "cosmetic"],
+            scalp: ["dermatolog", "tricholog", "scalp"],
+          };
+          const matchKeywords = Object.entries(specMap).find(([key]) => scanArea.includes(key))?.[1] || [];
+          const filtered = matchKeywords.length > 0
+            ? doctors.filter(doc => matchKeywords.some(kw => (doc.specialization || "").toLowerCase().includes(kw)))
+            : doctors;
+          const displayDocs = filtered.length > 0 ? filtered : doctors;
+
+          return (
+            <Card className="border-border shadow-card">
+              <CardContent className="p-5">
+                <h3 className="font-display font-semibold mb-3">{t("results.recommendedDoctors")}</h3>
+                {displayDocs.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">{t("results.noDoctors")}</p>
+                ) : (
+                  <div className="space-y-3">
+                    {displayDocs.map((doc) => (
+                      <div key={doc.id} className="flex items-center justify-between bg-card border border-border rounded-xl p-3">
+                        <div className="flex items-center gap-3">
+                          <div className="bg-primary/10 rounded-full p-2.5">
+                            <Stethoscope className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-sm">{doc.profiles?.full_name || "Doctor"}</p>
+                            <p className="text-xs text-muted-foreground capitalize">{doc.specialization} • {doc.hospital_name}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-semibold text-sm">{doc.profiles?.full_name || "Doctor"}</p>
-                          <p className="text-xs text-muted-foreground">{doc.specialization} • {doc.hospital_name}</p>
-                        </div>
+                        <Button size="sm" className="rounded-lg text-xs" onClick={() => handleBookDoctor(doc.user_id)}>
+                          {t("results.book")}
+                        </Button>
                       </div>
-                      <Button size="sm" className="rounded-lg text-xs" onClick={() => handleBookDoctor(doc.user_id)}>
-                        {t("results.book")}
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })()}
 
         <p className="text-xs text-muted-foreground text-center pb-4">{t("results.disclaimer")}</p>
         </>
