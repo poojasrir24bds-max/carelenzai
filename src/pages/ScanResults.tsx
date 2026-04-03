@@ -88,10 +88,17 @@ const ScanResults = () => {
   const fetchDoctors = async () => {
     const { data } = await supabase
       .from("doctor_profiles")
-      .select("*, profiles!doctor_profiles_user_id_fkey(full_name)")
+      .select("*")
       .eq("is_verified", true)
       .eq("is_active", true);
-    setDoctors(data || []);
+    if (data && data.length > 0) {
+      const userIds = data.map(d => d.user_id);
+      const { data: profiles } = await supabase.from("profiles").select("user_id, full_name").in("user_id", userIds);
+      const nameMap = Object.fromEntries((profiles || []).map(p => [p.user_id, p.full_name]));
+      setDoctors(data.map(d => ({ ...d, profiles: { full_name: nameMap[d.user_id] || "Doctor" } })));
+    } else {
+      setDoctors([]);
+    }
   };
 
   const handleBookDoctor = async (doctorUserId: string) => {
