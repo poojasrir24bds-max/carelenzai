@@ -46,7 +46,7 @@ const ScanResults = () => {
   }, []);
 
   useEffect(() => {
-    if (result && (result.severity === "medium" || result.severity === "high")) {
+    if (result) {
       fetchDoctors();
     }
   }, [result]);
