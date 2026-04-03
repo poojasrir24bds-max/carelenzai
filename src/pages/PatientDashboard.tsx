@@ -525,7 +525,23 @@ const PatientDashboard = () => {
                       </Button>
                     )}
                     {c.status === "pending" && (
-                      <span className="text-xs text-warning font-medium animate-pulse">⏳ {t("patient.pending")}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-warning font-medium animate-pulse">⏳ {t("patient.pending")}</span>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          className="rounded-xl text-xs px-2 py-1 h-7"
+                          onClick={async () => {
+                            const { error } = await supabase.from("consultations").update({ status: "cancelled" }).eq("id", c.id);
+                            if (!error) {
+                              setActiveConsultations(prev => prev.filter(x => x.id !== c.id));
+                              toast({ title: "Consultation cancelled" });
+                            }
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
                     )}
                   </CardContent>
                 </Card>
