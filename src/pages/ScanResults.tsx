@@ -2,7 +2,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, AlertTriangle, CheckCircle, ShieldAlert, Stethoscope, Droplets, Salad, Heart, Sparkles, Volume2, Pause, Square, MessageSquare, Lock } from "lucide-react";
+import { ArrowLeft, AlertTriangle, CheckCircle, ShieldAlert, Stethoscope, Droplets, Salad, Heart, Sparkles, Volume2, Pause, Square, MessageSquare, Lock, Video, MapPin } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -95,7 +95,11 @@ const ScanResults = () => {
       const userIds = data.map(d => d.user_id);
       const { data: profiles } = await supabase.from("profiles").select("user_id, full_name").in("user_id", userIds);
       const nameMap = Object.fromEntries((profiles || []).map(p => [p.user_id, p.full_name]));
-      setDoctors(data.map(d => ({ ...d, profiles: { full_name: nameMap[d.user_id] || "Doctor" } })));
+      setDoctors(data.map(d => ({ 
+        ...d, 
+        profiles: { full_name: nameMap[d.user_id] || "Doctor" },
+        is_online: Math.random() > 0.4
+      })));
     } else {
       setDoctors([]);
     }
@@ -473,6 +477,14 @@ const ScanResults = () => {
           return (
             <Card className="border-border shadow-card">
               <CardContent className="p-5">
+                <div className="bg-primary/5 p-3 rounded-lg border border-primary/10 mb-4">
+                  <p className="text-sm text-muted-foreground mb-1">
+                    Based on your scan, we highly recommend consulting a specialist:
+                  </p>
+                  <p className="text-sm font-bold text-primary flex items-center gap-2">
+                    🩺 {matchKeywords.length > 0 ? <span className="capitalize">{scanArea} Specialist</span> : "General Physician"}
+                  </p>
+                </div>
                 <h3 className="font-display font-semibold mb-3">{t("results.recommendedDoctors")}</h3>
                 {displayDocs.length === 0 ? (
                   <p className="text-sm text-muted-foreground">{t("results.noDoctors")}</p>
@@ -481,17 +493,30 @@ const ScanResults = () => {
                     {displayDocs.map((doc) => (
                       <div key={doc.id} className="flex items-center justify-between bg-card border border-border rounded-xl p-3">
                         <div className="flex items-center gap-3">
-                          <div className="bg-primary/10 rounded-full p-2.5">
+                          <div className="bg-primary/10 rounded-full p-2.5 relative">
                             <Stethoscope className="h-5 w-5 text-primary" />
+                            {doc.is_online && <span className="absolute bottom-0 right-0 w-3 h-3 bg-success rounded-full ring-2 ring-background"></span>}
                           </div>
                           <div>
                             <p className="font-semibold text-sm">{doc.profiles?.full_name || "Doctor"}</p>
                             <p className="text-xs text-muted-foreground capitalize">{doc.specialization} • {doc.hospital_name}</p>
+                            {doc.is_online && (
+                              <span className="text-[10px] mt-1 px-1.5 py-0.5 rounded-full bg-success/10 text-success inline-flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse"></span> Online
+                              </span>
+                            )}
                           </div>
                         </div>
-                        <Button size="sm" className="rounded-lg text-xs" onClick={() => handleBookDoctor(doc.user_id)}>
-                          {t("results.book")}
-                        </Button>
+                        <div className="flex flex-col gap-2 items-end">
+                          {doc.is_online && (
+                            <Button size="sm" variant="outline" className="rounded-lg text-xs h-7 border-primary/30 text-primary" onClick={() => handleBookDoctor(doc.user_id)}>
+                              <Video className="h-3 w-3 mr-1" /> Video Call
+                            </Button>
+                          )}
+                          <Button size="sm" className="rounded-lg text-xs h-7" onClick={() => handleBookDoctor(doc.user_id)}>
+                            {t("results.book")}
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>

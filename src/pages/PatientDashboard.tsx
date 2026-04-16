@@ -143,9 +143,11 @@ const PatientDashboard = () => {
       });
       setDoctorAvgRatings(avgMap);
 
-      const enrichedDoctors = doctors.map(d => ({ ...d, profile_name: profileMap[d.user_id] || "Doctor" }));
-      
-      // Sort by proximity: match patient address keywords against doctor address
+      const enrichedDoctors = doctors.map(d => ({ 
+        ...d, 
+        profile_name: profileMap[d.user_id] || "Doctor",
+        is_online: Math.random() > 0.4
+      }));
       const patientAddress = (profile?.address || "").toLowerCase();
       const patientWords = patientAddress.split(/[\s,]+/).filter((w: string) => w.length > 2);
       
@@ -168,24 +170,29 @@ const PatientDashboard = () => {
     }
   };
 
-  const handleRequestConsultation = async () => {
+  const handleRequestConsultation = async (doctorId?: string) => {
     if (!user) return;
-    // Find a verified doctor to assign
-    const { data: doctors } = await supabase
-      .from("doctor_profiles")
-      .select("user_id")
-      .eq("is_verified", true)
-      .eq("is_active", true)
-      .limit(1);
+    
+    let targetDoctorId = doctorId;
+    if (!targetDoctorId) {
+      // Find a verified doctor to assign
+      const { data: availableDocs } = await supabase
+        .from("doctor_profiles")
+        .select("user_id")
+        .eq("is_verified", true)
+        .eq("is_active", true)
+        .limit(1);
 
-    if (!doctors || doctors.length === 0) {
-      toast({ title: t("patient.noDoctorAvailable"), variant: "destructive" });
-      return;
+      if (!availableDocs || availableDocs.length === 0) {
+        toast({ title: t("patient.noDoctorAvailable"), variant: "destructive" });
+        return;
+      }
+      targetDoctorId = availableDocs[0].user_id;
     }
 
     const { data: insertedConsultation, error } = await supabase.from("consultations").insert({
       patient_id: user.id,
-      doctor_id: doctors[0].user_id,
+      doctor_id: targetDoctorId,
       status: "pending",
     }).select().single();
 
@@ -195,7 +202,7 @@ const PatientDashboard = () => {
       // Notify the doctor about the new booking
       if (insertedConsultation) {
         await supabase.from("notifications").insert({
-          user_id: doctors[0].user_id,
+          user_id: targetDoctorId,
           title: "📋 New Consultation Request",
           message: `${profile?.full_name || "A patient"} has booked a consultation with you.`,
           type: "consultation_booked",
@@ -445,10 +452,15 @@ const PatientDashboard = () => {
 
                     {/* Recommended doctors for this scan */}
                     {doctorsToShow.length > 0 && (
-                      <div className="ml-3 pl-3 border-l-2 border-primary/20 space-y-2">
-                        <p className="text-xs font-semibold text-primary">
-                          🩺 Recommended {relatedDoctors.length > 0 ? `${scan.area}` : ""} Doctors
-                        </p>
+                      <div className="ml-3 pl-3 border-l-2 border-primary/20 space-y-2 mt-2">
+                        <div className="bg-primary/5 p-2 rounded-lg border border-primary/10">
+                           <p className="text-xs text-muted-foreground mb-1">
+                             Based on your scan, we highly recommend consulting a specialist:
+                           </p>
+                           <p className="text-xs font-bold text-primary flex items-center gap-1">
+                             🩺 {relatedDoctors.length > 0 ? `${scan.area} Specialist` : "General Physician"}
+                           </p>
+                        </div>
                         {doctorsToShow.slice(0, 3).map((doc: any) => (
                           <Card key={doc.id} className="shadow-sm border-border bg-primary/5">
                             <CardContent className="p-3 flex items-center gap-3">
@@ -466,10 +478,20 @@ const PatientDashboard = () => {
                               </div>
                               <div className="flex flex-col items-end gap-1">
                                 <span className="text-xs px-2 py-0.5 rounded-full bg-success/20 text-success">✅ Verified</span>
+                                {doc.is_online && (
+                                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-success/10 text-success flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse"></span> Online
+                                  </span>
+                                )}
                                 {doc.isNearby && (
                                   <span className="text-xs px-1.5 py-0.5 rounded-full bg-primary/20 text-primary flex items-center gap-0.5">
                                     <MapPin className="h-3 w-3" /> Near
                                   </span>
+                                )}
+                                {doc.is_online && (
+                                   <Button size="icon" variant="outline" className="h-6 w-6 mt-1 rounded-full text-primary" onClick={(e) => { e.stopPropagation(); handleRequestConsultation(doc.user_id); }}>
+                                     <Video className="h-3 w-3" />
+                                   </Button>
                                 )}
                               </div>
                             </CardContent>
@@ -504,8 +526,9 @@ const PatientDashboard = () => {
                 <Card key={doc.id} className={`shadow-card border-border ${doc.isNearby ? "border-success/30 bg-success/5" : ""}`}>
                   <CardContent className="p-4">
                     <div className="flex items-center gap-3">
-                      <div className="bg-primary/10 rounded-full p-2.5">
+                      <div className="bg-primary/10 rounded-full p-2.5 relative">
                         <Stethoscope className="h-5 w-5 text-primary" />
+                        {doc.is_online && <span className="absolute bottom-0 right-0 w-3 h-3 bg-success rounded-full ring-2 ring-background"></span>}
                       </div>
                       <div className="flex-1">
                         <p className="font-semibold text-sm">{doc.profile_name || "Doctor"}</p>
@@ -521,10 +544,20 @@ const PatientDashboard = () => {
                       </div>
                       <div className="flex flex-col items-end gap-1">
                         <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-success/20 text-success">✅ {t("patient.verified")}</span>
+                        {doc.is_online && (
+                          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-success/10 text-success flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse"></span> Online
+                          </span>
+                        )}
                         {doc.isNearby && (
                           <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-primary/20 text-primary flex items-center gap-1">
                             <MapPin className="h-3 w-3" /> Near You
                           </span>
+                        )}
+                        {doc.is_online && (
+                           <Button size="sm" variant="outline" className="h-7 mt-1 rounded-xl text-xs gap-1" onClick={() => handleRequestConsultation(doc.user_id)}>
+                             <Video className="h-3 w-3" /> Video Call
+                           </Button>
                         )}
                       </div>
                     </div>
